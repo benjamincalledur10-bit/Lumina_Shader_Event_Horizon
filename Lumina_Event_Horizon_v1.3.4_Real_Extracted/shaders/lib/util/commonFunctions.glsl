@@ -10,7 +10,7 @@
             ang = (ang + (cos(ang * 3.14159265358979) * -0.5 + 0.5 - ang) / 3.0) * 6.28318530717959;
             return normalize((gbufferModelView * vec4(vec3(-sin(ang), cos(ang) * sunRotationData) * 2000.0, 1.0)).xyz);
         #elif defined END
-            vec3 bhDir = normalize(vec3(-1.0, 0.12, 0.0)); // Match eventHorizon.glsl
+            vec3 bhDir = normalize(vec3(-1.0, 0.25, -1.5)); // Match eventHorizon.glsl
             return normalize(mat3(gbufferModelView) * bhDir);
         #else
             return vec3(0.0);

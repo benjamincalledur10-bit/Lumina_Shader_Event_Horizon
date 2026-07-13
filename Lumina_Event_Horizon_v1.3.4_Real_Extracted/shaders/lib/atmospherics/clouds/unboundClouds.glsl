@@ -1,9 +1,9 @@
 #if CLOUD_QUALITY == 1 || !defined DEFERRED1
-    const float cloudStretchRaw = 16.0;
+    const float cloudStretchRaw = 20.0;
 #elif CLOUD_QUALITY == 2
-    const float cloudStretchRaw = 22.0;
+    const float cloudStretchRaw = 26.0;
 #elif CLOUD_QUALITY == 3
-    const float cloudStretchRaw = 28.0;
+    const float cloudStretchRaw = 32.0;
 #endif
 #if CLOUD_UNBOUND_SIZE_MULT <= 100
     const float cloudStretch = cloudStretchRaw;
@@ -39,18 +39,18 @@ float GetCloudNoise(vec3 tracePos, int cloudAltitude, float lTracePosXZ, float c
     #endif
 
     #if CLOUD_QUALITY == 1
-        int sampleCount = 2;
-        float persistance = 0.6;
-        float noiseMult = 0.95;
+        int sampleCount = 4;
+        float persistance = 0.55;
+        float noiseMult = 1.05;
         wind *= 0.5;
     #elif CLOUD_QUALITY == 2 || !defined DEFERRED1
-        int sampleCount = 3;
+        int sampleCount = 5;
+        float persistance = 0.55;
+        float noiseMult = 1.20;
+    #elif CLOUD_QUALITY == 3
+        int sampleCount = 6;
         float persistance = 0.55;
         float noiseMult = 1.15;
-    #elif CLOUD_QUALITY == 3
-        int sampleCount = 4;
-        float persistance = 0.6;
-        float noiseMult = 1.05;
     #endif
 
     #ifndef DEFERRED1
@@ -92,13 +92,21 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
     float higherPlaneAltitude = cloudAltitude + cloudStretch;
     float lowerPlaneAltitude  = cloudAltitude - cloudStretch;
 
-    float lowerPlaneDistance  = (lowerPlaneAltitude - cameraPos.y) / nPlayerPos.y;
-    float higherPlaneDistance = (higherPlaneAltitude - cameraPos.y) / nPlayerPos.y;
-    float minPlaneDistance = min(lowerPlaneDistance, higherPlaneDistance);
-          minPlaneDistance = max(minPlaneDistance, 0.0);
-    float maxPlaneDistance = max(lowerPlaneDistance, higherPlaneDistance);
+    float minPlaneDistance;
+    float maxPlaneDistance;
+    if (abs(nPlayerPos.y) < 0.0001) {
+        if (cameraPos.y < lowerPlaneAltitude || cameraPos.y > higherPlaneAltitude) return vec4(0.0);
+        minPlaneDistance = 0.0;
+        maxPlaneDistance = distanceThreshold;
+    } else {
+        float lowerPlaneDistance  = (lowerPlaneAltitude - cameraPos.y) / nPlayerPos.y;
+        float higherPlaneDistance = (higherPlaneAltitude - cameraPos.y) / nPlayerPos.y;
+        minPlaneDistance = max(min(lowerPlaneDistance, higherPlaneDistance), 0.0);
+        maxPlaneDistance = max(lowerPlaneDistance, higherPlaneDistance);
+    }
     if (maxPlaneDistance < 0.0) return vec4(0.0);
     float planeDistanceDif = maxPlaneDistance - minPlaneDistance;
+    if (planeDistanceDif <= 0.0) return vec4(0.0);
 
     #ifndef DEFERRED1
         float stepMult = 64.0;
@@ -114,7 +122,13 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
         stepMult = stepMult / sqrt(float(CLOUD_UNBOUND_SIZE_MULT_M));
     #endif
 
-    int sampleCount = int(planeDistanceDif / stepMult + dither + 1);
+    int sampleCount = min(int(planeDistanceDif / stepMult + dither + 1), 128);
+
+    #ifdef FIX_AMD_REFLECTION_CRASH
+        sampleCount = min(sampleCount, 30); // BFARC
+    #endif
+
+    stepMult = planeDistanceDif / float(max(sampleCount, 1));
     vec3 traceAdd = nPlayerPos * stepMult;
     vec3 tracePos = cameraPos + minPlaneDistance * nPlayerPos;
     tracePos += traceAdd * dither;
@@ -126,10 +140,6 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
     float VdotSM2 = pow2(VdotSM1) * abs(sunVisibility - 0.5) * 2.0;
     float VdotSM3 = VdotSM2 * (2.5 + rainFactor) + 1.5 * rainFactor;
     float VdotSM4 = pow(VdotSM1M, 100.0) * sunVisibility;
-
-    #ifdef FIX_AMD_REFLECTION_CRASH
-        sampleCount = min(sampleCount, 30); //BFARC
-    #endif
 
     for (int i = 0; i < sampleCount; i++) {
         tracePos += traceAdd;
@@ -165,10 +175,12 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
             }
 
             float opacityFactor = min1(cloudNoise * 8.0);
+            float powderFactor = 1.0 - exp(-cloudNoise * 4.0);
 
             float cloudShading = 1.0 - (higherPlaneAltitude - tracePos.y) / cloudTallness;
-            float scattering = pow(VdotSM1, 3.0) * (1.0 - opacityFactor) * 1.5;
-            cloudShading *= 1.0 + 0.2 * VdotSM3 * (1.0 - opacityFactor) + VdotSM4 + scattering;
+            cloudShading = pow(max0(cloudShading), 1.2);
+            float scattering = pow(VdotSM1, 6.0) * (1.0 - opacityFactor) * 2.0 * powderFactor;
+            cloudShading *= 1.0 + 0.3 * VdotSM3 * (1.0 - opacityFactor) + VdotSM4 + scattering;
 
             vec3 colorSample = cloudAmbientColor * (0.35 + 0.65 * cloudShading) + cloudLightColor * cloudShading;
             colorSample += cloudLightColor * scattering * 0.5;

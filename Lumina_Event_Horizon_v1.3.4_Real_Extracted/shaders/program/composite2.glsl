@@ -20,7 +20,7 @@
 void main() {
     vec3 color = texelFetch(colortex0, texelCoord, 0).rgb;
 
-    composite2 has been reserved for future use. This file is currently completely unused
+    // composite2 has been reserved for future use. This file is currently completely unused.
 
     /* DRAWBUFFERS:0 */
     gl_FragData[0] = vec4(color, 1.0);

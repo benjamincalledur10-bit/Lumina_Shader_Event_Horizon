@@ -33,31 +33,39 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
     float higherPlaneAltitude = cloudAltitude + cloudStretch;
     float lowerPlaneAltitude  = cloudAltitude - cloudStretch;
 
-    float lowerPlaneDistance  = (lowerPlaneAltitude - cameraPos.y) / nPlayerPos.y;
-    float higherPlaneDistance = (higherPlaneAltitude - cameraPos.y) / nPlayerPos.y;
-    float minPlaneDistance = min(lowerPlaneDistance, higherPlaneDistance);
-          minPlaneDistance = max(minPlaneDistance, 0.0);
-    float maxPlaneDistance = max(lowerPlaneDistance, higherPlaneDistance);
+    float minPlaneDistance;
+    float maxPlaneDistance;
+    if (abs(nPlayerPos.y) < 0.0001) {
+        if (cameraPos.y < lowerPlaneAltitude || cameraPos.y > higherPlaneAltitude) return vec4(0.0);
+        minPlaneDistance = 0.0;
+        maxPlaneDistance = distanceThreshold;
+    } else {
+        float lowerPlaneDistance  = (lowerPlaneAltitude - cameraPos.y) / nPlayerPos.y;
+        float higherPlaneDistance = (higherPlaneAltitude - cameraPos.y) / nPlayerPos.y;
+        minPlaneDistance = max(min(lowerPlaneDistance, higherPlaneDistance), 0.0);
+        maxPlaneDistance = max(lowerPlaneDistance, higherPlaneDistance);
+    }
     if (maxPlaneDistance < 0.0) return vec4(0.0);
     float planeDistanceDif = maxPlaneDistance - minPlaneDistance;
+    if (planeDistanceDif <= 0.0) return vec4(0.0);
 
     #if CLOUD_QUALITY == 1 || !defined DEFERRED1
-        int sampleCount = max(int(planeDistanceDif) / 16, 6);
+        int sampleCount = min(max(int(planeDistanceDif) / 8, 12), 64);
     #elif CLOUD_QUALITY == 2
-        int sampleCount = max(int(planeDistanceDif) / 8, 12);
+        int sampleCount = min(max(int(planeDistanceDif) / 4, 24), 96);
     #elif CLOUD_QUALITY == 3
-        int sampleCount = max(int(planeDistanceDif), 12);
+        int sampleCount = min(max(int(planeDistanceDif) / 2, 48), 128);
     #endif
 
-    float stepMult = planeDistanceDif / sampleCount;
+    #ifdef FIX_AMD_REFLECTION_CRASH
+        sampleCount = min(sampleCount, 30); // BFARC
+    #endif
+
+    float stepMult = planeDistanceDif / float(sampleCount);
     vec3 traceAdd = nPlayerPos * stepMult;
     vec3 tracePos = cameraPos + minPlaneDistance * nPlayerPos;
     tracePos += traceAdd * dither;
     tracePos.y -= traceAdd.y;
-
-    #ifdef FIX_AMD_REFLECTION_CRASH
-        sampleCount = min(sampleCount, 30); //BFARC
-    #endif
 
     for (int i = 0; i < sampleCount; i++) {
         tracePos += traceAdd;

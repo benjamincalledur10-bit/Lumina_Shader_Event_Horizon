@@ -214,6 +214,8 @@ void main() {
         vec3 screenPosWH = clipPosWH.xyz / clipPosWH.w * 0.5 + 0.5;
         
         // 2. Destellos Cinemáticos (Anamorphic Lens Flares) - Solo para el Agujero Blanco
+        #define WHITE_HOLE_RAYS
+        #ifdef WHITE_HOLE_RAYS
         if (clipPosWH.z > 0.0) {
             // Brighter horizontal and vertical starburst for the White Hole
             float distY = abs(texCoord.y - screenPosWH.y) * 500.0;
@@ -222,8 +224,9 @@ void main() {
             float distX = abs(texCoord.x - screenPosWH.x) * 600.0;
             flareWH += max(0.0, 1.0 - abs(texCoord.y - screenPosWH.y) * 1.2) * exp(-distX);
             
-            color += vec3(0.3, 0.7, 1.0) * flareWH * 2.5; 
+            color += vec3(0.3, 0.7, 1.0) * flareWH * 2.5;
         }
+        #endif
     #endif
 
     DoCompTonemap(color);

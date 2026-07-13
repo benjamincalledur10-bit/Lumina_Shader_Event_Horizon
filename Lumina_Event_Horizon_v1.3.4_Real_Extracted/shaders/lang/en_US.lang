@@ -12,8 +12,8 @@ profile.COMPLEMENTARY=§4§l§n§oLumina
 profile.comment=Shader profiles change performance settings with the most optimised visual fidelity to performance ratio. §e[*]§r It's recommended to use one of these profiles for your settings unless you know what you are doing. §e[*]§r All affected settings can all be found in the "Performance Settings" menu.
 
 #Information
-screen.INFORMATION=Information
-screen.INFORMATION.comment=This section contains buttons that only exist to provide information.
+screen.LUMINA_INFO=Lumina Event Horizon Info
+screen.LUMINA_INFO.comment=This section contains buttons that only exist to provide information.
 
 option.info0=§bHover your mouse on a button
 value.info0.0=
@@ -65,11 +65,11 @@ option.SHADER_STYLE.comment=Determines the default visual style of the shader pa
 value.SHADER_STYLE.4=§dLumina Event Horizon
 
 #Screens
-screen.PERFORMANCE_SETTINGS=§ePerformance Settings§r
-screen.PERFORMANCE_SETTINGS.comment=Settings that directly relate to the performance, and get changed by the different shader profiles.
+screen.LUMINA_OPTIMIZATION=§eLumina Optimization§r
+screen.LUMINA_OPTIMIZATION.comment=Settings that directly relate to the performance, and get changed by the different shader profiles.
 
-screen.ATMOSPHERE_SETTINGS=Atmosphere
-screen.ATMOSPHERE_SETTINGS.comment=Settings that relate to the atmosphere.
+screen.ENVIRONMENT=§bEnvironment & Sky§r
+screen.ENVIRONMENT.comment=Settings that relate to the atmosphere.
 
 screen.ATM_COLOR_SETTINGS=Atmosphere Color Multipliers
 screen.ATM_COLOR_SETTINGS.comment=Enables customization of atmosphere colors that are mostly seen in the sky and fog.
@@ -102,8 +102,8 @@ screen.NETHER_SETTINGS.comment=Settings that relate to the Nether dimension.
 screen.WEATHER_SETTINGS=Rain / Weather
 screen.WEATHER_SETTINGS.comment=Settings that relate to weather conditions
 
-screen.CAMERA_SETTINGS=Camera
-screen.CAMERA_SETTINGS.comment=Settings that relate to the view/camera.
+screen.CINEMATICS=§dCinematics & Post-FX§r
+screen.CINEMATICS.comment=Settings that relate to the view/camera.
 
 screen.TONEMAP_SETTINGS=Color Balance
 screen.TONEMAP_SETTINGS.comment=Settings that determine the color balance of the visuals.
@@ -117,8 +117,8 @@ screen.WORLD_BLUR_SETTINGS.comment=Settings that relate to fancy world blurring 
 screen.TAA_SETTINGS=Temporal Filter Settings
 screen.TAA_SETTINGS.comment=Settings to determine the behaviour of temporal anti aliasing.
 
-screen.MATERIAL_SETTINGS=Materials
-screen.MATERIAL_SETTINGS.comment=Settings that are related to the materials of Minecraft.
+screen.SURFACE_MATERIALS=§bSurface Materials§r
+screen.SURFACE_MATERIALS.comment=Settings that are related to the materials of Minecraft.
 
 screen.IPBR_SETTINGS=IntegratedPBR+ Materials
 screen.IPBR_SETTINGS.comment=Settings that are related to the features of IntegratedPBR+.
@@ -135,8 +135,8 @@ screen.OTHER_IPBR_SETTINGS.comment=Miscellaneous IntegratedPBR+ settings.
 screen.CUSTOM_PBR_SETTINGS=labPBR/seuspbr Materials
 screen.CUSTOM_PBR_SETTINGS.comment=Settings that are related to the features of labPBR/seuspbr.
 
-screen.LIGHTING_SETTINGS=Lighting
-screen.LIGHTING_SETTINGS.comment=Settings that are related to lighting.
+screen.GLOBAL_ILLUMINATION=§eGlobal Illumination§r
+screen.GLOBAL_ILLUMINATION.comment=Settings that are related to lighting.
 
 screen.LIGHT_COLOR_SETTINGS=Lighting Color Multipliers
 screen.LIGHT_COLOR_SETTINGS.comment=Enables customization of lighting colors that are seen on all surfaces.
@@ -173,8 +173,8 @@ screen.WATER_WAVE_SETTINGS.comment=Settings to customise the surface-direction w
 screen.WAVING_SETTINGS=Waving Textures
 screen.WAVING_SETTINGS.comment=Settings that are about waving textures.
 
-screen.OTHER_SETTINGS=Other
-screen.OTHER_SETTINGS.comment=Settings that don't fit into any other category.
+screen.MISCELLANEOUS=§dMiscellaneous§r
+screen.MISCELLANEOUS.comment=Settings that don't fit into any other category.
 
 screen.SELECT_OUTLINE_SETTINGS=Selection Outline
 screen.SELECT_OUTLINE_SETTINGS.comment=Settings that change the block selection outline.
@@ -247,6 +247,7 @@ value.ENTITY_SHADOW.2=§4§k-§r§4§l§n§oFull§r§4§k- §r§c[-]
 option.DETAIL_QUALITY=Detail Quality
 option.DETAIL_QUALITY.comment=Adjusts several small things that affect performance. Adjust the quality of: Water material, TAA, lighting tweaks, Night Nebula, Nether Storm, Ender Beams, sky effect reflections, rain puddle accuracy, waving effect, motion blur
 value.DETAIL_QUALITY.0=§aPotato
+value.DETAIL_QUALITY.1=§bLow
 value.DETAIL_QUALITY.2=§eMedium
 value.DETAIL_QUALITY.3=§cHigh
 
@@ -1121,3 +1122,5 @@ option.XLIGHT_I=Blocklight Intensity
 
 option.XLIGHT_CURVE=Blocklight Contrast
 option.XLIGHT_CURVE.comment=Adjusts how quickly the intensity of blocklight fades away as it travels distance away from the light source.
+option.WHITE_HOLE_RAYS=White Hole Light Rays
+option.WHITE_HOLE_RAYS.comment=Toggles the corona of expelled energy rays around the White Hole.

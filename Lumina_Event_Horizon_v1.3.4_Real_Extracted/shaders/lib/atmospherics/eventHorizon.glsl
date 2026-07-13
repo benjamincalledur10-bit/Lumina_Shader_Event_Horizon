@@ -15,7 +15,7 @@ vec3 GetLensedDir(vec3 nViewPos, vec3 upVec, vec3 eastVec) {
     float deflection = (bhSize * bhSize * 1.2) / max(angle, 0.001);
     
     // Fade out deflection so it doesn't streak the whole sky
-    deflection *= smoothstep(bhSize * 4.0, bhSize, angle);
+    deflection *= 1.0 - smoothstep(bhSize, bhSize * 4.0, angle);
     
     vec3 tangent = normalize(worldDir - bhPosWorld * cosTheta);
     vec3 lensedDir = normalize(worldDir - tangent * deflection);
@@ -46,7 +46,7 @@ vec4 getDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     float detail = noise1 * 0.5 + noise2 * 0.3 + noise3 * 0.2;
     
     // Base volumetric shape: smooth fade from inner edge to outer edge for 3D depth/volume
-    float density = smoothstep(R_out, R_in, R) * smoothstep(R_in - 0.2, R_in + 0.2, R);
+    float density = (1.0 - smoothstep(R_in, R_out, R)) * smoothstep(R_in - 0.2, R_in + 0.2, R);
     
     // Soft noise modulation for dust lanes and volume (avoids pixelated 'huecos')
     density *= (0.4 + detail * 1.5);
@@ -55,7 +55,7 @@ vec4 getDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     vec3 colCore = vec3(1.0, 0.95, 0.85) * 5.0; // Brighter core
     vec3 colDust = vec3(0.9, 0.4, 0.05) * 2.0; // Richer orange
     
-    vec3 color = mix(colDust, colCore, smoothstep(R_in + 1.0, R_in, R));
+    vec3 color = mix(colDust, colCore, 1.0 - smoothstep(R_in, R_in + 1.0, R));
     
     // Enhance color with noise for texture
     color *= (0.7 + detail * 0.5);
@@ -117,7 +117,7 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         backDisk.a *= poleMask;
         
         // Constrain the Einstein ring tightly around the black hole instead of spanning the map
-        backDisk.a *= smoothstep(1.5, 1.25, r);
+        backDisk.a *= 1.0 - smoothstep(1.25, 1.5, r);
         
         finalCol.rgb = backDisk.rgb * backDisk.a;
         finalCol.a = backDisk.a;
@@ -141,12 +141,10 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     }
     
     // Photon ring glow
-    float photonRing = smoothstep(1.06, 1.0, r) * smoothstep(0.96, 1.0, r);
+    float photonRing = (1.0 - smoothstep(1.0, 1.06, r)) * smoothstep(0.96, 1.0, r);
     finalCol.rgb += vec3(1.0, 0.8, 0.6) * photonRing * 1.5 * (1.0 - finalCol.a);
     finalCol.a = max(finalCol.a, photonRing);
 
-    finalCol.rgb *= (1.0 - maxBlindnessDarkness);
-    
     return finalCol;
 }
 
@@ -169,7 +167,7 @@ vec4 getWhiteDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     
     float detail = noise1 * 0.5 + noise2 * 0.3 + noise3 * 0.2;
     
-    float density = smoothstep(R_out, R_in, R) * smoothstep(R_in - 0.2, R_in + 0.2, R);
+    float density = (1.0 - smoothstep(R_in, R_out, R)) * smoothstep(R_in - 0.2, R_in + 0.2, R);
     density *= (0.4 + detail * 1.5);
     
     float doppler = smoothstep(-R_out, R_out, disk_uv.x);
@@ -178,7 +176,7 @@ vec4 getWhiteDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     vec3 colCore = vec3(0.9, 0.95, 1.0) * 8.0; 
     vec3 colDust = vec3(0.2, 0.6, 1.0) * 3.0; 
     
-    vec3 color = mix(colDust, colCore, smoothstep(R_in + 1.0, R_in, R));
+    vec3 color = mix(colDust, colCore, 1.0 - smoothstep(R_in, R_in + 1.0, R));
     
     color *= (0.7 + detail * 0.5);
     color *= (0.6 + doppler * 0.8);
@@ -215,7 +213,7 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     
     // 1. Bright White Sphere Core
     if (r <= 1.0) {
-        float glow = smoothstep(1.0, 0.0, r);
+        float glow = 1.0 - smoothstep(0.0, 1.0, r);
         finalCol = vec4(vec3(1.0, 0.95, 1.0) * (5.0 + glow * 5.0), 1.0);
     } else {
         // 2. Einstein Ring (Lensed back-disk)
@@ -225,7 +223,7 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         vec4 backDisk = getWhiteDisk(R_back, uv_back, R_in, R_out);
         
         // No massive radial streaks for the white hole, just the ring itself
-        backDisk.a *= smoothstep(1.5, 1.1, r); 
+        backDisk.a *= 1.0 - smoothstep(1.1, 1.5, r);
         
         float poleMask = smoothstep(0.0, 0.5, abs(uv.y) / r);
         backDisk.a *= poleMask;
@@ -249,7 +247,7 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     
     // 4. Outer Glow (Corona of expelled energy)
     if (r > 1.0) {
-        float outerGlow = smoothstep(3.5, 1.0, r);
+        float outerGlow = 1.0 - smoothstep(1.0, 3.5, r);
         finalCol.rgb += vec3(0.5, 0.8, 1.0) * outerGlow * 1.5;
         finalCol.a = max(finalCol.a, outerGlow * 0.5);
     }

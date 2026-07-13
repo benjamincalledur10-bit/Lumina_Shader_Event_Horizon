@@ -1,7 +1,7 @@
 vec3 GetLensedDir(vec3 nViewPos, vec3 upVec, vec3 eastVec) {
     vec3 bhPosWorld = normalize(vec3(-1.0, 0.25, -1.5)); 
     float bhSize = 0.12;
-    
+
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     float cosTheta = dot(worldDir, bhPosWorld);
     
@@ -16,14 +16,14 @@ vec3 GetLensedDir(vec3 nViewPos, vec3 upVec, vec3 eastVec) {
     
     // Fade out deflection so it doesn't streak the whole sky
     deflection *= 1.0 - smoothstep(bhSize, bhSize * 4.0, angle);
-    
-    vec3 tangent = normalize(worldDir - bhPosWorld * cosTheta);
-    vec3 lensedDir = normalize(worldDir - tangent * deflection);
-    
+
     if (angle < bhSize * 0.95) {
         return vec3(0.0);
     }
-    
+
+    vec3 tangent = normalize(worldDir - bhPosWorld * cosTheta);
+    vec3 lensedDir = normalize(worldDir - tangent * deflection);
+
     return lensedDir;
 }
 
@@ -85,8 +85,8 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     float angle = acos(clamp(cosTheta, -1.0, 1.0));
     vec3 localDir = vec3(dot(worldDir, bhX), dot(worldDir, bhY), cosTheta);
     
-    vec2 uv = normalize(localDir.xy) * (angle / bhSize);
-    if (angle < 0.0001) uv = vec2(0.0);
+    vec2 uv = vec2(0.0);
+    if (angle >= 0.0001) uv = normalize(localDir.xy) * (angle / bhSize);
     float r = length(uv);
     
     vec4 finalCol = vec4(0.0);
@@ -201,8 +201,8 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     float angle = acos(clamp(cosTheta, -1.0, 1.0));
     vec3 localDir = vec3(dot(worldDir, bhX), dot(worldDir, bhY), cosTheta);
     
-    vec2 uv = normalize(localDir.xy) * (angle / bhSize);
-    if (angle < 0.0001) uv = vec2(0.0);
+    vec2 uv = vec2(0.0);
+    if (angle >= 0.0001) uv = normalize(localDir.xy) * (angle / bhSize);
     float r = length(uv);
     
     vec4 finalCol = vec4(0.0);

@@ -9,13 +9,13 @@ vec4 GetNetherStorm(vec3 color, vec3 translucentMult, vec3 nPlayerPos, vec3 play
     #endif
 
     #ifndef LOW_QUALITY_NETHER_STORM
-        int sampleCount = int(maxDist / 8.0 + 0.001);
+        int sampleCount = max(int(maxDist / 8.0 + 0.001), 1);
 
         vec3 traceAdd = nPlayerPos * maxDist / sampleCount;
         vec3 tracePos = cameraPosition;
         tracePos += traceAdd * dither;
     #else
-        int sampleCount = int(maxDist / 16.0 + 0.001);
+        int sampleCount = max(int(maxDist / 16.0 + 0.001), 1);
 
         vec3 traceAdd = 0.75 * nPlayerPos * maxDist / sampleCount;
         vec3 tracePos = cameraPosition;

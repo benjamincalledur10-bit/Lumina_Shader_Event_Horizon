@@ -7,9 +7,12 @@
 
 <p align="center">
   <a href="https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/latest"><img alt="Latest GitHub release" src="https://img.shields.io/github/v/release/benjamincalledur10-bit/Lumina_Shader_Event_Horizon?style=for-the-badge"></a>
-  <a href="https://modrinth.com/shader/lumina-shader-event-horizon"><img alt="Modrinth downloads" src="https://img.shields.io/modrinth/dt/9gxVXUDr?style=for-the-badge&logo=modrinth&label=Modrinth"></a>
-  <a href="https://www.curseforge.com/minecraft/shaders/lumina-shaders-event-horizon"><img alt="CurseForge downloads" src="https://img.shields.io/curseforge/dt/1481177?style=for-the-badge&logo=curseforge&label=CurseForge"></a>
+  <a href="https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/latest"><img alt="GitHub downloads" src="https://img.shields.io/github/downloads/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/total?style=for-the-badge&logo=github&label=GitHub&cacheSeconds=172800"></a>
+  <a href="https://modrinth.com/shader/lumina-shader-event-horizon"><img alt="Modrinth downloads" src="https://img.shields.io/modrinth/dt/9gxVXUDr?style=for-the-badge&logo=modrinth&label=Modrinth&cacheSeconds=172800"></a>
+  <a href="https://www.curseforge.com/minecraft/shaders/lumina-shaders-event-horizon"><img alt="CurseForge downloads" src="https://img.shields.io/curseforge/dt/1481177?style=for-the-badge&logo=curseforge&label=CurseForge&cacheSeconds=172800"></a>
 </p>
+
+Download counters are refreshed automatically every 48 hours.
 
 ## Download
 

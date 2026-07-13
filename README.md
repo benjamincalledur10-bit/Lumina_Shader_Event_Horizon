@@ -94,7 +94,7 @@ logs when available.
 
 - **Main developer:** Benjiaa
 - Lumina Event Horizon is based on
-  [Complementary Reimagined](https://modrinth.com/shader/complementary-reimagined)
+  [Complementary Reimagined](https://www.complementary.dev/shaders/)
   by EminGT. Special thanks to EminGT and the Complementary shader community.
 
 ## Community and support
@@ -102,6 +102,10 @@ logs when available.
 - [Discord community](https://discord.gg/JK6rTQ9T)
 - [Support development on Ko-fi](https://ko-fi.com/lumina_dev/goal?g=0)
 
-Lumina Shader: Event Horizon is distributed as **All Rights Reserved**. Refer to
-the official distribution pages and applicable upstream licenses before
-redistributing or modifying the project.
+## License
+
+Lumina Shader: Event Horizon is a Modified Pack distributed under the
+[Complementary License Agreement 1.6](License.txt). The unchanged license is
+also included inside every downloadable shader ZIP, as required by the original
+pack's terms. Review it before redistributing, including the shader in a
+modpack, or creating another modified pack.

@@ -11,6 +11,8 @@ section to the release version and date when publishing.
 
 ### Added
 
+- Added the required unchanged Complementary License Agreement 1.6 to the
+  repository and downloadable shader pack.
 - Added an optional White Hole light-rays effect and reorganized shader menus.
 - Added missing Pale Oak sign material mappings.
 - Added labels for every supported detail-quality level.

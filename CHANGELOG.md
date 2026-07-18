@@ -4,8 +4,17 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
-Add new changes here while developing the next version, then rename this
-section to the release version and date when publishing.
+### Changed
+
+- Renamed the canonical source directory so it matches shader version v1.3.5.
+- Updated the documented compatibility range through Minecraft 26.2.
+
+### Fixed
+
+- Clipped cloud ray intervals before calculating capped sample spacing, avoiding
+  missing or popping clouds along near-horizontal view directions.
+- Guarded the White Hole flare projection against a near-zero clip-space `w`
+  value and removed the unused Black Hole screen projection.
 
 ## [1.3.5] - 2026-07-13
 

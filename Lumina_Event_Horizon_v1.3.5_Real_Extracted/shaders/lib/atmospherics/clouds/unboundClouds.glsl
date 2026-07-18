@@ -105,6 +105,15 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
         maxPlaneDistance = max(lowerPlaneDistance, higherPlaneDistance);
     }
     if (maxPlaneDistance < 0.0) return vec4(0.0);
+
+    // Clip the ray interval before deriving the sample spacing. Without this,
+    // almost-horizontal rays can span an enormous distance and the first
+    // capped sample can jump beyond the cloud render distance.
+    float horizontalDirectionLength = length(nPlayerPos.xz);
+    if (horizontalDirectionLength > 0.0001) {
+        maxPlaneDistance = min(maxPlaneDistance, distanceThreshold / horizontalDirectionLength);
+    }
+
     float planeDistanceDif = maxPlaneDistance - minPlaneDistance;
     if (planeDistanceDif <= 0.0) return vec4(0.0);
 

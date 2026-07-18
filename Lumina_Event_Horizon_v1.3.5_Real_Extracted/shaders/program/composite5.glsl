@@ -207,16 +207,14 @@ void main() {
         vec3 bhPosWorld = normalize(vec3(-1.0, 0.25, -1.5));
         vec3 whPosWorld = -bhPosWorld;
         
-        vec4 clipPosBH = gbufferProjection * vec4(mat3(gbufferModelView) * bhPosWorld, 1.0);
-        vec3 screenPosBH = clipPosBH.xyz / clipPosBH.w * 0.5 + 0.5;
-        
         vec4 clipPosWH = gbufferProjection * vec4(mat3(gbufferModelView) * whPosWorld, 1.0);
-        vec3 screenPosWH = clipPosWH.xyz / clipPosWH.w * 0.5 + 0.5;
-        
+
         // 2. Destellos Cinemáticos (Anamorphic Lens Flares) - Solo para el Agujero Blanco
         #define WHITE_HOLE_RAYS
         #ifdef WHITE_HOLE_RAYS
-        if (clipPosWH.z > 0.0) {
+        if (clipPosWH.w > 0.0001 && clipPosWH.z > 0.0) {
+            vec3 screenPosWH = clipPosWH.xyz / clipPosWH.w * 0.5 + 0.5;
+
             // Brighter horizontal and vertical starburst for the White Hole
             float distY = abs(texCoord.y - screenPosWH.y) * 500.0;
             float flareWH = max(0.0, 1.0 - abs(texCoord.x - screenPosWH.x) * 0.8) * exp(-distY);

@@ -46,7 +46,7 @@ compressed when installing it.
 
 | Component | Support |
 | --- | --- |
-| Game | Minecraft: Java Edition 1.8 through 26.2-rc-2 |
+| Game | Minecraft: Java Edition 1.8 through 26.2 |
 | Shader loaders | Iris and OptiFine |
 | Rendering profiles | Potato, Very Low, Low, Medium, High, Very High, Ultra |
 

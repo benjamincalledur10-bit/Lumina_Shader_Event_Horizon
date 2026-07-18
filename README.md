@@ -22,7 +22,7 @@ Use one of the official distribution pages:
 - [Modrinth](https://modrinth.com/shader/lumina-shader-event-horizon)
 - [CurseForge](https://www.curseforge.com/minecraft/shaders/lumina-shaders-event-horizon)
 
-The current stable release is **v1.3.5**. Download the `.zip` file and keep it
+The current stable release is **v1.3.6**. Download the `.zip` file and keep it
 compressed when installing it.
 
 ## Highlights
@@ -58,7 +58,7 @@ resource packs, and GPU.
 
 1. Install [Iris](https://www.irisshaders.dev/) or a compatible OptiFine
    version.
-2. Download `Lumina_Event_Horizon_v1.3.5.zip` from an official source above.
+2. Download `Lumina_Event_Horizon_v1.3.6.zip` from an official source above.
 3. Open Minecraft and go to **Options > Video Settings > Shader Packs**.
 4. Open the shader-pack folder and place the downloaded ZIP inside it. Do not
    extract the archive.

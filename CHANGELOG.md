@@ -7,11 +7,11 @@ All notable changes to Lumina Event Horizon are documented in this file.
 Add new changes here while developing the next version, then rename this
 section to the release version and date when publishing.
 
-## [1.3.6-rc.1] - 2026-07-17
+## [1.3.6] - 2026-07-17
 
 ### Changed
 
-- Renamed the canonical source directory so it matches shader version v1.3.5.
+- Renamed the canonical source directory so it matches shader version v1.3.6.
 - Updated the documented compatibility range through Minecraft 26.2.
 
 ### Fixed
@@ -53,6 +53,6 @@ section to the release version and date when publishing.
 - Fixed invalid block mappings, texture metadata, and dormant GLSL source text.
 - Removed invalid empty temporary PNG files from the shader pack.
 
-[Unreleased]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.6-rc.1...HEAD
-[1.3.6-rc.1]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.5...v1.3.6-rc.1
+[Unreleased]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.6...HEAD
+[1.3.6]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.5

@@ -105,20 +105,35 @@ vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset
         int maxCloudAlt = max(cloudAlt1i, cloudAlt2i);
         int minCloudAlt = min(cloudAlt1i, cloudAlt2i);
 
+        int nearCloudAlt;
+        int farCloudAlt;
+
         if (abs(cameraPos.y - minCloudAlt) < abs(cameraPos.y - maxCloudAlt)) {
-            clouds = GetVolumetricClouds(minCloudAlt, thresholdF, cloudLinearDepth, skyFade, skyMult0,
-                                            cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
-            if (clouds.a == 0.0) {
-            clouds = GetVolumetricClouds(maxCloudAlt, thresholdF, cloudLinearDepth, skyFade, skyMult0,
-                                            cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
-            }
+            nearCloudAlt = minCloudAlt;
+            farCloudAlt = maxCloudAlt;
         } else {
-            clouds = GetVolumetricClouds(maxCloudAlt, thresholdF, cloudLinearDepth, skyFade, skyMult0,
-                                            cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
-            if (clouds.a == 0.0) {
-            clouds = GetVolumetricClouds(minCloudAlt, thresholdF, cloudLinearDepth, skyFade, skyMult0,
-                                            cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
-            }
+            nearCloudAlt = maxCloudAlt;
+            farCloudAlt = minCloudAlt;
+        }
+
+        float nearCloudDepth = cloudLinearDepth;
+        float farCloudDepth = cloudLinearDepth;
+        vec4 nearClouds = GetVolumetricClouds(nearCloudAlt, thresholdF, nearCloudDepth, skyFade, skyMult0,
+                                                cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
+        vec4 farClouds = GetVolumetricClouds(farCloudAlt, thresholdF, farCloudDepth, skyFade, skyMult0,
+                                               cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
+
+        float remainingVisibility = 1.0 - clamp01(nearClouds.a);
+        clouds.a = nearClouds.a + farClouds.a * remainingVisibility;
+        if (clouds.a > 0.00001) {
+            clouds.rgb = (nearClouds.rgb * nearClouds.a
+                        + farClouds.rgb * farClouds.a * remainingVisibility) / clouds.a;
+        }
+
+        if (nearClouds.a > 0.0) {
+            cloudLinearDepth = nearCloudDepth;
+        } else if (farClouds.a > 0.0) {
+            cloudLinearDepth = farCloudDepth;
         }
     #endif
 

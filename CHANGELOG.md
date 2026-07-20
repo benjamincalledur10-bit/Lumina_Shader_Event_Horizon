@@ -4,8 +4,12 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
-Add new changes here while developing the next version, then rename this
-section to the release version and date when publishing.
+### Fixed
+
+- Prevented undefined zero-vector normalization in opaque shadow and light-shaft colors.
+- Composited both Reimagined cloud layers when the nearer layer is translucent.
+- Added a stable End light-direction fallback at the exact world origin.
+- Repaired invalid JSON metadata in the historical Event Horizon source copy.
 
 ## [1.3.6] - 2026-07-17
 

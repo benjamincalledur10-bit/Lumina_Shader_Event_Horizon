@@ -7,9 +7,22 @@
         #endif
 
         vec3 worldPos = playerPos + cameraPosition;
-        vec2 shadowPos = worldPos.xz + worldPos.y * 0.25;
-        shadowPos.x += syncedTime;
-        shadowPos *= 0.000002 * LUMINA_CLOUD_SCALE;
+        vec2 shadowPos = (worldPos.xz + worldPos.y * 0.25) * cloudNarrowness;
+        float wind = 0.0006;
+        #if CLOUD_SPEED_MULT == 100
+            wind *= syncedTime;
+        #else
+            wind *= frameTimeCounter * (CLOUD_SPEED_MULT * 0.01);
+        #endif
+        #if LUMINA_CLOUD_SCALE != 100
+            const float cloudScale = LUMINA_CLOUD_SCALE * 0.01;
+            shadowPos *= cloudScale;
+            wind *= cloudScale;
+        #endif
+        #if CLOUD_QUALITY == 1
+            wind *= 0.5;
+        #endif
+        shadowPos -= vec2(0.0, wind);
 
         vec2 shadowOffsets[8] = vec2[8](
             vec2( 0.0   , 1.0   ),

@@ -14,6 +14,9 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Fixed
 
+- Synchronized terrain cloud shadows with the direction, speed, scale, and quality-dependent motion of the visible Lumina cloud formations.
+- Restored the valid shadow-map distance check used to hide volumetric clouds when the player is inside a closed area.
+- Preserved the true first cloud-ray hit at close range so cloud depth remains stable for reflections and light shafts.
 - Prevented undefined zero-vector normalization in opaque shadow and light-shaft colors.
 - Added a stable End light-direction fallback at the exact world origin.
 - Repaired invalid JSON metadata in the historical Event Horizon source copy.

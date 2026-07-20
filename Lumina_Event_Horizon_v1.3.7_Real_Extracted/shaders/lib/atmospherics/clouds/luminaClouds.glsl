@@ -157,7 +157,7 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
     tracePos += traceAdd * dither;
     tracePos.y -= traceAdd.y;
 
-    float firstHitPos = 0.0;
+    float firstHitPos = -1.0;
     float VdotSM1 = max0(sunVisibility > 0.5 ? VdotS : - VdotS);
     float VdotSM1M = VdotSM1 * invRainFactor;
     float VdotSM2 = pow2(VdotSM1) * abs(sunVisibility - 0.5) * 2.0;
@@ -184,13 +184,13 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
         if (cloudNoise > 0.00001) {
             #if defined CLOUD_CLOSED_AREA_CHECK && SHADOW_QUALITY > -1
                 float shadowLength = shadowDistance * 0.9166667; //consistent08JJ622
-                if (shadowLength < lTracePos)
+                if (shadowLength > lTracePos)
                 if (GetShadowOnCloud(tracePos, cameraPos, cloudAltitude, lowerPlaneAltitude, higherPlaneAltitude)) {
                     if (eyeBrightness.y != 240) continue;
                 }
             #endif
 
-            if (firstHitPos < 1.0) {
+            if (firstHitPos < 0.0) {
                 firstHitPos = lTracePos;
                 #if CLOUD_QUALITY == 1 && defined DEFERRED1
                     tracePos.y += 4.0 * (texture2DLod(noisetex, tracePos.xz * cloudNarrowness * 16.0, 0.0).r - 0.5);

@@ -6,14 +6,15 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Changed
 
-- Increased medium and high Unbound cloud ray-march resolution for smoother silhouettes and denser volume definition.
-- Added quality-scaled 3D edge erosion to Reimagined clouds, with distance fading to preserve temporal stability.
-- Refined Reimagined cloud rounding at medium and high quality for sharper small-scale formations.
+- Replaced the inherited multi-style cloud selector with one unified `Lumina Clouds` renderer and visual identity.
+- Rebuilt cloud formation around multi-octave volumetric density, height-aware erosion, anvil shaping, powder scattering, and silver-lining illumination.
+- Increased medium and high ray-march resolution for smoother silhouettes and denser volume definition.
+- Added dedicated Lumina controls for cloud coverage, formation scale, storm density, altitude, speed, color, and shadowing.
+- Removed the legacy secondary cloud layer, vanilla-cloud mode, and style-specific cloud settings.
 
 ### Fixed
 
 - Prevented undefined zero-vector normalization in opaque shadow and light-shaft colors.
-- Composited both Reimagined cloud layers when the nearer layer is translucent.
 - Added a stable End light-direction fallback at the exact world origin.
 - Repaired invalid JSON metadata in the historical Event Horizon source copy.
 

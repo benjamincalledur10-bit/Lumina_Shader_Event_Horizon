@@ -87,8 +87,8 @@ screen.CLOUD_SETTINGS.comment=Settings that relate to the clouds.
 screen.CLOUD_COLOR_SETTINGS=Cloud Color
 screen.CLOUD_COLOR_SETTINGS.comment=Settings to change the color of the clouds.
 
-screen.CLOUD_UNBOUND_SETTINGS=Unbound Cloud Settings
-screen.CLOUD_REIMAGINED_SETTINGS=Reimagined Cloud Settings
+screen.LUMINA_CLOUD_SHAPE_SETTINGS=Lumina Cloud Shape
+screen.LUMINA_CLOUD_SHAPE_SETTINGS.comment=Controls the shape and weather response of Lumina's unified volumetric cloud system.
 
 screen.FOG_SETTINGS=Fog
 screen.FOG_SETTINGS.comment=Settings that relate to the various types of fog.
@@ -252,7 +252,7 @@ value.DETAIL_QUALITY.2=§eMedium
 value.DETAIL_QUALITY.3=§cHigh
 
 option.CLOUD_QUALITY=Cloud Quality
-option.CLOUD_QUALITY.comment=Adjusts the lighting, detail, and sample quality of Reimagined/Unbound cloud styles. §e[*]§r This setting only works with the "Reimagined" or "Unbound" Cloud Styles.
+option.CLOUD_QUALITY.comment=Adjusts the resolution, volumetric detail, lighting, and sample quality of Lumina Clouds.
 value.CLOUD_QUALITY.0=§aOFF
 value.CLOUD_QUALITY.1=§aLow
 value.CLOUD_QUALITY.2=§eMedium
@@ -349,46 +349,32 @@ option.LIGHTSHAFT_RAIN_I=Light Shaft Rain Multiplier
 option.LIGHTSHAFT_SUNSET_SATURATION=Light Shaft Sunset Color
 option.LIGHTSHAFT_SUNSET_SATURATION.comment=Adjusts the extra color saturation given to the color of light shafts at sunrise and sunset times. Higher values are going to produce a red-ish orange, while lower values are going to shift it towards yellow.
 
-option.CLOUD_STYLE_DEFINE=Cloud Style
-option.CLOUD_STYLE_DEFINE.comment=Determines the style of clouds. §e[*]§r "Set by Style" means that the setting will be automatically determined by the "Visual Style" setting in the main menu of Shader Options. §e[*]§r The "Vanilla" style requires clouds to be enabled in Video Settings.
-value.CLOUD_STYLE_DEFINE.-1=Set by Style
-value.CLOUD_STYLE_DEFINE.0=OFF
-value.CLOUD_STYLE_DEFINE.1=Reimagined
-value.CLOUD_STYLE_DEFINE.3=Unbound
-value.CLOUD_STYLE_DEFINE.50=Vanilla §e[*]
-
 option.CLOUD_SHADOWS=Cloud Shadows
-option.CLOUD_SHADOWS.comment=Enables shadows that are cast from the clouds. §e[*]§r This setting only works with the "Reimagined" or "Unbound" Cloud Styles. §e[*]§r Cloud shadows will be randomly generated if Cloud Style is set to "Unbound", because of the extra complexity of Unbound clouds.
+option.CLOUD_SHADOWS.comment=Enables soft shadows generated from Lumina's volumetric cloud coverage.
 
 option.CLOUD_CLOSED_AREA_CHECK=Prevent Clouds in Interiors
-option.CLOUD_CLOSED_AREA_CHECK.comment=Does additional checks to remove clouds in closed areas. §e[*]§r This setting only works with the "Reimagined" or "Unbound" Cloud Styles. §e[*]§r This setting will be disabled if "Real-Time Shadows" is OFF.
+option.CLOUD_CLOSED_AREA_CHECK.comment=Does additional checks to remove volumetric clouds in closed areas. §e[*]§r This setting will be disabled if "Real-Time Shadows" is OFF.
 
 option.CLOUD_ALT1=Cloud Altitude
-option.CLOUD_ALT1.comment=Determines the world height which the clouds will appear at. §e[*]§r This setting only works with the "Reimagined" or "Unbound" Cloud Styles.
+option.CLOUD_ALT1.comment=Determines the world height where Lumina Clouds appear.
 
 option.CLOUD_SPEED_MULT=Cloud Speed
-option.CLOUD_SPEED_MULT.comment=Determines how fast the clouds are going to move. "Synced to World Time" setting uses Minecraft world time to advance the cloud positions; this allows for clouds to appear the same between players in the same server. §e[*]§r This setting only works with the "Reimagined" or "Unbound" Cloud Styles.
+option.CLOUD_SPEED_MULT.comment=Determines how fast Lumina Clouds move. "Synced to World Time" uses Minecraft world time so players on the same server see matching formations.
 value.CLOUD_SPEED_MULT.100=Synced to World Time
 
 option.CLOUD_R=Cloud Red Multiplier
 option.CLOUD_G=Cloud Green Multiplier
 option.CLOUD_B=Cloud Blue Multiplier
 
-option.CLOUD_UNBOUND_AMOUNT=Cloud Amount
-option.CLOUD_UNBOUND_AMOUNT.comment=Adjusts the amount of Unbound clouds.
+option.LUMINA_CLOUD_COVERAGE=Cloud Coverage
+option.LUMINA_CLOUD_COVERAGE.comment=Controls the amount and density of Lumina Clouds.
 
-option.CLOUD_UNBOUND_SIZE_MULT=Cloud Smallness §c[-]§r
-option.CLOUD_UNBOUND_SIZE_MULT.comment=Adjusts the size of Unbound clouds. Higher values produce smaller clouds. §c[-]§r Changing this setting will disable the "sync clouds between players in the same server" feature of Lumina.
+option.LUMINA_CLOUD_SCALE=Cloud Scale
+option.LUMINA_CLOUD_SCALE.comment=Controls formation size. Higher values produce smaller, more detailed cloud structures.
 
-option.CLOUD_UNBOUND_RAIN_ADD=Rain Cloud Addition
-option.CLOUD_UNBOUND_RAIN_ADD.comment=Adjusts the cloud amount increase that gets applied during rain/snow.
-prefix.CLOUD_UNBOUND_RAIN_ADD=+
-
-option.DOUBLE_REIM_CLOUDS=Double Reimagined Clouds
-option.DOUBLE_REIM_CLOUDS.comment=Enables a secondary Reimagined cloud layer. §e[*]§r This setting only works with the "Reimagined" Cloud Style.
-
-option.CLOUD_ALT2=Cloud Layer 2 Altitude
-option.CLOUD_ALT2.comment=Determines the world height which the second layer clouds will appear at. §e[*]§r This setting only works when the "Double Reimagined Clouds" option is enabled with the "Reimagined" Cloud Style.
+option.LUMINA_CLOUD_RAIN_DENSITY=Storm Density
+option.LUMINA_CLOUD_RAIN_DENSITY.comment=Controls how much denser and darker the cloud volume becomes during rain and snow.
+prefix.LUMINA_CLOUD_RAIN_DENSITY=+
 
 option.NETHER_STORM=§eNether Storm§r
 option.NETHER_STORM.comment=Adds a smoke-like volumetric effect to the Nether dimension. §c[-]§r This effect can impact performance.

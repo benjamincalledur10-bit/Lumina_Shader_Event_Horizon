@@ -1,5 +1,5 @@
-#if CLOUD_UNBOUND_SIZE_MULT != 100
-    #define CLOUD_UNBOUND_SIZE_MULT_M CLOUD_UNBOUND_SIZE_MULT * 0.01
+#if LUMINA_CLOUD_SCALE != 100
+    #define LUMINA_CLOUD_SCALE_M LUMINA_CLOUD_SCALE * 0.01
 #endif
 
 #include "/lib/colors/lightAndAmbientColors.glsl"
@@ -38,12 +38,7 @@ float InterleavedGradientNoiseForClouds() {
     }
 #endif
 
-#ifdef CLOUDS_REIMAGINED
-    #include "/lib/atmospherics/clouds/reimaginedClouds.glsl"
-#endif
-#ifdef CLOUDS_UNBOUND
-    #include "/lib/atmospherics/clouds/unboundClouds.glsl"
-#endif
+#include "/lib/atmospherics/clouds/luminaClouds.glsl"
 
 vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset, vec3 playerPos,
                float lViewPos, float VdotS, float VdotU, float dither, vec3 auroraBorealis, vec3 nightNebula) {
@@ -54,14 +49,10 @@ vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset
     float skyMult0 = pow2(skyFade * 3.333333 - 2.333333);
 
     #if IRIS_VERSION >= 10800
-        #ifdef CLOUDS_REIMAGINED
-            float modFactor = 1.0 / cloudNarrowness * 256.0;
+        #if LUMINA_CLOUD_SCALE == 100
+            float modFactor = 1.0 / cloudNarrowness;
         #else
-            #if CLOUD_UNBOUND_SIZE_MULT == 100
-                float modFactor = 1.0 / cloudNarrowness;
-            #else
-                float modFactor = 1.0 / (cloudNarrowness * CLOUD_UNBOUND_SIZE_MULT_M);
-            #endif
+            float modFactor = 1.0 / (cloudNarrowness * LUMINA_CLOUD_SCALE_M);
         #endif
 
         int modFactorM = int(modFactor);
@@ -78,18 +69,12 @@ vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset
     #endif
     cameraPos += cameraPosOffset;
 
-    #ifdef CLOUDS_REIMAGINED
-        float thresholdF = 4000.0;
-    #else
-        float thresholdF = 4000.0;
-    #endif
+    float thresholdF = 4000.0;
 
     //float thresholdMix = pow2(clamp01(VdotU * 15.0));
     //thresholdF = mix(far, thresholdF, thresholdMix * 0.5 + 0.5);
 
-    #ifdef CLOUDS_REIMAGINED
-        cloudAmbientColor *= 1.0 - 0.25 * rainFactor;
-    #endif
+    cloudAmbientColor *= 1.0 - 0.25 * rainFactor;
 
     vec3 cloudColorMult = vec3(1.0);
     #if CLOUD_R != 100 || CLOUD_G != 100 || CLOUD_B != 100
@@ -98,44 +83,8 @@ vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset
     cloudAmbientColor *= cloudColorMult;
     cloudLightColor *= cloudColorMult;
 
-    #if !defined DOUBLE_REIM_CLOUDS || defined CLOUDS_UNBOUND
-        clouds = GetVolumetricClouds(cloudAlt1i, thresholdF, cloudLinearDepth, skyFade, skyMult0,
-                                        cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
-    #else
-        int maxCloudAlt = max(cloudAlt1i, cloudAlt2i);
-        int minCloudAlt = min(cloudAlt1i, cloudAlt2i);
-
-        int nearCloudAlt;
-        int farCloudAlt;
-
-        if (abs(cameraPos.y - minCloudAlt) < abs(cameraPos.y - maxCloudAlt)) {
-            nearCloudAlt = minCloudAlt;
-            farCloudAlt = maxCloudAlt;
-        } else {
-            nearCloudAlt = maxCloudAlt;
-            farCloudAlt = minCloudAlt;
-        }
-
-        float nearCloudDepth = cloudLinearDepth;
-        float farCloudDepth = cloudLinearDepth;
-        vec4 nearClouds = GetVolumetricClouds(nearCloudAlt, thresholdF, nearCloudDepth, skyFade, skyMult0,
-                                                cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
-        vec4 farClouds = GetVolumetricClouds(farCloudAlt, thresholdF, farCloudDepth, skyFade, skyMult0,
-                                               cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
-
-        float remainingVisibility = 1.0 - clamp01(nearClouds.a);
-        clouds.a = nearClouds.a + farClouds.a * remainingVisibility;
-        if (clouds.a > 0.00001) {
-            clouds.rgb = (nearClouds.rgb * nearClouds.a
-                        + farClouds.rgb * farClouds.a * remainingVisibility) / clouds.a;
-        }
-
-        if (nearClouds.a > 0.0) {
-            cloudLinearDepth = nearCloudDepth;
-        } else if (farClouds.a > 0.0) {
-            cloudLinearDepth = farCloudDepth;
-        }
-    #endif
+    clouds = GetVolumetricClouds(cloudAlt1i, thresholdF, cloudLinearDepth, skyFade, skyMult0,
+                                    cameraPos, nPlayerPos, lViewPosM, VdotS, VdotU, dither);
 
     #ifdef ATM_COLOR_MULTS
         clouds.rgb *= sqrtAtmColorMult; // C72380KD - Reduced atmColorMult impact on some things

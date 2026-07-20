@@ -150,9 +150,6 @@ uniform vec3 previousCameraPositionFract;
         uniform sampler2D playerAtlas_sampler;
     #endif
 
-    #ifdef CLOUD_SHADOWS
-        uniform sampler2D cloudWaterTex;
-    #endif
 #endif
 
 /*-----------------------------------------------------------------------------

@@ -2,9 +2,32 @@
 
 const float cloudStretch = 4.2;
 const float cloudTallness = cloudStretch * 2.0;
-const float cloudRoundness = 0.125;
+#if CLOUD_QUALITY == 1
+    const float cloudRoundness = 0.125;
+#elif CLOUD_QUALITY == 2
+    const float cloudRoundness = 0.09;
+#else
+    const float cloudRoundness = 0.065;
+#endif
 
-bool GetCloudNoise(vec3 tracePos, inout vec3 tracePosM, int cloudAltitude) {
+float GetReimaginedCloudDetail(vec3 tracePosM, float lTracePosXZ) {
+    #if CLOUD_QUALITY == 1
+        return 0.0;
+    #else
+        vec3 detailPos = vec3(tracePosM.xz * 0.015625, tracePosM.y * 0.025);
+        float mediumDetail = Noise3D(detailPos) - 0.5;
+        float distanceFade = 1.0 - smoothstep(900.0, 3200.0, lTracePosXZ);
+
+        #if CLOUD_QUALITY == 2
+            return mediumDetail * 0.14 * distanceFade;
+        #else
+            float fineDetail = Noise3D(detailPos * 2.7 + vec3(0.37, 0.11, 0.53)) - 0.5;
+            return (mediumDetail * 0.16 + fineDetail * 0.07) * distanceFade;
+        #endif
+    #endif
+}
+
+bool GetCloudNoise(vec3 tracePos, inout vec3 tracePosM, int cloudAltitude, float lTracePosXZ) {
     tracePosM = ModifyTracePos(tracePos, cloudAltitude);
     vec2 coord = GetRoundedCloudCoord(tracePosM.xz, cloudRoundness);
 
@@ -16,7 +39,15 @@ bool GetCloudNoise(vec3 tracePos, inout vec3 tracePosM, int cloudAltitude) {
 
     float threshold = clamp(abs(cloudAltitude - tracePos.y) / cloudStretch, 0.001, 0.999);
     threshold = pow2(pow2(pow2(threshold)));
-    return noise > threshold * 0.5 + 0.25;
+    float cloudDensity = noise - (threshold * 0.5 + 0.25);
+
+    #if CLOUD_QUALITY >= 2
+        if (cloudDensity > -0.14 && cloudDensity < 0.18) {
+            cloudDensity += GetReimaginedCloudDetail(tracePosM, lTracePosXZ);
+        }
+    #endif
+
+    return cloudDensity > 0.0;
 }
 
 float Get2DCloudSample(vec2 pos) {
@@ -90,7 +121,7 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
         }
 
         vec3 tracePosM;
-        if (GetCloudNoise(tracePos, tracePosM, cloudAltitude)) {
+        if (GetCloudNoise(tracePos, tracePosM, cloudAltitude, lTracePosXZ)) {
             float lightMult = 1.0;
 
             #if SHADOW_QUALITY > -1

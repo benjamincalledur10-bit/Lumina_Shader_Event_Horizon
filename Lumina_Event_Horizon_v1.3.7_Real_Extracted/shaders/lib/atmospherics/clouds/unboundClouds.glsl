@@ -122,9 +122,9 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
     #elif CLOUD_QUALITY == 1
         float stepMult = 54.0;
     #elif CLOUD_QUALITY == 2
-        float stepMult = 112.0;
+        float stepMult = 48.0;
     #elif CLOUD_QUALITY == 3
-        float stepMult = 42.0;
+        float stepMult = 32.0;
     #endif
 
     #if CLOUD_UNBOUND_SIZE_MULT > 100

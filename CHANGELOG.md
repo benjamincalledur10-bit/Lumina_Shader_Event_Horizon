@@ -4,6 +4,12 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Increased medium and high Unbound cloud ray-march resolution for smoother silhouettes and denser volume definition.
+- Added quality-scaled 3D edge erosion to Reimagined clouds, with distance fading to preserve temporal stability.
+- Refined Reimagined cloud rounding at medium and high quality for sharper small-scale formations.
+
 ### Fixed
 
 - Prevented undefined zero-vector normalization in opaque shadow and light-shaft colors.

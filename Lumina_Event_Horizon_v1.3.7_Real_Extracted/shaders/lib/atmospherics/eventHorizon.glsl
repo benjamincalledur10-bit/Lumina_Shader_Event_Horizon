@@ -1,6 +1,6 @@
 vec3 GetLensedDir(vec3 nViewPos, vec3 upVec, vec3 eastVec) {
-    vec3 bhPosWorld = normalize(vec3(-1.0, 0.25, -1.5)); 
-    float bhSize = 0.12;
+    vec3 bhPosWorld = normalize(EVENT_HORIZON_DIRECTION);
+    float bhSize = EVENT_HORIZON_SIZE;
 
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     float cosTheta = dot(worldDir, bhPosWorld);
@@ -12,7 +12,7 @@ vec3 GetLensedDir(vec3 nViewPos, vec3 upVec, vec3 eastVec) {
     // Only lens the background near the black hole
     if (angle > bhSize * 4.0) return worldDir;
     
-    float deflection = (bhSize * bhSize * 1.2) / max(angle, 0.001);
+    float deflection = (bhSize * bhSize * EVENT_HORIZON_LENSING_STRENGTH) / max(angle, 0.001);
     
     // Fade out deflection so it doesn't streak the whole sky
     deflection *= 1.0 - smoothstep(bhSize, bhSize * 4.0, angle);
@@ -31,7 +31,7 @@ vec3 GetLensedDir(vec3 nViewPos, vec3 upVec, vec3 eastVec) {
 vec4 getDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     if (R < R_in || R > R_out) return vec4(0.0);
     
-    float time = syncedTime * 0.1;
+    float time = syncedTime * 0.1 * EVENT_HORIZON_ROTATION_SPEED;
     // Use smoother UV scaling to avoid exposing texture pixels
     vec2 n1_uv = disk_uv * 0.8 - vec2(time, 0.0);
     vec2 n2_uv = disk_uv * 1.6 + vec2(time * 0.6, 0.0);
@@ -61,14 +61,14 @@ vec4 getDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     color *= (0.7 + detail * 0.5);
     color *= (0.6 + doppler * 0.8);
     
-    return vec4(color, clamp(density, 0.0, 1.0));
+    return vec4(color * EVENT_HORIZON_DISK_INTENSITY, clamp(density, 0.0, 1.0));
 }
 
 vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     // FIXED: Use a constant WORLD space direction so the black hole is fixed in the sky.
     // Minecraft End spawn usually faces -X. So we place it at (-1.0, 0.25, -1.5) (Further right).
-    vec3 bhPosWorld = normalize(vec3(-1.0, 0.25, -1.5)); 
-    float bhSize = 0.12; // Gargantua scale
+    vec3 bhPosWorld = normalize(EVENT_HORIZON_DIRECTION);
+    float bhSize = EVENT_HORIZON_SIZE;
     
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     
@@ -93,8 +93,8 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     
     // Disk inner and outer radii (in EH units)
     float R_in = 1.02; // Touches the event horizon perfectly!
-    float R_out = 5.0;
-    float tilt = 0.1; // Tilt of the accretion disk
+    float R_out = EVENT_HORIZON_DISK_OUTER_RADIUS;
+    float tilt = EVENT_HORIZON_DISK_TILT;
     
     // ---------------------------------------------------------
     // 1. Event Horizon (Perfect Sphere)
@@ -155,7 +155,7 @@ vec4 getWhiteDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     if (R < R_in || R > R_out) return vec4(0.0);
     
     // Reverse time so matter looks like it's being expelled
-    float time = -syncedTime * 0.2; 
+    float time = -syncedTime * 0.2 * EVENT_HORIZON_ROTATION_SPEED;
     
     vec2 n1_uv = disk_uv * 0.8 - vec2(time, 0.0);
     vec2 n2_uv = disk_uv * 1.6 + vec2(time * 0.6, 0.0);
@@ -181,13 +181,13 @@ vec4 getWhiteDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     color *= (0.7 + detail * 0.5);
     color *= (0.6 + doppler * 0.8);
     
-    return vec4(color, clamp(density, 0.0, 1.0));
+    return vec4(color * EVENT_HORIZON_DISK_INTENSITY, clamp(density, 0.0, 1.0));
 }
 
 vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     // Placed exactly opposite the black hole
-    vec3 bhPosWorld = -normalize(vec3(-1.0, 0.25, -1.5)); 
-    float bhSize = 0.12; 
+    vec3 bhPosWorld = -normalize(EVENT_HORIZON_DIRECTION);
+    float bhSize = EVENT_HORIZON_SIZE;
     
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     
@@ -208,8 +208,8 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     vec4 finalCol = vec4(0.0);
     
     float R_in = 1.02; 
-    float R_out = 5.0;
-    float tilt = 0.1; 
+    float R_out = EVENT_HORIZON_DISK_OUTER_RADIUS;
+    float tilt = EVENT_HORIZON_DISK_TILT;
     
     // 1. Bright White Sphere Core
     if (r <= 1.0) {

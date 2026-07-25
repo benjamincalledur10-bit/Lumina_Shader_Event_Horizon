@@ -204,14 +204,13 @@ void main() {
 
     #ifdef END
         // Cinematic Lens Flares and Volumetric Absorption Rays for the End
-        vec3 bhPosWorld = normalize(vec3(-1.0, 0.25, -1.5));
+        vec3 bhPosWorld = normalize(EVENT_HORIZON_DIRECTION);
         vec3 whPosWorld = -bhPosWorld;
         
         vec4 clipPosWH = gbufferProjection * vec4(mat3(gbufferModelView) * whPosWorld, 1.0);
 
         // 2. Destellos Cinemáticos (Anamorphic Lens Flares) - Solo para el Agujero Blanco
-        #define WHITE_HOLE_RAYS
-        #ifdef WHITE_HOLE_RAYS
+        #if defined WHITE_HOLE && defined WHITE_HOLE_RAYS
         if (clipPosWH.w > 0.0001 && clipPosWH.z > 0.0) {
             vec3 screenPosWH = clipPosWH.xyz / clipPosWH.w * 0.5 + 0.5;
 

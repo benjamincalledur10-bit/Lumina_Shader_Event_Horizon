@@ -32,7 +32,7 @@ vec3 northVec = normalize(gbufferModelView[2].xyz);
     vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
 #elif defined END
     vec3 endLightDirection = mat3(gbufferModelView) * -cameraPosition;
-    vec3 endLightFallback = mat3(gbufferModelView) * normalize(vec3(-1.0, 0.25, -1.5));
+    vec3 endLightFallback = mat3(gbufferModelView) * normalize(EVENT_HORIZON_DIRECTION);
     vec3 lightVec = dot(endLightDirection, endLightDirection) > 0.00000001
                   ? normalize(endLightDirection)
                   : normalize(endLightFallback);

@@ -6,6 +6,8 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Changed
 
+- Added a dedicated Event Horizon Settings menu for black-hole size, accretion-disk intensity, gravitational lensing, disk rotation, the White Hole, and its energy rays.
+- Centralized the Event Horizon direction, size, disk geometry, animation, and rendering constants so the sky object, End lighting, and post-processing remain aligned.
 - Replaced the inherited multi-style cloud selector with one unified `Lumina Clouds` renderer and visual identity.
 - Rebuilt cloud formation around multi-octave volumetric density, height-aware erosion, anvil shaping, powder scattering, and silver-lining illumination.
 - Increased medium and high ray-march resolution for smoother silhouettes and denser volume definition.
@@ -14,6 +16,7 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Fixed
 
+- Fixed the White Hole Rays toggle so disabling it now removes the horizontal and vertical energy flares.
 - Synchronized terrain cloud shadows with the direction, speed, scale, and quality-dependent motion of the visible Lumina cloud formations.
 - Restored the valid shadow-map distance check used to hide volumetric clouds when the player is inside a closed area.
 - Preserved the true first cloud-ray hit at close range so cloud depth remains stable for reflections and light shafts.

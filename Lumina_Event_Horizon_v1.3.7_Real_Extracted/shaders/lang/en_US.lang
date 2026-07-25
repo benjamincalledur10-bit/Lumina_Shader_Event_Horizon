@@ -71,6 +71,9 @@ screen.LUMINA_OPTIMIZATION.comment=Settings that directly relate to the performa
 screen.ENVIRONMENT=§bEnvironment & Sky§r
 screen.ENVIRONMENT.comment=Settings that relate to the atmosphere.
 
+screen.EVENT_HORIZON_SETTINGS=Event Horizon Settings
+screen.EVENT_HORIZON_SETTINGS.comment=Controls Lumina's black hole, accretion disk, gravitational lensing, and opposite white hole in the End.
+
 screen.ATM_COLOR_SETTINGS=Atmosphere Color Multipliers
 screen.ATM_COLOR_SETTINGS.comment=Enables customization of atmosphere colors that are mostly seen in the sky and fog.
 
@@ -1109,4 +1112,14 @@ option.XLIGHT_I=Blocklight Intensity
 option.XLIGHT_CURVE=Blocklight Contrast
 option.XLIGHT_CURVE.comment=Adjusts how quickly the intensity of blocklight fades away as it travels distance away from the light source.
 option.WHITE_HOLE_RAYS=White Hole Light Rays
-option.WHITE_HOLE_RAYS.comment=Toggles the corona of expelled energy rays around the White Hole.
+option.WHITE_HOLE_RAYS.comment=Toggles the horizontal and vertical energy rays around the White Hole.
+option.WHITE_HOLE=White Hole
+option.WHITE_HOLE.comment=Toggles the White Hole and all of its associated rendering.
+option.EVENT_HORIZON_SIZE=Black Hole Size
+option.EVENT_HORIZON_SIZE.comment=Controls the apparent size of the black hole and its event horizon.
+option.EVENT_HORIZON_DISK_INTENSITY=Accretion Disk Intensity
+option.EVENT_HORIZON_DISK_INTENSITY.comment=Controls the brightness of the black and white hole accretion disks.
+option.EVENT_HORIZON_LENSING_STRENGTH=Gravitational Lensing Strength
+option.EVENT_HORIZON_LENSING_STRENGTH.comment=Controls how strongly the black hole bends the background sky.
+option.EVENT_HORIZON_ROTATION_SPEED=Disk Rotation Speed
+option.EVENT_HORIZON_ROTATION_SPEED.comment=Controls the animation speed of the black and white hole disks.

@@ -294,8 +294,10 @@ void main() {
             vec4 bh = GetBlackHole(nViewPos, upVec, eastVec, dither);
             color.rgb = mix(color.rgb, bh.rgb, bh.a);
             
-            vec4 wh = GetWhiteHole(nViewPos, upVec, eastVec, dither);
-            color.rgb = mix(color.rgb, wh.rgb, wh.a);
+            #ifdef WHITE_HOLE
+                vec4 wh = GetWhiteHole(nViewPos, upVec, eastVec, dither);
+                color.rgb = mix(color.rgb, wh.rgb, wh.a);
+            #endif
 
             color.rgb *= 1.0 - maxBlindnessDarkness;
 

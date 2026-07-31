@@ -182,12 +182,14 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
         float cloudNoise = GetLuminaCloudDensity(tracePos, cloudAltitude, lTracePosXZ, cloudPlayerPos.y);
 
         if (cloudNoise > 0.00001) {
-            #if defined CLOUD_CLOSED_AREA_CHECK && SHADOW_QUALITY > -1
-                float shadowLength = shadowDistance * 0.9166667; //consistent08JJ622
-                if (shadowLength > lTracePos)
-                if (GetShadowOnCloud(tracePos, cameraPos, cloudAltitude, lowerPlaneAltitude, higherPlaneAltitude)) {
-                    if (eyeBrightness.y != 240) continue;
-                }
+            #ifdef CLOUD_CLOSED_AREA_CHECK
+                #if SHADOW_QUALITY > -1
+                    float shadowLength = shadowDistance * 0.9166667; //consistent08JJ622
+                    if (shadowLength > lTracePos)
+                    if (GetShadowOnCloud(tracePos, cameraPos, cloudAltitude, lowerPlaneAltitude, higherPlaneAltitude)) {
+                        if (eyeBrightness.y != 240) continue;
+                    }
+                #endif
             #endif
 
             if (firstHitPos < 0.0) {

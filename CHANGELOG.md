@@ -2,7 +2,7 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [Unreleased]
+## [1.3.7] - 2026-07-30
 
 ### Changed
 
@@ -17,18 +17,17 @@ All notable changes to Lumina Event Horizon are documented in this file.
 ### Fixed
 
 - Added depth-aware White Hole ray occlusion with softened terrain-edge sampling and Distant Horizons support.
-- Removed the obsolete origin-facing End light fallback so post-processing light direction remains tied to the centralized Event Horizon direction.
+- Prevented White Hole energy rays from rendering outside the viewport or through terrain.
 - Made the White Hole Rays and closed-area cloud checks discoverable as functional boolean options in Iris and OptiFine.
-- Prevented White Hole energy rays from rendering after their source moves outside the visible viewport.
+- Centralized End lighting on the Event Horizon direction and removed the obsolete origin-facing fallback.
 - Rebuilt terrain cloud shadows from the same multi-octave density, erosion, weather, scale, and wind model used by visible Lumina Clouds.
-- Projected terrain shadows toward the configured cloud layer along the active world-space light direction.
-- Removed an out-of-scope cloud-frequency reference that could break lighting-program compilation.
+- Projected cloud shadows toward the configured cloud layer along the active world-space light direction.
 - Disabled cloud shadows automatically when cloud quality is set to Off.
-- Synchronized terrain cloud shadows with the direction, speed, scale, and quality-dependent motion of the visible Lumina cloud formations.
+- Removed an out-of-scope cloud-frequency reference that could break lighting-program compilation.
 - Restored the valid shadow-map distance check used to hide volumetric clouds when the player is inside a closed area.
-- Preserved the true first cloud-ray hit at close range so cloud depth remains stable for reflections and light shafts.
+- Preserved the true first cloud-ray hit at close range so reflections and light shafts retain stable cloud depth.
 - Prevented undefined zero-vector normalization in opaque shadow and light-shaft colors.
-- Added a stable End light-direction fallback at the exact world origin.
+- Added stable End light direction handling at the exact world origin.
 - Repaired invalid JSON metadata in the historical Event Horizon source copy.
 
 ## [1.3.6] - 2026-07-17

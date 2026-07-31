@@ -16,6 +16,8 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Fixed
 
+- Added depth-aware White Hole ray occlusion with softened terrain-edge sampling and Distant Horizons support.
+- Removed the obsolete origin-facing End light fallback so post-processing light direction remains tied to the centralized Event Horizon direction.
 - Made the White Hole Rays and closed-area cloud checks discoverable as functional boolean options in Iris and OptiFine.
 - Prevented White Hole energy rays from rendering after their source moves outside the visible viewport.
 - Rebuilt terrain cloud shadows from the same multi-octave density, erosion, weather, scale, and wind model used by visible Lumina Clouds.

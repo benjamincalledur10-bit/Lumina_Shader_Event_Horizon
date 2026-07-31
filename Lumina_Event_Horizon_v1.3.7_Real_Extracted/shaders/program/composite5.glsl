@@ -13,6 +13,10 @@ noperspective in vec2 texCoord;
 #if defined BLOOM_FOG || LENSFLARE_MODE > 0 && defined OVERWORLD
     flat in vec3 upVec, sunVec;
 #endif
+#if defined END && defined WHITE_HOLE && defined WHITE_HOLE_RAYS
+    flat in vec3 whiteHoleScreenPos;
+    flat in float whiteHoleVisibility;
+#endif
 
 //Pipeline Constants//
 
@@ -204,28 +208,18 @@ void main() {
 
     #ifdef END
         // Cinematic Lens Flares and Volumetric Absorption Rays for the End
-        vec3 bhPosWorld = normalize(EVENT_HORIZON_DIRECTION);
-        vec3 whPosWorld = -bhPosWorld;
-        
-        vec4 clipPosWH = gbufferProjection * vec4(mat3(gbufferModelView) * whPosWorld, 1.0);
-
         // 2. Destellos Cinemáticos (Anamorphic Lens Flares) - Solo para el Agujero Blanco
         #ifdef WHITE_HOLE
         #ifdef WHITE_HOLE_RAYS
-        if (clipPosWH.w > 0.0001
-         && abs(clipPosWH.x) <= clipPosWH.w
-         && abs(clipPosWH.y) <= clipPosWH.w
-         && abs(clipPosWH.z) <= clipPosWH.w) {
-            vec3 screenPosWH = clipPosWH.xyz / clipPosWH.w * 0.5 + 0.5;
-
+        if (whiteHoleVisibility > 0.0) {
             // Brighter horizontal and vertical starburst for the White Hole
-            float distY = abs(texCoord.y - screenPosWH.y) * 500.0;
-            float flareWH = max(0.0, 1.0 - abs(texCoord.x - screenPosWH.x) * 0.8) * exp(-distY);
+            float distY = abs(texCoord.y - whiteHoleScreenPos.y) * 500.0;
+            float flareWH = max(0.0, 1.0 - abs(texCoord.x - whiteHoleScreenPos.x) * 0.8) * exp(-distY);
             
-            float distX = abs(texCoord.x - screenPosWH.x) * 600.0;
-            flareWH += max(0.0, 1.0 - abs(texCoord.y - screenPosWH.y) * 1.2) * exp(-distX);
+            float distX = abs(texCoord.x - whiteHoleScreenPos.x) * 600.0;
+            flareWH += max(0.0, 1.0 - abs(texCoord.y - whiteHoleScreenPos.y) * 1.2) * exp(-distX);
             
-            color += vec3(0.3, 0.7, 1.0) * flareWH * 2.5;
+            color += vec3(0.3, 0.7, 1.0) * flareWH * 2.5 * whiteHoleVisibility;
         }
         #endif
         #endif
@@ -271,6 +265,10 @@ noperspective out vec2 texCoord;
 #if defined BLOOM_FOG || LENSFLARE_MODE > 0 && defined OVERWORLD
     flat out vec3 upVec, sunVec;
 #endif
+#if defined END && defined WHITE_HOLE && defined WHITE_HOLE_RAYS
+    flat out vec3 whiteHoleScreenPos;
+    flat out float whiteHoleVisibility;
+#endif
 
 //Attributes//
 
@@ -289,6 +287,53 @@ void main() {
     #if defined BLOOM_FOG || LENSFLARE_MODE > 0 && defined OVERWORLD
         upVec = normalize(gbufferModelView[1].xyz);
         sunVec = GetSunVector();
+    #endif
+
+    #ifdef END
+        #ifdef WHITE_HOLE
+            #ifdef WHITE_HOLE_RAYS
+                vec3 whiteHoleDirection = -normalize(EVENT_HORIZON_DIRECTION);
+                vec4 whiteHoleClipPos = gbufferProjection * vec4(mat3(gbufferModelView) * whiteHoleDirection, 1.0);
+
+                whiteHoleScreenPos = vec3(-1.0);
+                whiteHoleVisibility = 0.0;
+                if (whiteHoleClipPos.w > 0.0001
+                 && abs(whiteHoleClipPos.x) <= whiteHoleClipPos.w
+                 && abs(whiteHoleClipPos.y) <= whiteHoleClipPos.w
+                 && abs(whiteHoleClipPos.z) <= whiteHoleClipPos.w) {
+                    whiteHoleScreenPos = whiteHoleClipPos.xyz / whiteHoleClipPos.w * 0.5 + 0.5;
+
+                    vec2 occlusionOffsets[9] = vec2[9](
+                        vec2( 0.0, 0.0),
+                        vec2( 1.0, 0.0),
+                        vec2(-1.0, 0.0),
+                        vec2( 0.0, 1.0),
+                        vec2( 0.0,-1.0),
+                        vec2( 0.7071, 0.7071),
+                        vec2(-0.7071, 0.7071),
+                        vec2( 0.7071,-0.7071),
+                        vec2(-0.7071,-0.7071));
+
+                    float sourceVisibility = 0.0;
+                    vec2 occlusionScale = 12.0 / vec2(viewWidth, viewHeight);
+                    for (int i = 0; i < 9; i++) {
+                        vec2 checkCoord = clamp(
+                            whiteHoleScreenPos.xy + occlusionOffsets[i] * occlusionScale,
+                            vec2(0.0),
+                            vec2(1.0)
+                        );
+                        float terrainDepth = texture2DLod(depthtex0, checkCoord, 0.0).r;
+                        float sampleVisibility = step(1.0, terrainDepth);
+                        #ifdef DISTANT_HORIZONS
+                            float distantDepth = texture2DLod(dhDepthTex, checkCoord, 0.0).r;
+                            sampleVisibility *= step(1.0, distantDepth);
+                        #endif
+                        sourceVisibility += sampleVisibility;
+                    }
+                    whiteHoleVisibility = smoothstep(0.15, 0.85, sourceVisibility / 9.0);
+                }
+            #endif
+        #endif
     #endif
 }
 

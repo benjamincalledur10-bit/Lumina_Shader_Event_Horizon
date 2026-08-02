@@ -66,7 +66,7 @@ void DoCompTonemap(inout vec3 color) {
     // Remove tonemapping from darker colors for better readability
     const float darkLiftStart = 0.1;
     const float darkLiftMix = 0.75;
-    float darkLift = smoothstep(darkLiftStart, 0.0, initialLuminance);
+    float darkLift = 1.0 - smoothstep(0.0, darkLiftStart, initialLuminance);
     vec3 smoothColor = pow(color, vec3(1.0 / 2.2));
     colorOut = mix(colorOut, smoothColor, darkLift * darkLiftMix * max0(0.55 - abs(1.05 - TM_CONTRAST)) / 0.55);
     
@@ -80,7 +80,7 @@ void DoCompTonemap(inout vec3 color) {
     // Desaturate dark colors
     const float dpInputCurveStart = 0.1;
     const float dpInputCurveMax = 0.0;
-    float desaturatePath = smoothstep(dpInputCurveStart, dpInputCurveMax, initialLuminance);
+    float desaturatePath = 1.0 - smoothstep(dpInputCurveMax, dpInputCurveStart, initialLuminance);
     colorOut = mix(colorOut, vec3(GetLuminance(colorOut)), desaturatePath * TM_DARK_DESATURATION);
     
     color = clamp01(colorOut);

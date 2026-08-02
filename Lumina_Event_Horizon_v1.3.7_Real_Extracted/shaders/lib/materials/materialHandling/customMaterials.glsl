@@ -72,7 +72,7 @@ void GetCustomMaterials(inout vec4 color, inout vec3 normalM, inout vec2 lmCoord
         #if RP_MODE == 3 // labPBR
             if (normalM.x + normalM.y > -1.999) {
                 if (length(normalM.xy) > 1.0) normalM.xy = normalize(normalM.xy);
-                normalM.z = sqrt(1.0 - dot(normalM.xy, normalM.xy));
+                normalM.z = sqrt(max(1.0 - dot(normalM.xy, normalM.xy), 0.0));
                 normalM.xyz = normalize(clamp(normalM.xyz, vec3(-1.0), vec3(1.0)));
             } else normalM = vec3(0.0, 0.0, 1.0);
         #endif

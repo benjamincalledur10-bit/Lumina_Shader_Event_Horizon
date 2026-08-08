@@ -180,11 +180,12 @@ void main() {
     if (z0 < 1.0) {
         #ifdef DISTANT_LIGHT_BOKEH
             int dlbo = 1;
+            ivec2 dlbMaxCoord = textureSize(colortex0, 0) - ivec2(1);
             vec3 dlbColor = color.rgb;
-            dlbColor += texelFetch(colortex0, texelCoord + ivec2( 0, dlbo), 0).rgb;
-            dlbColor += texelFetch(colortex0, texelCoord + ivec2( 0,-dlbo), 0).rgb;
-            dlbColor += texelFetch(colortex0, texelCoord + ivec2( dlbo, 0), 0).rgb;
-            dlbColor += texelFetch(colortex0, texelCoord + ivec2(-dlbo, 0), 0).rgb;
+            dlbColor += texelFetch(colortex0, clamp(texelCoord + ivec2( 0, dlbo), ivec2(0), dlbMaxCoord), 0).rgb;
+            dlbColor += texelFetch(colortex0, clamp(texelCoord + ivec2( 0,-dlbo), ivec2(0), dlbMaxCoord), 0).rgb;
+            dlbColor += texelFetch(colortex0, clamp(texelCoord + ivec2( dlbo, 0), ivec2(0), dlbMaxCoord), 0).rgb;
+            dlbColor += texelFetch(colortex0, clamp(texelCoord + ivec2(-dlbo, 0), ivec2(0), dlbMaxCoord), 0).rgb;
             dlbColor = max(color.rgb, dlbColor * 0.2);
             float dlbMix = GetDistantLightBokehMix(lViewPos);
             color.rgb = mix(color.rgb, dlbColor, dlbMix);
@@ -395,7 +396,8 @@ void main() {
         vlFactor = texelFetch(colortex5, ivec2(viewWidth-1, viewHeight-1), 0).a;
 
         #ifdef END
-            if (frameCounter % int(0.06666 / frameTimeSmooth + 0.5) == 0) { // Change speed is not too different above 10 fps
+            int frameUpdateInterval = max(int(0.06666 / max(frameTimeSmooth, 0.0001) + 0.5), 1);
+            if (frameCounter % frameUpdateInterval == 0) { // Change speed is not too different above 10 fps
 
                 #if MC_VERSION >= 12106
                     bool isEnderDragonDead = !heavyFog;

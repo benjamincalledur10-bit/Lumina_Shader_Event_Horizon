@@ -3,7 +3,9 @@ color = vec4(0.0);
 
 int sampleCount = 8;
 
-float multiplier = 0.4 / (-viewVector.z * sampleCount);
+float portalViewDepth = -viewVector.z;
+float safePortalViewDepth = abs(portalViewDepth) > 0.0001 ? portalViewDepth : (portalViewDepth < 0.0 ? -0.0001 : 0.0001);
+float multiplier = 0.4 / (safePortalViewDepth * sampleCount);
 vec2 interval = viewVector.xy * multiplier;
 vec2 coord = signMidCoordPos * 0.5 + 0.5;
 vec2 absMidCoordPos2 = absMidCoordPos * 2.0;

@@ -44,6 +44,19 @@ OPTION_RE = re.compile(
 PREPROCESSOR_RE = re.compile(
     r"^\s*#\s*(if|ifdef|ifndef|elif|else|endif)\b", re.MULTILINE
 )
+UNSAFE_SHADER_PATTERNS = (
+    (re.compile(r"normalize\(pow\(lightColor\b"), "unsafe zero-length light-color normalization"),
+    (re.compile(r"frameCounter\s*%\s*int\("), "unsafe frame interval may evaluate to zero"),
+    (re.compile(r"shadowDir\s*/=\s*abs\(shadowDir\.z\)"), "unsafe rainbow horizon division"),
+    (
+        re.compile(r"volumetricLight\s*\*=\s*pow\(totalSmoke\s*/\s*volumetricLight\.a"),
+        "unsafe smoke normalization with zero accumulated alpha",
+    ),
+    (re.compile(r"0\.4\s*/\s*\(-viewVector\.z\s*\*\s*sampleCount\)"), "unsafe portal grazing-angle division"),
+    (re.compile(r"normalize\(lightVec\s*-\s*viewPos\)"), "unsafe zero-length GGX half-vector normalization"),
+    (re.compile(r"mat2\s+J\s*=\s*inverseM\(mat2\(dFdx\(uv\)"), "unguarded anisotropic derivative inversion"),
+    (re.compile(r"texelFetch\(colortex3,\s*texelCoord\s*\+\s*ivec2"), "unclamped FXAA neighborhood fetch"),
+)
 
 
 def relative(path: Path) -> str:
@@ -172,6 +185,14 @@ def validate_option_defaults(files: list[Path], errors: list[str]) -> None:
                 )
 
 
+def validate_known_shader_hazards(files: list[Path], errors: list[str]) -> None:
+    for path in files:
+        text = strip_comments_and_strings(path.read_text(encoding="utf-8-sig"))
+        for pattern, description in UNSAFE_SHADER_PATTERNS:
+            if pattern.search(text):
+                errors.append(f"{relative(path)}: {description}")
+
+
 def changed_paths(base_ref: str, errors: list[str]) -> None:
     result = subprocess.run(
         ["git", "diff", "--name-only", "--no-renames", base_ref, "--"],
@@ -229,6 +250,7 @@ def main() -> int:
     validate_delimiters(files, errors)
     validate_preprocessor(files, errors)
     validate_option_defaults(files, errors)
+    validate_known_shader_hazards(files, errors)
     validate_repository_hygiene(errors)
     if args.base_ref:
         changed_paths(args.base_ref, errors)

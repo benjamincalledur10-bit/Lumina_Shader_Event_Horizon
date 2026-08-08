@@ -31,7 +31,10 @@
     #include "/lib/misc/pixelation.glsl"
 #endif
 
-vec3 highlightColor = normalize(pow(lightColor, vec3(0.37))) * (0.3 + 1.5 * sunVisibility2) * (1.0 - 0.85 * rainFactor);
+vec3 highlightColorBase = pow(max(lightColor, vec3(0.0)), vec3(0.37));
+float highlightColorLengthSquared = dot(highlightColorBase, highlightColorBase);
+vec3 highlightColor = (highlightColorLengthSquared > 1e-8 ? highlightColorBase * inversesqrt(highlightColorLengthSquared) : vec3(0.0))
+                    * (0.3 + 1.5 * sunVisibility2) * (1.0 - 0.85 * rainFactor);
 
 //Lighting//
 void DoLighting(inout vec4 color, inout vec3 shadowMult, vec3 playerPos, vec3 viewPos, float lViewPos, vec3 geoNormal, vec3 normalM, float dither,

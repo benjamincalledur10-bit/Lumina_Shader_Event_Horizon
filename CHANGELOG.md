@@ -2,6 +2,14 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- Restored the broad v1.3.2 black-hole accretion glow in The End.
+- Restored the always-visible v1.3.2 White Hole light rays while preserving the
+  v1.3.7 projection safety guard and Event Horizon settings.
+
 ## [1.3.7] - 2026-07-30
 
 ### Changed

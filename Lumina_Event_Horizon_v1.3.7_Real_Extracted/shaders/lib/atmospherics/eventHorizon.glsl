@@ -111,13 +111,14 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         
         vec2 uv_back = normalize(uv) * R_back;
         vec4 backDisk = getDisk(R_back, uv_back, R_in, R_out);
+
+        // Restore the broad, luminous v1.3.2 back-disk presence.
+        backDisk.rgb *= 0.5;
+        backDisk.a *= smoothstep(-0.99, -0.8, cosTheta);
         
         // The back disk is lensed over the poles. Fade it at the equator to avoid clipping the front disk.
         float poleMask = smoothstep(0.0, 0.5, abs(uv.y) / r);
         backDisk.a *= poleMask;
-        
-        // Constrain the Einstein ring tightly around the black hole instead of spanning the map
-        backDisk.a *= 1.0 - smoothstep(1.25, 1.5, r);
         
         finalCol.rgb = backDisk.rgb * backDisk.a;
         finalCol.a = backDisk.a;

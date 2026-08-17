@@ -72,15 +72,11 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     
-    // Reject pixels outside the visible disk before building the local basis or
-    // sampling noise. The old path sampled the back disk across almost the
-    // entire End sky even though its useful radius ends at R_out.
+    // Keep the v1.3.2 radial light field across the End sky.
     float cosTheta = dot(worldDir, bhPosWorld);
-    float maxAngle = bhSize * EVENT_HORIZON_DISK_OUTER_RADIUS;
-    if (cosTheta < cos(maxAngle)) return vec4(0.0);
+    if (cosTheta < -0.99) return vec4(0.0);
 
     float angle = acos(clamp(cosTheta, -1.0, 1.0));
-    if (angle > maxAngle) return vec4(0.0);
     
     // Local orthonormal basis for the black hole in WORLD space
     vec3 bhX = normalize(cross(bhPosWorld, vec3(0, 1, 0))); 
@@ -119,7 +115,6 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         // Restore the broad, luminous v1.3.2 back-disk presence.
         backDisk.rgb *= 0.5;
         backDisk.a *= smoothstep(-0.99, -0.8, cosTheta);
-        backDisk.a *= 1.0 - smoothstep(R_out - 0.5, R_out, r);
         
         // The back disk is lensed over the poles. Fade it at the equator to avoid clipping the front disk.
         float poleMask = smoothstep(0.0, 0.5, abs(uv.y) / r);

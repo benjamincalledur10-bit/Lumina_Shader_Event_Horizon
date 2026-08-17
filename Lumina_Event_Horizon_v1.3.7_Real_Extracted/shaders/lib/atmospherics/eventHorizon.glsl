@@ -27,24 +27,6 @@ vec3 GetLensedDir(vec3 nViewPos, vec3 upVec, vec3 eastVec) {
     return lensedDir;
 }
 
-// Full-width accretion rays use only analytic math so the luminous line can
-// cross the End sky without restoring the old full-screen noise cost.
-vec3 GetBlackHoleWideRays(vec3 nViewPos) {
-    vec3 bhPosWorld = normalize(EVENT_HORIZON_DIRECTION);
-    vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
-    vec3 bhX = normalize(cross(bhPosWorld, vec3(0.0, 1.0, 0.0)));
-    vec3 bhY = normalize(cross(bhX, bhPosWorld));
-
-    float lineDistance = abs(dot(worldDir, bhY));
-    float forwardFade = smoothstep(-0.35, 0.15, dot(worldDir, bhPosWorld));
-    float softRay = exp(-lineDistance * 85.0);
-    float brightCore = exp(-lineDistance * 420.0);
-    float rayStrength = (softRay * 0.18 + brightCore * 0.55)
-                      * forwardFade * EVENT_HORIZON_DISK_INTENSITY;
-
-    return vec3(1.0, 0.38, 0.055) * rayStrength;
-}
-
 // Evaluate the accretion disk color and density at a given local space radius and uv
 vec4 getDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     if (R < R_in || R > R_out) return vec4(0.0);
@@ -90,15 +72,11 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     
-    // Reject pixels outside the visible disk before building the local basis or
-    // sampling noise. The old path sampled the back disk across almost the
-    // entire End sky even though its useful radius ends at R_out.
+    // Keep the v1.3.2 radial light field across the End sky.
     float cosTheta = dot(worldDir, bhPosWorld);
-    float maxAngle = bhSize * EVENT_HORIZON_DISK_OUTER_RADIUS;
-    if (cosTheta < cos(maxAngle)) return vec4(0.0);
+    if (cosTheta < -0.99) return vec4(0.0);
 
     float angle = acos(clamp(cosTheta, -1.0, 1.0));
-    if (angle > maxAngle) return vec4(0.0);
     
     // Local orthonormal basis for the black hole in WORLD space
     vec3 bhX = normalize(cross(bhPosWorld, vec3(0, 1, 0))); 
@@ -137,7 +115,6 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         // Restore the broad, luminous v1.3.2 back-disk presence.
         backDisk.rgb *= 0.5;
         backDisk.a *= smoothstep(-0.99, -0.8, cosTheta);
-        backDisk.a *= 1.0 - smoothstep(R_out - 0.5, R_out, r);
         
         // The back disk is lensed over the poles. Fade it at the equator to avoid clipping the front disk.
         float poleMask = smoothstep(0.0, 0.5, abs(uv.y) / r);

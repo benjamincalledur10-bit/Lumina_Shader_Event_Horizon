@@ -6,8 +6,9 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Fixed
 
-- Restored the Black Hole's full-width horizontal accretion rays with a low-cost
-  analytic pass, while keeping procedural disk-noise samples locally bounded.
+- Restored the complete v1.3.2-style white radial light field around the Black
+  Hole across the End sky, without the v1.3.8 outer-radius cutoff.
+- Removed the incorrect orange horizontal line introduced in v1.3.81-rc.1.
 
 ## [1.3.8] - 2026-08-16
 

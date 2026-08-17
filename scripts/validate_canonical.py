@@ -310,31 +310,19 @@ def validate_end_performance_guards(errors: list[str]) -> None:
         encoding="utf-8-sig"
     )
     required = (
-        (
-            "float maxAngle = bhSize * EVENT_HORIZON_DISK_OUTER_RADIUS",
-            "black-hole angular early rejection",
-        ),
-        (
-            "backDisk.a *= 1.0 - smoothstep(R_out - 0.5, R_out, r)",
-            "black-hole edge fade",
-        ),
         ("float maxAngle = bhSize * 3.5", "white-hole angular early rejection"),
         ("if (r < 1.5)", "masked white-hole disk sampling guard"),
         (
-            "vec3 GetBlackHoleWideRays(vec3 nViewPos)",
-            "analytic full-width Black Hole ray function",
-        ),
-        (
-            "float brightCore = exp(-lineDistance * 420.0)",
-            "full-width Black Hole ray core",
+            "if (cosTheta < -0.99) return vec4(0.0)",
+            "v1.3.2 full-sky Black Hole ray guard",
         ),
     )
     for snippet, description in required:
         if snippet not in event_horizon:
             errors.append(f"missing {description}: {snippet}")
 
-    if "color.rgb += GetBlackHoleWideRays(nViewPos)" not in deferred:
-        errors.append("missing full-width Black Hole ray composition in deferred1")
+    if "GetBlackHoleWideRays" in event_horizon or "GetBlackHoleWideRays" in deferred:
+        errors.append("incorrect orange horizontal Black Hole ray pass is still enabled")
 
 
 def parse_args() -> argparse.Namespace:

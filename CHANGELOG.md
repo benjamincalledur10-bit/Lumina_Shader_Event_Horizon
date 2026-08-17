@@ -10,6 +10,10 @@ All notable changes to Lumina Event Horizon are documented in this file.
 - Restored the always-visible v1.3.2 White Hole light rays while preserving the
   v1.3.7 projection safety guard and Event Horizon settings.
 - Renamed the canonical validation job so it no longer embeds a shader version.
+- Added smoothly blended Nether fog colors and densities for Nether Wastes,
+  Crimson Forest, Warped Forest, Basalt Deltas, and Soul Sand Valley.
+- Added a 0-150% Nether Biome Fog Strength control without adding fog texture
+  samples.
 
 ### Fixed
 

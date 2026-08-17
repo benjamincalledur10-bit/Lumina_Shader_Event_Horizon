@@ -23,7 +23,7 @@
         #endif
         #ifdef NETHER
             float farM = min(renderDistance, NETHER_VIEW_LIMIT); // consistency9023HFUE85JG
-            float fog = lPos / farM;
+            float fog = lPos * netherBiomeFogDensity / farM;
             fog = fog * 0.3 + 0.7 * pow(fog, 256.0 / max(farM, 256.0));
         #endif
         #ifdef END

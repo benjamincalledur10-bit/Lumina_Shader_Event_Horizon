@@ -6,6 +6,9 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Changed
 
+- Reduced End sky cost by rejecting black-hole and white-hole pixels outside
+  their visible radii before disk-noise sampling, while retaining full detail,
+  animation, and the broad accretion glow inside the rendered effect.
 - Restored the broad v1.3.2 black-hole accretion glow in The End.
 - Restored the always-visible v1.3.2 White Hole light rays while preserving the
   v1.3.7 projection safety guard and Event Horizon settings.

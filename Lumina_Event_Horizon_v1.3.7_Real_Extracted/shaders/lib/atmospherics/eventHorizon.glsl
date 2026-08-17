@@ -72,17 +72,21 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     
-    // Check if we are looking towards the black hole to prevent mirroring behind the camera
+    // Reject pixels outside the visible disk before building the local basis or
+    // sampling noise. The old path sampled the back disk across almost the
+    // entire End sky even though its useful radius ends at R_out.
     float cosTheta = dot(worldDir, bhPosWorld);
-    // Let the radial rays cover almost the entire sky, just cut it off slightly behind the player to avoid singularities
-    if (cosTheta < -0.99) return vec4(0.0); 
+    float maxAngle = bhSize * EVENT_HORIZON_DISK_OUTER_RADIUS;
+    if (cosTheta < cos(maxAngle)) return vec4(0.0);
+
+    float angle = acos(clamp(cosTheta, -1.0, 1.0));
+    if (angle > maxAngle) return vec4(0.0);
     
     // Local orthonormal basis for the black hole in WORLD space
     vec3 bhX = normalize(cross(bhPosWorld, vec3(0, 1, 0))); 
     vec3 bhY = normalize(cross(bhX, bhPosWorld)); 
     
     // Proper spherical projection to prevent infinite stretching (laser beams)
-    float angle = acos(clamp(cosTheta, -1.0, 1.0));
     vec3 localDir = vec3(dot(worldDir, bhX), dot(worldDir, bhY), cosTheta);
     
     vec2 uv = vec2(0.0);
@@ -115,6 +119,7 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         // Restore the broad, luminous v1.3.2 back-disk presence.
         backDisk.rgb *= 0.5;
         backDisk.a *= smoothstep(-0.99, -0.8, cosTheta);
+        backDisk.a *= 1.0 - smoothstep(R_out - 0.5, R_out, r);
         
         // The back disk is lensed over the poles. Fade it at the equator to avoid clipping the front disk.
         float poleMask = smoothstep(0.0, 0.5, abs(uv.y) / r);
@@ -193,13 +198,15 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     vec3 worldDir = mat3(gbufferModelViewInverse) * nViewPos;
     
     float cosTheta = dot(worldDir, bhPosWorld);
-    // Only render the white hole if we look at the opposite pole (don't cover the black hole)
-    if (cosTheta < -0.8) return vec4(0.0); 
+    float maxAngle = bhSize * 3.5;
+    if (cosTheta < cos(maxAngle)) return vec4(0.0);
+
+    float angle = acos(clamp(cosTheta, -1.0, 1.0));
+    if (angle > maxAngle) return vec4(0.0);
     
     vec3 bhX = normalize(cross(bhPosWorld, vec3(0, 1, 0))); 
     vec3 bhY = normalize(cross(bhX, bhPosWorld)); 
     
-    float angle = acos(clamp(cosTheta, -1.0, 1.0));
     vec3 localDir = vec3(dot(worldDir, bhX), dot(worldDir, bhY), cosTheta);
     
     vec2 uv = vec2(0.0);
@@ -220,11 +227,14 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         // 2. Einstein Ring (Lensed back-disk)
         float R_back = mix(R_out, R_in, smoothstep(1.0, 1.35, r));
         
-        vec2 uv_back = normalize(uv) * R_back;
-        vec4 backDisk = getWhiteDisk(R_back, uv_back, R_in, R_out);
-        
-        // No massive radial streaks for the white hole, just the ring itself
-        backDisk.a *= 1.0 - smoothstep(1.1, 1.5, r);
+        vec4 backDisk = vec4(0.0);
+        // Beyond r=1.5 the existing mask is already zero, so skip all three
+        // noise samples while retaining the procedural outer corona.
+        if (r < 1.5) {
+            vec2 uv_back = normalize(uv) * R_back;
+            backDisk = getWhiteDisk(R_back, uv_back, R_in, R_out);
+            backDisk.a *= 1.0 - smoothstep(1.1, 1.5, r);
+        }
         
         float poleMask = smoothstep(0.0, 0.5, abs(uv.y) / r);
         backDisk.a *= poleMask;

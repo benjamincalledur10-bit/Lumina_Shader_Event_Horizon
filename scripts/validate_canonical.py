@@ -302,6 +302,27 @@ def validate_nether_features(errors: list[str]) -> None:
             errors.append(f"missing {description}: {snippet}")
 
 
+def validate_end_performance_guards(errors: list[str]) -> None:
+    event_horizon = (
+        SHADER_ROOT / "lib/atmospherics/eventHorizon.glsl"
+    ).read_text(encoding="utf-8-sig")
+    required = (
+        (
+            "float maxAngle = bhSize * EVENT_HORIZON_DISK_OUTER_RADIUS",
+            "black-hole angular early rejection",
+        ),
+        (
+            "backDisk.a *= 1.0 - smoothstep(R_out - 0.5, R_out, r)",
+            "black-hole edge fade",
+        ),
+        ("float maxAngle = bhSize * 3.5", "white-hole angular early rejection"),
+        ("if (r < 1.5)", "masked white-hole disk sampling guard"),
+    )
+    for snippet, description in required:
+        if snippet not in event_horizon:
+            errors.append(f"missing {description}: {snippet}")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -325,6 +346,7 @@ def main() -> int:
     validate_known_shader_hazards(files, errors)
     validate_repository_hygiene(errors)
     validate_nether_features(errors)
+    validate_end_performance_guards(errors)
     if args.base_ref:
         changed_paths(args.base_ref, errors)
 

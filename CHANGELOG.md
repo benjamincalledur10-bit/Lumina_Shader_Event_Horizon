@@ -9,6 +9,15 @@ All notable changes to Lumina Event Horizon are documented in this file.
 - Restored the broad v1.3.2 black-hole accretion glow in The End.
 - Restored the always-visible v1.3.2 White Hole light rays while preserving the
   v1.3.7 projection safety guard and Event Horizon settings.
+- Renamed the canonical validation job so it no longer embeds a shader version.
+
+### Fixed
+
+- Restored nine-sample terrain occlusion for White Hole rays in the vertex pass.
+- Restored Distant Horizons depth occlusion and viewport bounds checks for the
+  White Hole ray source.
+- Multiplied White Hole ray intensity by its softened source visibility so rays
+  fade at terrain edges instead of passing through mountains.
 
 ## [1.3.7] - 2026-07-30
 

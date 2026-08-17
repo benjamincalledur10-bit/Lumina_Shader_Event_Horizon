@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate Lumina Event Horizon v1.3.7
+    name: Validate canonical Lumina Event Horizon
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

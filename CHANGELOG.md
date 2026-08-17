@@ -2,7 +2,7 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [Unreleased]
+## [1.3.8] - 2026-08-16
 
 ### Changed
 

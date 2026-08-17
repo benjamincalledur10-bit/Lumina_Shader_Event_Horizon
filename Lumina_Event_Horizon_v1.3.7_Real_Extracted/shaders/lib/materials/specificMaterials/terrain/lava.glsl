@@ -25,7 +25,12 @@
 
 noDirectionalShading = true;
 lmCoordM = vec2(0.0);
-emission = GetLuminance(color.rgb) * 7.48 + 0.5;
+#ifdef MC_OS_MAC
+    emission = GetLuminance(color.rgb) * 7.48 + 0.5;
+#else
+    // Keep a strong hot core without letting large lava seas dominate exposure.
+    emission = clamp(GetLuminance(color.rgb) * 6.2 + 0.45, 0.45, 7.5);
+#endif
 
 maRecolor = vec3(clamp(pow2(pow2(pow2(smoothstep1(emission * 0.28)))), 0.12, 0.4) * 1.3) * vec3(0.25, vec2(0.175));
 

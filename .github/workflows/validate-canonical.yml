@@ -1,0 +1,42 @@
+name: Validate canonical shader
+
+on:
+  push:
+    branches:
+      - main
+      - luminahorizondev
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate canonical Lumina Event Horizon
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select comparison revision
+        id: comparison
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base_ref="$PR_BASE_SHA"
+          else
+            git fetch --no-tags origin main
+            base_ref="$(git merge-base HEAD origin/main)"
+          fi
+          echo "base_ref=$base_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Validate canonical package
+        run: python3 scripts/validate_canonical.py --base-ref "${{ steps.comparison.outputs.base_ref }}"

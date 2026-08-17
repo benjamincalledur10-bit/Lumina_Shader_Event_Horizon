@@ -1,6 +1,11 @@
 bool intersectsAABB(vec3 ro, vec3 rd, vec3 aabbMin, vec3 aabbMax) {
-    vec3 t0 = (aabbMin - ro) / rd;
-    vec3 t1 = (aabbMax - ro) / rd;
+    vec3 safeRayDirection = vec3(
+        abs(rd.x) > 1e-8 ? rd.x : (rd.x < 0.0 ? -1e-8 : 1e-8),
+        abs(rd.y) > 1e-8 ? rd.y : (rd.y < 0.0 ? -1e-8 : 1e-8),
+        abs(rd.z) > 1e-8 ? rd.z : (rd.z < 0.0 ? -1e-8 : 1e-8)
+    );
+    vec3 t0 = (aabbMin - ro) / safeRayDirection;
+    vec3 t1 = (aabbMax - ro) / safeRayDirection;
 
     vec3 tMin = min(t0, t1);
     vec3 tMax = max(t0, t1);
@@ -13,17 +18,24 @@ bool intersectsAABB(vec3 ro, vec3 rd, vec3 aabbMin, vec3 aabbMax) {
 
 bool intersectsParallelogram(vec3 ro, vec3 rd, vec3 v0, vec3 v1, vec3 v2, float tMin, out float t, out vec2 uv, inout vec3 normal) {
     vec3 a = v1 - v0, n = cross(a, v2 - v0);
+    vec3 b = v2 - v1;
+    float normalLengthSquared = dot(n, n);
+    float aLengthSquared = dot(a, a);
+    float bLengthSquared = dot(b, b);
+    float rayPlaneDot = dot(n, rd);
 
-    t = dot(v0 - ro, n) / dot(n, rd);
+    if (normalLengthSquared <= 1e-8 || aLengthSquared <= 1e-8 || bLengthSquared <= 1e-8 || abs(rayPlaneDot) <= 1e-8)
+        return false;
+
+    t = dot(v0 - ro, n) / rayPlaneDot;
     if (t < 0.0 || t > tMin) return false;
 
-    vec3 b = v2 - v1;
     vec3 c = ro + rd * t  - v0;
 
-    uv = vec2(dot(c, a) / dot(a, a), dot(c, b) / dot(b, b));
+    uv = vec2(dot(c, a) / aLengthSquared, dot(c, b) / bLengthSquared);
     if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return false;
 
-    normal = normalize(n);
+    normal = n * inversesqrt(normalLengthSquared);
     return true;
 }
 

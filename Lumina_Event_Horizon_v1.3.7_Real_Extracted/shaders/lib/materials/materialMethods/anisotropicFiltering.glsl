@@ -23,13 +23,19 @@ mat2 inverseM(mat2 m) {
 vec4 textureAF(sampler2D texSampler, vec2 uv) {
     vec2 spriteDimensions = vec2(spriteBounds.z - spriteBounds.x, spriteBounds.w - spriteBounds.y);
 
-    mat2 J = inverseM(mat2(dFdx(uv), dFdy(uv)));
+    mat2 derivatives = mat2(dFdx(uv), dFdy(uv));
+    if (abs(manualDeterminant(derivatives)) <= 1e-8)
+        return texture2D(texSampler, uv);
+
+    mat2 J = inverseM(derivatives);
     J = transpose(J)*J;
     float d = manualDeterminant(J), t = J[0][0]+J[1][1],
           D = sqrt(abs(t*t-4.001*d)), // using 4.001 instead of 4.0 fixes a rare texture glitch with square texture atlas
-          V = (t-D)/2.0, v = (t+D)/2.0,
+          V = max((t-D)/2.0, 1e-8), v = max((t+D)/2.0, 1e-8),
           M = 1.0/sqrt(V), m = 1./sqrt(v);
-    vec2 A = M * normalize(vec2(-J[0][1], J[0][0]-V));
+    vec2 majorAxis = vec2(-J[0][1], J[0][0]-V);
+    float majorAxisLengthSquared = dot(majorAxis, majorAxis);
+    vec2 A = majorAxisLengthSquared > 1e-8 ? M * majorAxis * inversesqrt(majorAxisLengthSquared) : vec2(0.0);
 
     float lod = 0.0;
     #if ANISOTROPIC_FILTER >= 8 && defined GBUFFERS_TERRAIN
@@ -67,7 +73,7 @@ vec4 textureAF(sampler2D texSampler, vec2 uv) {
         filteredColor.rgb += colorSample.rgb * modifiedAlpha;
         filteredColor.a += colorSample.a;
     }
-    filteredColor.rgb /= totalModifiedAlpha;
+    filteredColor.rgb /= max(totalModifiedAlpha, 0.000001);
     filteredColor.a /= ANISOTROPIC_FILTER;
 
     return filteredColor;

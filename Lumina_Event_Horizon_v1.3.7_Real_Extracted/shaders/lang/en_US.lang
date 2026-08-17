@@ -412,6 +412,8 @@ option.NETHER_COLOR_MODE.comment=Determines how the ambience colors will be hand
 value.NETHER_COLOR_MODE.3=Biome Based (Modified)
 value.NETHER_COLOR_MODE.2=Biome Based
 value.NETHER_COLOR_MODE.0=Constant
+option.NETHER_BIOME_FOG_STRENGTH=Nether Biome Fog Strength
+option.NETHER_BIOME_FOG_STRENGTH.comment=Controls biome density differences from 0% (uniform density) to 150% (strong contrast). Biome transitions remain smoothly blended over 15 seconds.
 
 option.TM_EXPOSURE=General Brightness
 option.TM_EXPOSURE.comment=Also known as "Tonemap Exposure". Adjusts the overall brightness of the whole image.

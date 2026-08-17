@@ -2,6 +2,44 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- Reduced End sky cost by rejecting black-hole and white-hole pixels outside
+  their visible radii before disk-noise sampling, while retaining full detail,
+  animation, and the broad accretion glow inside the rendered effect.
+- Restored the broad v1.3.2 black-hole accretion glow in The End.
+- Restored the always-visible v1.3.2 White Hole light rays while preserving the
+  v1.3.7 projection safety guard and Event Horizon settings.
+- Renamed the canonical validation job so it no longer embeds a shader version.
+- Added smoothly blended Nether fog colors and densities for Nether Wastes,
+  Crimson Forest, Warped Forest, Basalt Deltas, and Soul Sand Valley.
+- Added a 0-150% Nether Biome Fog Strength control without adding fog texture
+  samples.
+- Rebalanced lava toward natural orange local lighting with controlled surface
+  emission so large lava fields do not overexpose the whole view.
+- Shifted Nether Portals toward a cinematic purple-blue glow and increased
+  their colored-light contribution to nearby terrain.
+- Adapted Nether Storm color and opacity to the smoothly blended biome state,
+  with denser gray ash in Basalt Deltas and reduced intensity in Warped Forest
+  and Soul Sand Valley.
+- Extended canonical validation to protect the Nether fog control, biome storm
+  integration, settings exposure, and zero-texture-sample fog requirement.
+
+### Fixed
+
+- Moved Nether biome-density calculations out of global scope and compiled them
+  only for non-macOS Nether programs to avoid an Apple OpenGL compiler crash.
+- Restored complete v1.3.7-compatible `MC_OS_MAC` Nether paths for fog, storm,
+  lava, portals, biome colors, and local lighting; Windows and Linux retain the
+  v1.3.8 improvements.
+- Restored nine-sample terrain occlusion for White Hole rays in the vertex pass.
+- Restored Distant Horizons depth occlusion and viewport bounds checks for the
+  White Hole ray source.
+- Multiplied White Hole ray intensity by its softened source visibility so rays
+  fade at terrain edges instead of passing through mountains.
+
 ## [1.3.7] - 2026-07-30
 
 ### Changed

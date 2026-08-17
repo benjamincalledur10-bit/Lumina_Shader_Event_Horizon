@@ -9,8 +9,13 @@ void AddSpecialLightDetail(inout vec3 light, vec3 albedo, float emission) {
 }
 
 vec3 fireSpecialLightColor = vec3(2.25, 0.83, 0.27) * 3.7;
-vec3 lavaSpecialLightColor = vec3(3.25, 0.9, 0.2) * 3.9;
-vec3 netherPortalSpecialLightColor = vec3(1.8, 0.4, 2.2) * 0.8;
+#ifdef MC_OS_MAC
+    vec3 lavaSpecialLightColor = vec3(3.25, 0.9, 0.2) * 3.9;
+    vec3 netherPortalSpecialLightColor = vec3(1.8, 0.4, 2.2) * 0.8;
+#else
+    vec3 lavaSpecialLightColor = vec3(3.05, 1.05, 0.26) * 3.35;
+    vec3 netherPortalSpecialLightColor = vec3(1.65, 0.32, 2.45) * 1.05;
+#endif
 vec3 redstoneSpecialLightColor = vec3(4.5, 0.05, 0.05);
 vec4 soulFireSpecialColor = vec4(vec3(0.3, 2.0, 2.2) * 1.0, 0.3);
 float candleColorMult = 2.0;
@@ -44,7 +49,11 @@ vec4 GetSpecialBlocklightColor(int mat) {
 					} else {
 						if (mat == 11) return vec4(fireSpecialLightColor, 0.0); // Jack o'Lantern
 						if (mat == 12) return vec4(fireSpecialLightColor, 0.0); // Lantern
-						if (mat == 13) return vec4(lavaSpecialLightColor, 0.8); // Lava
+						#ifdef MC_OS_MAC
+							if (mat == 13) return vec4(lavaSpecialLightColor, 0.8); // Lava
+						#else
+							if (mat == 13) return vec4(lavaSpecialLightColor, 0.55); // Lava
+						#endif
 					}
 				}
 			} else {
@@ -66,7 +75,11 @@ vec4 GetSpecialBlocklightColor(int mat) {
 					} else {
 						if (mat == 23) return vec4(fireSpecialLightColor * 0.7, 0.0); // Blast Furnace:Lit
 						if (mat == 24) return vec4(fireSpecialLightColor * 0.25 * candleColorMult, candleExtraLight); // Standard Candles:Lit
-						if (mat == 25) return vec4(netherPortalSpecialLightColor * 2.0, 0.4); // Nether Portal
+						#ifdef MC_OS_MAC
+							if (mat == 25) return vec4(netherPortalSpecialLightColor * 2.0, 0.4); // Nether Portal
+						#else
+							if (mat == 25) return vec4(netherPortalSpecialLightColor * 2.0, 0.55); // Nether Portal
+						#endif
 					}
 				}
 			}

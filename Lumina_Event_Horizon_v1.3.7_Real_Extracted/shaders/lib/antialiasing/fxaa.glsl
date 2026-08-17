@@ -14,6 +14,10 @@
 //FXAA 3.11 from http://blog.simonrodriguez.fr/articles/30-07-2016_implementing_fxaa.html
 float quality[12] = float[12] (1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 2.0, 2.0, 2.0, 2.0, 4.0, 8.0);
 
+ivec2 ClampFXAATexel(ivec2 coordinate) {
+    return clamp(coordinate, ivec2(0), textureSize(colortex3, 0) - ivec2(1));
+}
+
 void FXAA311(inout vec3 color) {
     float edgeThresholdMin = 0.03125;
     float edgeThresholdMax = 0.0625;
@@ -23,10 +27,10 @@ void FXAA311(inout vec3 color) {
     vec2 view = 1.0 / vec2(viewWidth, viewHeight);
 
     float lumaCenter = GetLuminance(color);
-    float lumaDown  = GetLuminance(texelFetch(colortex3, texelCoord + ivec2( 0, -1), 0).rgb);
-    float lumaUp    = GetLuminance(texelFetch(colortex3, texelCoord + ivec2( 0,  1), 0).rgb);
-    float lumaLeft  = GetLuminance(texelFetch(colortex3, texelCoord + ivec2(-1,  0), 0).rgb);
-    float lumaRight = GetLuminance(texelFetch(colortex3, texelCoord + ivec2( 1,  0), 0).rgb);
+    float lumaDown  = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2( 0, -1)), 0).rgb);
+    float lumaUp    = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2( 0,  1)), 0).rgb);
+    float lumaLeft  = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2(-1,  0)), 0).rgb);
+    float lumaRight = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2( 1,  0)), 0).rgb);
 
     float lumaMin = min(lumaCenter, min(min(lumaDown, lumaUp), min(lumaLeft, lumaRight)));
     float lumaMax = max(lumaCenter, max(max(lumaDown, lumaUp), max(lumaLeft, lumaRight)));
@@ -34,10 +38,10 @@ void FXAA311(inout vec3 color) {
     float lumaRange = lumaMax - lumaMin;
 
     if (lumaRange > max(edgeThresholdMin, lumaMax * edgeThresholdMax)) {
-        float lumaDownLeft  = GetLuminance(texelFetch(colortex3, texelCoord + ivec2(-1, -1), 0).rgb);
-        float lumaUpRight   = GetLuminance(texelFetch(colortex3, texelCoord + ivec2( 1,  1), 0).rgb);
-        float lumaUpLeft    = GetLuminance(texelFetch(colortex3, texelCoord + ivec2(-1,  1), 0).rgb);
-        float lumaDownRight = GetLuminance(texelFetch(colortex3, texelCoord + ivec2( 1, -1), 0).rgb);
+        float lumaDownLeft  = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2(-1, -1)), 0).rgb);
+        float lumaUpRight   = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2( 1,  1)), 0).rgb);
+        float lumaUpLeft    = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2(-1,  1)), 0).rgb);
+        float lumaDownRight = GetLuminance(texelFetch(colortex3, ClampFXAATexel(texelCoord + ivec2( 1, -1)), 0).rgb);
 
         float lumaDownUp    = lumaDown + lumaUp;
         float lumaLeftRight = lumaLeft + lumaRight;

@@ -27,7 +27,7 @@
     #define ANISOTROPIC_FILTER 0 //[0 4 8 16]
     #define ENTITY_SHADOW -1 //[-1 1 2]
 
-    #define COLORED_LIGHTING 0 //[128 192 256 384 512 768 1024]
+    #define COLORED_LIGHTING 0 //[0 128 192 256 384 512 768 1024]
     #define WORLD_SPACE_REFLECTIONS -1 //[-1 1]
     #if defined IRIS_FEATURE_CUSTOM_IMAGES && SHADOW_QUALITY > -1 && !defined MC_OS_MAC
         #define COLORED_LIGHTING_INTERNAL COLORED_LIGHTING
@@ -123,6 +123,9 @@
 
     #define NETHER_VIEW_LIMIT 256.0 //[96.0 112.0 128.0 160.0 192.0 224.0 256.0 320.0 384.0 512.0 768.0 1024.0 99999.0]
     #define NETHER_COLOR_MODE 3 //[3 2 0]
+    #ifndef MC_OS_MAC
+        #define NETHER_BIOME_FOG_STRENGTH 100 //[0 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150]
+    #endif
     #define NETHER_STORM
     #define NETHER_STORM_LOWER_ALT 28 //[-296 -292 -288 -284 -280 -276 -272 -268 -264 -260 -256 -252 -248 -244 -240 -236 -232 -228 -224 -220 -216 -212 -208 -204 -200 -196 -192 -188 -184 -180 -176 -172 -168 -164 -160 -156 -152 -148 -144 -140 -136 -132 -128 -124 -120 -116 -112 -108 -104 -100 -96 -92 -88 -84 -80 -76 -72 -68 -64 -60 -56 -52 -48 -44 -40 -36 -32 -28 -24 -20 -16 -12 -8 -4 0 4 8 12 16 20 22 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132 136 140 144 148 152 156 160 164 168 172 176 180 184 188 192 196 200 204 208 212 216 220 224 228 232 236 240 244 248 252 256 260 264 268 272 276 280 284 288 292 296 300]
     #define NETHER_STORM_HEIGHT 200 //[25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 325 350 375 400 425 450 475 500 550 600 650 700 750 800 850 900]
@@ -272,7 +275,7 @@
     #define PIXEL_SCALE 1 //[-2 -1 1 2 3 4 5]
 
     #define TM_EXPOSURE 1.25 //[0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00 2.10 2.20 2.30 2.40 2.50 2.60 2.70 2.80]
-    #define TM_CONTRAST 1.28 //[0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00]
+    #define TM_CONTRAST 1.28 //[0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.28 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00]
     #define T_SATURATION 1.20 //[0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00]
     #define WHITE_BALANCE 6500.0 // [5500.0 6000.0 6500.0 7000.0]
     #define T_VIBRANCE 1.00 //[0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00]
@@ -728,23 +731,62 @@
     #endif
     vec3 waterFogColor = underwaterColorM2 * vec3(0.2 + 0.1 * vsBrightness);
 
+    #ifdef NETHER
+    #ifdef MC_OS_MAC
+        #if NETHER_COLOR_MODE == 3
+            float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
+            vec3 netherColor = mix(
+                fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
+                (
+                    inNetherWastes * vec3(0.4, 0.14, 0.06) + inCrimsonForest * vec3(0.36, 0.07, 0.05) +
+                    inWarpedForest * vec3(0.18, 0.1, 0.25) + inBasaltDeltas * vec3(0.25, 0.235, 0.23) +
+                    inSoulValley * vec3(0.1, vec2(0.24))
+                ),
+                netherColorMixer
+            );
+        #elif NETHER_COLOR_MODE == 2
+            vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
+        #elif NETHER_COLOR_MODE == 0
+            vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
+        #endif
+    #else
     #if NETHER_COLOR_MODE == 3
         float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
         vec3 netherColor = mix(
             fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
             (
-                inNetherWastes * vec3(0.4, 0.14, 0.06) + inCrimsonForest * vec3(0.36, 0.07, 0.05) +
-                inWarpedForest * vec3(0.18, 0.1, 0.25) + inBasaltDeltas * vec3(0.25, 0.235, 0.23) +
-                inSoulValley * vec3(0.1, vec2(0.24))
+                inNetherWastes * vec3(0.44, 0.14, 0.035) + inCrimsonForest * vec3(0.42, 0.045, 0.035) +
+                inWarpedForest * vec3(0.055, 0.28, 0.27) + inBasaltDeltas * vec3(0.22, 0.22, 0.23) +
+                inSoulValley * vec3(0.08, 0.20, 0.30)
             ),
-            netherColorMixer
+            clamp01(netherColorMixer)
         );
     #elif NETHER_COLOR_MODE == 2
         vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
     #elif NETHER_COLOR_MODE == 0
         vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
     #endif
-    vec3 lavaLightColor = vec3(0.15, 0.06, 0.01);
+
+    float GetNetherBiomeFogDensity() {
+        #if NETHER_COLOR_MODE != 3
+            return 1.0;
+        #else
+            float biomeMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
+            float densityWeighted = (
+                inNetherWastes * 1.00 + inCrimsonForest * 1.28 + inWarpedForest * 0.72 +
+                inBasaltDeltas * 1.38 + inSoulValley * 0.75
+            ) / max(biomeMixer, 0.0001);
+            float biomeDensity = mix(1.0, densityWeighted, clamp01(biomeMixer));
+            return mix(1.0, biomeDensity, NETHER_BIOME_FOG_STRENGTH * 0.01);
+        #endif
+    }
+    #endif
+    #endif
+    #ifdef MC_OS_MAC
+        vec3 lavaLightColor = vec3(0.15, 0.06, 0.01);
+    #else
+        vec3 lavaLightColor = vec3(0.19, 0.072, 0.012);
+    #endif
 
     const vec3 endSkyColor = vec3(0.005, 0.006, 0.01);
 

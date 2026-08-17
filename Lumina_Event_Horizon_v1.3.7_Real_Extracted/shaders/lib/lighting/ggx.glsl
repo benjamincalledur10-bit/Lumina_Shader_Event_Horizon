@@ -6,7 +6,7 @@ float GetNoHSquared(float radiusTan, float NoL, float NoV, float VoL) {
     if (RoL >= radiusCos)
         return 1.0;
 
-    float rOverLengthT = radiusCos * radiusTan / sqrt(1.0 - RoL * RoL);
+    float rOverLengthT = radiusCos * radiusTan / sqrt(max(1.0 - RoL * RoL, 1e-8));
     float NoTr = rOverLengthT * (NoV - RoL * NoL);
     float VoTr = rOverLengthT * (2.0 * NoV * NoV - 1.0 - RoL * VoL);
 
@@ -18,7 +18,8 @@ float GetNoHSquared(float radiusTan, float NoL, float NoV, float VoL) {
     float xNum = q * (-0.5 * p + 0.25 * VoBr * NoLVTr);
     float xDenom = p * p + s * ((s - 2.0 * p)) + NoLVTr * ((NoL * radiusCos + NoV) * VoLVTr * VoLVTr +
                    q * (-0.5 * (VoLVTr + VoL * radiusCos) - 0.5));
-    float twoX1 = 2.0 * xNum / (xDenom * xDenom + xNum * xNum);
+    float twoXDenominator = max(xDenom * xDenom + xNum * xNum, 1e-8);
+    float twoX1 = 2.0 * xNum / twoXDenominator;
     float sinTheta = twoX1 * xDenom;
     float cosTheta = 1.0 - twoX1 * xNum;
     NoTr = cosTheta * NoTr + sinTheta * NoBr;
@@ -28,7 +29,7 @@ float GetNoHSquared(float radiusTan, float NoL, float NoV, float VoL) {
     float newVoL = VoL * radiusCos + VoTr;
     float NoH = NoV + newNoL;
     float HoH = 2.0 * newVoL + 2.0;
-    return clamp(NoH * NoH / HoH, 0.0, 1.0);
+    return clamp(NoH * NoH / max(HoH, 1e-8), 0.0, 1.0);
 }
 
 float GGX(vec3 normalM, vec3 viewPos, vec3 lightVec, float NdotLmax0, float smoothnessG) {
@@ -36,9 +37,13 @@ float GGX(vec3 normalM, vec3 viewPos, vec3 lightVec, float NdotLmax0, float smoo
     float roughnessP = (1.35 - smoothnessG);
     float roughness = pow2(pow2(roughnessP));
 
-    vec3 halfVec = normalize(lightVec - viewPos);
+    vec3 halfVectorInput = lightVec - viewPos;
+    float halfVectorLengthSquared = dot(halfVectorInput, halfVectorInput);
+    if (halfVectorLengthSquared <= 1e-8)
+        return 0.0;
+    vec3 halfVec = halfVectorInput * inversesqrt(halfVectorLengthSquared);
 
-    float dotLH = clamp(dot(halfVec, lightVec), 0.0, 1.0);
+    float dotLH = clamp(dot(halfVec, lightVec), 0.0001, 1.0);
     float dotNV = dot(normalM, -viewPos);
 
     #if WATER_REFLECT_QUALITY >= 2

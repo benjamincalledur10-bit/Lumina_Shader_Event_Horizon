@@ -245,14 +245,20 @@ vec4 GetVolumetricLight(inout vec3 color, inout float vlFactor, vec3 translucent
     }
 
     #ifdef LIGHTSHAFT_SMOKE
-        volumetricLight *= pow(totalSmoke / volumetricLight.a, min(1.0 - volumetricLight.a, 0.5));
-        volumetricLight.rgb /= pow(0.5, 1.0 - volumetricLight.a);
+        if (volumetricLight.a > 1e-6) {
+            float smokeRatio = max(totalSmoke / volumetricLight.a, 0.0);
+            volumetricLight *= pow(smokeRatio, min(1.0 - volumetricLight.a, 0.5));
+            volumetricLight.rgb /= pow(0.5, 1.0 - volumetricLight.a);
+        } else {
+            volumetricLight = vec4(0.0);
+        }
     #endif
 
     // Decision of Intensity for Scene Aware Light Shafts //
     #if defined OVERWORLD && LIGHTSHAFT_BEHAVIOUR == 1 && SHADOW_QUALITY >= 1
         if (viewWidth + viewHeight - gl_FragCoord.x - gl_FragCoord.y < 1.5) {
-            if (frameCounter % int(0.06666 / frameTimeSmooth + 0.5) == 0) { // Change speed is not too different above 10 fps
+            int frameUpdateInterval = max(int(0.06666 / max(frameTimeSmooth, 0.0001) + 0.5), 1);
+            if (frameCounter % frameUpdateInterval == 0) { // Change speed is not too different above 10 fps
                 int salsX = 5;
                 int salsY = 5;
                 float heightThreshold = 6.0;

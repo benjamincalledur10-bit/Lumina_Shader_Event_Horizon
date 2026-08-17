@@ -31,7 +31,10 @@
     #include "/lib/misc/pixelation.glsl"
 #endif
 
-vec3 highlightColor = normalize(pow(lightColor, vec3(0.37))) * (0.3 + 1.5 * sunVisibility2) * (1.0 - 0.85 * rainFactor);
+vec3 highlightColorBase = pow(max(lightColor, vec3(0.0)), vec3(0.37));
+float highlightColorLengthSquared = dot(highlightColorBase, highlightColorBase);
+vec3 highlightColor = (highlightColorLengthSquared > 1e-8 ? highlightColorBase * inversesqrt(highlightColorLengthSquared) : vec3(0.0))
+                    * (0.3 + 1.5 * sunVisibility2) * (1.0 - 0.85 * rainFactor);
 
 //Lighting//
 void DoLighting(inout vec4 color, inout vec3 shadowMult, vec3 playerPos, vec3 viewPos, float lViewPos, vec3 geoNormal, vec3 normalM, float dither,
@@ -448,8 +451,12 @@ void DoLighting(inout vec4 color, inout vec3 shadowMult, vec3 playerPos, vec3 vi
     #ifdef END
         #if defined IS_IRIS && MC_VERSION >= 12109
             vec3 worldEndFlashPosition = mat3(gbufferModelViewInverse) * endFlashPosition;
-            worldEndFlashPosition = normalize(vec3(worldEndFlashPosition.x, 0.0, worldEndFlashPosition.z));
-            float endFlashDirectionFactor = max0(1.0 + dot(worldGeoNormal, normalize(worldEndFlashPosition))) * 0.5;
+            vec2 horizontalEndFlashDirection = worldEndFlashPosition.xz;
+            float horizontalEndFlashLengthSquared = dot(horizontalEndFlashDirection, horizontalEndFlashDirection);
+            worldEndFlashPosition = horizontalEndFlashLengthSquared > 1e-8
+                ? vec3(horizontalEndFlashDirection.x, 0.0, horizontalEndFlashDirection.y) * inversesqrt(horizontalEndFlashLengthSquared)
+                : vec3(0.0);
+            float endFlashDirectionFactor = max0(1.0 + dot(worldGeoNormal, worldEndFlashPosition)) * 0.5;
                   endFlashDirectionFactor = pow2(pow2(endFlashDirectionFactor));
 
             vec3 endFlashColor = (endOrangeCol + 0.5 * endLightColor) * endFlashIntensity * pow2(lightmapYM);

@@ -3,7 +3,13 @@ color = vec4(0.0);
 
 int sampleCount = 8;
 
-float multiplier = 0.4 / (-viewVector.z * sampleCount);
+#ifdef MC_OS_MAC
+    float multiplier = 0.4 / (-viewVector.z * sampleCount);
+#else
+    float portalViewDepth = -viewVector.z;
+    float safePortalViewDepth = abs(portalViewDepth) > 0.0001 ? portalViewDepth : (portalViewDepth < 0.0 ? -0.0001 : 0.0001);
+    float multiplier = 0.4 / (safePortalViewDepth * sampleCount);
+#endif
 vec2 interval = viewVector.xy * multiplier;
 vec2 coord = signMidCoordPos * 0.5 + 0.5;
 vec2 absMidCoordPos2 = absMidCoordPos * 2.0;
@@ -25,13 +31,22 @@ for (int i = 0; i < sampleCount; i++) {
 }
 color /= sampleCount;
 
-color.rgb *= color.rgb * vec3(1.25, 1.0, 0.65);
+#ifdef MC_OS_MAC
+    color.rgb *= color.rgb * vec3(1.25, 1.0, 0.65);
+#else
+    // Preserve blue energy in the portal instead of pushing the result toward red.
+    color.rgb *= color.rgb * vec3(0.95, 0.65, 1.5);
+#endif
 color.a = sqrt1(color.a) * 0.8;
 
 emission *= emission;
 emission *= emission;
 emission *= emission;
-emission = clamp(emission * 120.0, 0.03, 1.2) * 8.0;
+#ifdef MC_OS_MAC
+    emission = clamp(emission * 120.0, 0.03, 1.2) * 8.0;
+#else
+    emission = clamp(emission * 110.0, 0.03, 1.1) * 7.0;
+#endif
 
 #define PORTAL_REDUCE_CLOSEUP
 #ifdef PORTAL_REDUCE_CLOSEUP
@@ -65,8 +80,16 @@ emission = clamp(emission * 120.0, 0.03, 1.2) * 8.0;
         }
 
         vec4 edgeColor = vec4(normalize(color.rgb), 1.0);
-        edgeColor.b *= 0.8;
+        #ifdef MC_OS_MAC
+            edgeColor.b *= 0.8;
+        #else
+            edgeColor.b *= 1.15;
+        #endif
         color = mix(color, edgeColor, edge);
-        emission = mix(emission, 5.0, edge);
+        #ifdef MC_OS_MAC
+            emission = mix(emission, 5.0, edge);
+        #else
+            emission = mix(emission, 5.5, edge);
+        #endif
     }
 #endif

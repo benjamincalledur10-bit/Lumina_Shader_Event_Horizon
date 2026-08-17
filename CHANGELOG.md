@@ -14,6 +14,10 @@ All notable changes to Lumina Event Horizon are documented in this file.
   Crimson Forest, Warped Forest, Basalt Deltas, and Soul Sand Valley.
 - Added a 0-150% Nether Biome Fog Strength control without adding fog texture
   samples.
+- Rebalanced lava toward natural orange local lighting with controlled surface
+  emission so large lava fields do not overexpose the whole view.
+- Shifted Nether Portals toward a cinematic purple-blue glow and increased
+  their colored-light contribution to nearby terrain.
 
 ### Fixed
 

@@ -27,13 +27,14 @@ for (int i = 0; i < sampleCount; i++) {
 }
 color /= sampleCount;
 
-color.rgb *= color.rgb * vec3(1.25, 1.0, 0.65);
+// Preserve blue energy in the portal instead of pushing the result toward red.
+color.rgb *= color.rgb * vec3(0.95, 0.65, 1.5);
 color.a = sqrt1(color.a) * 0.8;
 
 emission *= emission;
 emission *= emission;
 emission *= emission;
-emission = clamp(emission * 120.0, 0.03, 1.2) * 8.0;
+emission = clamp(emission * 110.0, 0.03, 1.1) * 7.0;
 
 #define PORTAL_REDUCE_CLOSEUP
 #ifdef PORTAL_REDUCE_CLOSEUP
@@ -67,8 +68,8 @@ emission = clamp(emission * 120.0, 0.03, 1.2) * 8.0;
         }
 
         vec4 edgeColor = vec4(normalize(color.rgb), 1.0);
-        edgeColor.b *= 0.8;
+        edgeColor.b *= 1.15;
         color = mix(color, edgeColor, edge);
-        emission = mix(emission, 5.0, edge);
+        emission = mix(emission, 5.5, edge);
     }
 #endif

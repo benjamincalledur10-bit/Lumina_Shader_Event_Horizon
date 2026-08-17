@@ -757,7 +757,7 @@
         vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
         float netherBiomeFogDensity = 1.0;
     #endif
-    vec3 lavaLightColor = vec3(0.15, 0.06, 0.01);
+    vec3 lavaLightColor = vec3(0.19, 0.072, 0.012);
 
     const vec3 endSkyColor = vec3(0.005, 0.006, 0.01);
 

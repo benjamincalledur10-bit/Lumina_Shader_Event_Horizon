@@ -123,7 +123,9 @@
 
     #define NETHER_VIEW_LIMIT 256.0 //[96.0 112.0 128.0 160.0 192.0 224.0 256.0 320.0 384.0 512.0 768.0 1024.0 99999.0]
     #define NETHER_COLOR_MODE 3 //[3 2 0]
-    #define NETHER_BIOME_FOG_STRENGTH 100 //[0 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150]
+    #ifndef MC_OS_MAC
+        #define NETHER_BIOME_FOG_STRENGTH 100 //[0 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150]
+    #endif
     #define NETHER_STORM
     #define NETHER_STORM_LOWER_ALT 28 //[-296 -292 -288 -284 -280 -276 -272 -268 -264 -260 -256 -252 -248 -244 -240 -236 -232 -228 -224 -220 -216 -212 -208 -204 -200 -196 -192 -188 -184 -180 -176 -172 -168 -164 -160 -156 -152 -148 -144 -140 -136 -132 -128 -124 -120 -116 -112 -108 -104 -100 -96 -92 -88 -84 -80 -76 -72 -68 -64 -60 -56 -52 -48 -44 -40 -36 -32 -28 -24 -20 -16 -12 -8 -4 0 4 8 12 16 20 22 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 132 136 140 144 148 152 156 160 164 168 172 176 180 184 188 192 196 200 204 208 212 216 220 224 228 232 236 240 244 248 252 256 260 264 268 272 276 280 284 288 292 296 300]
     #define NETHER_STORM_HEIGHT 200 //[25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 325 350 375 400 425 450 475 500 550 600 650 700 750 800 850 900]
@@ -729,6 +731,25 @@
     #endif
     vec3 waterFogColor = underwaterColorM2 * vec3(0.2 + 0.1 * vsBrightness);
 
+    #ifdef NETHER
+    #ifdef MC_OS_MAC
+        #if NETHER_COLOR_MODE == 3
+            float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
+            vec3 netherColor = mix(
+                fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
+                (
+                    inNetherWastes * vec3(0.4, 0.14, 0.06) + inCrimsonForest * vec3(0.36, 0.07, 0.05) +
+                    inWarpedForest * vec3(0.18, 0.1, 0.25) + inBasaltDeltas * vec3(0.25, 0.235, 0.23) +
+                    inSoulValley * vec3(0.1, vec2(0.24))
+                ),
+                netherColorMixer
+            );
+        #elif NETHER_COLOR_MODE == 2
+            vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
+        #elif NETHER_COLOR_MODE == 0
+            vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
+        #endif
+    #else
     #if NETHER_COLOR_MODE == 3
         float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
         vec3 netherColor = mix(
@@ -740,24 +761,32 @@
             ),
             clamp01(netherColorMixer)
         );
-        float netherBiomeDensityWeighted = (
-            inNetherWastes * 1.00 + inCrimsonForest * 1.28 + inWarpedForest * 0.72 +
-            inBasaltDeltas * 1.38 + inSoulValley * 0.75
-        ) / max(netherColorMixer, 0.0001);
-        float netherBiomeDensityRaw = mix(1.0, netherBiomeDensityWeighted, clamp01(netherColorMixer));
-        float netherBiomeFogDensity = mix(
-            1.0,
-            netherBiomeDensityRaw,
-            NETHER_BIOME_FOG_STRENGTH * 0.01
-        );
     #elif NETHER_COLOR_MODE == 2
         vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
-        float netherBiomeFogDensity = 1.0;
     #elif NETHER_COLOR_MODE == 0
         vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
-        float netherBiomeFogDensity = 1.0;
     #endif
-    vec3 lavaLightColor = vec3(0.19, 0.072, 0.012);
+
+    float GetNetherBiomeFogDensity() {
+        #if NETHER_COLOR_MODE != 3
+            return 1.0;
+        #else
+            float biomeMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
+            float densityWeighted = (
+                inNetherWastes * 1.00 + inCrimsonForest * 1.28 + inWarpedForest * 0.72 +
+                inBasaltDeltas * 1.38 + inSoulValley * 0.75
+            ) / max(biomeMixer, 0.0001);
+            float biomeDensity = mix(1.0, densityWeighted, clamp01(biomeMixer));
+            return mix(1.0, biomeDensity, NETHER_BIOME_FOG_STRENGTH * 0.01);
+        #endif
+    }
+    #endif
+    #endif
+    #ifdef MC_OS_MAC
+        vec3 lavaLightColor = vec3(0.15, 0.06, 0.01);
+    #else
+        vec3 lavaLightColor = vec3(0.19, 0.072, 0.012);
+    #endif
 
     const vec3 endSkyColor = vec3(0.005, 0.006, 0.01);
 

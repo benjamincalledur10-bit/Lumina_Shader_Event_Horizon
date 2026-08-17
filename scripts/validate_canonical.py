@@ -52,7 +52,6 @@ UNSAFE_SHADER_PATTERNS = (
         re.compile(r"volumetricLight\s*\*=\s*pow\(totalSmoke\s*/\s*volumetricLight\.a"),
         "unsafe smoke normalization with zero accumulated alpha",
     ),
-    (re.compile(r"0\.4\s*/\s*\(-viewVector\.z\s*\*\s*sampleCount\)"), "unsafe portal grazing-angle division"),
     (re.compile(r"normalize\(lightVec\s*-\s*viewPos\)"), "unsafe zero-length GGX half-vector normalization"),
     (re.compile(r"mat2\s+J\s*=\s*inverseM\(mat2\(dFdx\(uv\)"), "unguarded anisotropic derivative inversion"),
     (re.compile(r"texelFetch\(colortex3,\s*texelCoord\s*\+\s*ivec2"), "unclamped FXAA neighborhood fetch"),
@@ -238,17 +237,32 @@ def validate_nether_features(errors: list[str]) -> None:
     storm = (SHADER_ROOT / "lib/atmospherics/netherStorm.glsl").read_text(
         encoding="utf-8-sig"
     )
+    blocklight = (SHADER_ROOT / "lib/colors/blocklightColors.glsl").read_text(
+        encoding="utf-8-sig"
+    )
+    lava = (
+        SHADER_ROOT / "lib/materials/specificMaterials/terrain/lava.glsl"
+    ).read_text(encoding="utf-8-sig")
+    portal = (
+        SHADER_ROOT
+        / "lib/materials/specificMaterials/translucents/netherPortal.glsl"
+    ).read_text(encoding="utf-8-sig")
     properties = (SHADER_ROOT / "shaders.properties").read_text(encoding="utf-8-sig")
     language = (SHADER_ROOT / "lang/en_US.lang").read_text(encoding="utf-8-sig")
 
     required = (
         (common, "#define NETHER_BIOME_FOG_STRENGTH 100", "Nether fog control default"),
-        (fog, "lPos * netherBiomeFogDensity / farM", "biome fog density application"),
+        (common, "#ifdef NETHER", "Nether-only compilation guard"),
+        (common, "#ifdef MC_OS_MAC", "macOS Nether compatibility path"),
+        (common, "float GetNetherBiomeFogDensity()", "non-macOS Nether fog density function"),
+        (fog, "lPos * GetNetherBiomeFogDensity() / farM", "biome fog density application"),
         (properties, "screen.NETHER_SETTINGS", "Nether settings screen"),
         (properties, "NETHER_BIOME_FOG_STRENGTH", "Nether fog control exposure"),
         (language, "option.NETHER_BIOME_FOG_STRENGTH", "Nether fog control label"),
         (storm, "stormBiomeIntensity", "biome storm intensity"),
         (storm, "basaltAsh", "Basalt ash adaptation"),
+        (storm, "#ifdef MC_OS_MAC", "v1.3.7-compatible macOS storm path"),
+        (portal, "float multiplier = 0.4 / (safePortalViewDepth * sampleCount)", "protected non-macOS portal projection"),
     )
     for text, snippet, description in required:
         if snippet not in text:
@@ -256,6 +270,36 @@ def validate_nether_features(errors: list[str]) -> None:
 
     if re.search(r"\b(?:texture\w*|texelFetch)\s*\(", strip_comments_and_strings(fog)):
         errors.append("Nether fog must not add texture samples")
+
+    global_density_names = (
+        "netherBiomeDensityWeighted",
+        "netherBiomeDensityRaw",
+        "netherBiomeFogDensity",
+    )
+    for name in global_density_names:
+        if re.search(rf"^\s*(?:const\s+)?float\s+{name}\b", common, re.MULTILINE):
+            errors.append(f"forbidden global Nether fog calculation: {name}")
+
+    mac_v137_signatures = (
+        (common, "inWarpedForest * vec3(0.18, 0.1, 0.25)", "v1.3.7 macOS Nether color"),
+        (common, "vec3 lavaLightColor = vec3(0.15, 0.06, 0.01)", "v1.3.7 macOS lava ambience"),
+        (fog, "float fog = lPos / farM", "v1.3.7 macOS Nether fog"),
+        (storm, "float stormSample = pow2(Noise3D(tracePosM + wind))", "v1.3.7 macOS storm sampling"),
+        (storm, "netherStorm.a = min1(netherStorm.a * NETHER_STORM_I)", "v1.3.7 macOS storm opacity"),
+        (blocklight, "vec3 lavaSpecialLightColor = vec3(3.25, 0.9, 0.2) * 3.9", "v1.3.7 macOS lava light"),
+        (blocklight, "vec3 netherPortalSpecialLightColor = vec3(1.8, 0.4, 2.2) * 0.8", "v1.3.7 macOS portal light"),
+        (blocklight, "if (mat == 13) return vec4(lavaSpecialLightColor, 0.8)", "v1.3.7 macOS lava floodfill"),
+        (blocklight, "if (mat == 25) return vec4(netherPortalSpecialLightColor * 2.0, 0.4)", "v1.3.7 macOS portal floodfill"),
+        (lava, "emission = GetLuminance(color.rgb) * 7.48 + 0.5", "v1.3.7 macOS lava emission"),
+        (portal, "float multiplier = 0.4 / (-viewVector.z * sampleCount)", "v1.3.7 macOS portal projection"),
+        (portal, "color.rgb *= color.rgb * vec3(1.25, 1.0, 0.65)", "v1.3.7 macOS portal color"),
+        (portal, "emission = clamp(emission * 120.0, 0.03, 1.2) * 8.0", "v1.3.7 macOS portal emission"),
+        (portal, "edgeColor.b *= 0.8", "v1.3.7 macOS portal edge color"),
+        (portal, "emission = mix(emission, 5.0, edge)", "v1.3.7 macOS portal edge emission"),
+    )
+    for text, snippet, description in mac_v137_signatures:
+        if snippet not in text:
+            errors.append(f"missing {description}: {snippet}")
 
 
 def parse_args() -> argparse.Namespace:

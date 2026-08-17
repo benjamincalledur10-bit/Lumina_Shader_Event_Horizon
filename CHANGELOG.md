@@ -26,6 +26,11 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ### Fixed
 
+- Moved Nether biome-density calculations out of global scope and compiled them
+  only for non-macOS Nether programs to avoid an Apple OpenGL compiler crash.
+- Restored complete v1.3.7-compatible `MC_OS_MAC` Nether paths for fog, storm,
+  lava, portals, biome colors, and local lighting; Windows and Linux retain the
+  v1.3.8 improvements.
 - Restored nine-sample terrain occlusion for White Hole rays in the vertex pass.
 - Restored Distant Horizons depth occlusion and viewport bounds checks for the
   White Hole ray source.

@@ -306,6 +306,9 @@ def validate_end_performance_guards(errors: list[str]) -> None:
     event_horizon = (
         SHADER_ROOT / "lib/atmospherics/eventHorizon.glsl"
     ).read_text(encoding="utf-8-sig")
+    deferred = (SHADER_ROOT / "program/deferred1.glsl").read_text(
+        encoding="utf-8-sig"
+    )
     required = (
         (
             "float maxAngle = bhSize * EVENT_HORIZON_DISK_OUTER_RADIUS",
@@ -317,10 +320,21 @@ def validate_end_performance_guards(errors: list[str]) -> None:
         ),
         ("float maxAngle = bhSize * 3.5", "white-hole angular early rejection"),
         ("if (r < 1.5)", "masked white-hole disk sampling guard"),
+        (
+            "vec3 GetBlackHoleWideRays(vec3 nViewPos)",
+            "analytic full-width Black Hole ray function",
+        ),
+        (
+            "float brightCore = exp(-lineDistance * 420.0)",
+            "full-width Black Hole ray core",
+        ),
     )
     for snippet, description in required:
         if snippet not in event_horizon:
             errors.append(f"missing {description}: {snippet}")
+
+    if "color.rgb += GetBlackHoleWideRays(nViewPos)" not in deferred:
+        errors.append("missing full-width Black Hole ray composition in deferred1")
 
 
 def parse_args() -> argparse.Namespace:

@@ -2,6 +2,13 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Restored the Black Hole's full-width horizontal accretion rays with a low-cost
+  analytic pass, while keeping procedural disk-noise samples locally bounded.
+
 ## [1.3.8] - 2026-08-16
 
 ### Changed

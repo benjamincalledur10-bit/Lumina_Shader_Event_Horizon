@@ -292,6 +292,8 @@ void main() {
                 color.rgb = vec3(0.0);
             }
             
+            color.rgb += GetBlackHoleWideRays(nViewPos);
+
             vec4 bh = GetBlackHole(nViewPos, upVec, eastVec, dither);
             color.rgb = mix(color.rgb, bh.rgb, bh.a);
             

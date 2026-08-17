@@ -18,6 +18,11 @@ All notable changes to Lumina Event Horizon are documented in this file.
   emission so large lava fields do not overexpose the whole view.
 - Shifted Nether Portals toward a cinematic purple-blue glow and increased
   their colored-light contribution to nearby terrain.
+- Adapted Nether Storm color and opacity to the smoothly blended biome state,
+  with denser gray ash in Basalt Deltas and reduced intensity in Warped Forest
+  and Soul Sand Valley.
+- Extended canonical validation to protect the Nether fog control, biome storm
+  integration, settings exposure, and zero-texture-sample fog requirement.
 
 ### Fixed
 

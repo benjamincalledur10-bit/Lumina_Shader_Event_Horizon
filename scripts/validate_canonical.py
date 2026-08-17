@@ -230,6 +230,34 @@ def validate_repository_hygiene(errors: list[str]) -> None:
             errors.append(f"unexpected ZIP inside canonical package: {relative(path)}")
 
 
+def validate_nether_features(errors: list[str]) -> None:
+    common = (SHADER_ROOT / "lib/common.glsl").read_text(encoding="utf-8-sig")
+    fog = (SHADER_ROOT / "lib/atmospherics/fog/mainFog.glsl").read_text(
+        encoding="utf-8-sig"
+    )
+    storm = (SHADER_ROOT / "lib/atmospherics/netherStorm.glsl").read_text(
+        encoding="utf-8-sig"
+    )
+    properties = (SHADER_ROOT / "shaders.properties").read_text(encoding="utf-8-sig")
+    language = (SHADER_ROOT / "lang/en_US.lang").read_text(encoding="utf-8-sig")
+
+    required = (
+        (common, "#define NETHER_BIOME_FOG_STRENGTH 100", "Nether fog control default"),
+        (fog, "lPos * netherBiomeFogDensity / farM", "biome fog density application"),
+        (properties, "screen.NETHER_SETTINGS", "Nether settings screen"),
+        (properties, "NETHER_BIOME_FOG_STRENGTH", "Nether fog control exposure"),
+        (language, "option.NETHER_BIOME_FOG_STRENGTH", "Nether fog control label"),
+        (storm, "stormBiomeIntensity", "biome storm intensity"),
+        (storm, "basaltAsh", "Basalt ash adaptation"),
+    )
+    for text, snippet, description in required:
+        if snippet not in text:
+            errors.append(f"missing {description}: {snippet}")
+
+    if re.search(r"\b(?:texture\w*|texelFetch)\s*\(", strip_comments_and_strings(fog)):
+        errors.append("Nether fog must not add texture samples")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -252,6 +280,7 @@ def main() -> int:
     validate_option_defaults(files, errors)
     validate_known_shader_hazards(files, errors)
     validate_repository_hygiene(errors)
+    validate_nether_features(errors)
     if args.base_ref:
         changed_paths(args.base_ref, errors)
 

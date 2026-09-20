@@ -120,8 +120,7 @@ logs when available.
 
 - **Main developer:** Benjiaa
 - Lumina Event Horizon is based on
-  [Complementary Reimagined](https://www.complementary.dev/shaders/)
-  by EminGT. Special thanks to EminGT and the Complementary shader community.
+  [Complementary Reimagined](https://www.complementary.dev/shaders/).
 
 ## Community and support
 

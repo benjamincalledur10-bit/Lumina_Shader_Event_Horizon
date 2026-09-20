@@ -15,9 +15,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_ROOT = REPOSITORY_ROOT / "Lumina_Event_Horizon_v1.3.7_Real_Extracted"
 SHADER_ROOT = CANONICAL_ROOT / "shaders"
 SHADER_SUFFIXES = {".csh", ".fsh", ".glsl", ".vsh"}
-EXPECTED_SHADER_FILES = 379
-EXPECTED_INCLUDES = 721
-EXPECTED_PACKAGE_FILES = 399
+EXPECTED_SHADER_FILES = 380
+EXPECTED_INCLUDES = 723
+EXPECTED_PACKAGE_FILES = 400
 HISTORICAL_ROOTS = (
     "Lumina_1.3.3_Extracted/",
     "Lumina_Event_Horizon/",
@@ -339,10 +339,10 @@ def validate_compatibility(errors: list[str]) -> None:
         metadata = json.loads((SHADER_ROOT / "pack.json").read_text())
     except (OSError, UnicodeError, json.JSONDecodeError):
         return  # Already reported by validate_json.
-    if metadata.get("version") != "1.3.9-rc.2":
-        errors.append("canonical pack version must be exactly 1.3.9-rc.2")
+    if metadata.get("version") != "1.3.9-rc.3":
+        errors.append("canonical pack version must be exactly 1.3.9-rc.3")
     if metadata.get("description") != (
-        "Lumina Shader Event Horizon v1.3.9-rc.2 (compatible from 1.8 to 26.3)"
+        "Lumina Shader Event Horizon v1.3.9-rc.3 (compatible from 1.8 to 26.3)"
     ):
         errors.append("canonical compatibility description is out of date")
 
@@ -407,6 +407,17 @@ def validate_post_processing(errors: list[str]) -> None:
                 errors.append(f"removed motion blur still referenced in {relative(path)}")
 
 
+def validate_cloud_model(errors: list[str]) -> None:
+    density_include = '#include "/lib/atmospherics/clouds/cloudDensity.glsl"'
+    for name in ("lib/atmospherics/clouds/luminaClouds.glsl", "lib/lighting/cloudShadows.glsl"):
+        if density_include not in (SHADER_ROOT / name).read_text():
+            errors.append(f"cloud rendering and shadows must share density: {name}")
+    properties = (SHADER_ROOT / "shaders.properties").read_text()
+    labels = (SHADER_ROOT / "lang/en_US.lang").read_text()
+    if "LUMINA_CLOUD_SEPARATION" not in properties or "option.LUMINA_CLOUD_SEPARATION=" not in labels:
+        errors.append("cloud separation must be exposed and labelled")
+
+
 def main() -> int:
     args = parse_args()
     errors: list[str] = []
@@ -417,6 +428,7 @@ def main() -> int:
     validate_json(errors)
     validate_compatibility(errors)
     validate_post_processing(errors)
+    validate_cloud_model(errors)
     validate_delimiters(files, errors)
     validate_preprocessor(files, errors)
     validate_option_defaults(files, errors)

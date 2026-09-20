@@ -50,9 +50,9 @@ vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset
 
     #if IRIS_VERSION >= 10800
         #if LUMINA_CLOUD_SCALE == 100
-            float modFactor = 1.0 / cloudNarrowness;
+            float modFactor = 4.0 / cloudNarrowness;
         #else
-            float modFactor = 1.0 / (cloudNarrowness * LUMINA_CLOUD_SCALE_M);
+            float modFactor = 4.0 / (cloudNarrowness * LUMINA_CLOUD_SCALE_M);
         #endif
 
         int modFactorM = int(modFactor);

@@ -334,6 +334,57 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def validate_compatibility(errors: list[str]) -> None:
+    try:
+        metadata = json.loads((SHADER_ROOT / "pack.json").read_text())
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return  # Already reported by validate_json.
+    if metadata.get("version") != "1.3.9":
+        errors.append("canonical pack version must be exactly 1.3.9")
+    if metadata.get("description") != (
+        "Lumina Shader Event Horizon v1.3.9 (compatible from 1.8 to 26.3)"
+    ):
+        errors.append("canonical compatibility description is out of date")
+
+    # Exercise both sides of every version boundary in the block library.
+    # This is a mapping check, not a claim of in-game or GPU validation.
+    source = (SHADER_ROOT / "block.properties").read_text()
+    versions = [10800, 10809, 11202, 11300, 12104, 12105, 12111,
+                260100, 260200, 260300]
+    for version in versions:
+        active = [True]
+        mappings: dict[int, list[str]] = {}
+        for line in source.splitlines():
+            line = line.strip()
+            condition = re.fullmatch(r"#if MC_VERSION >= (\d+)", line)
+            if condition:
+                active.append(active[-1] and version >= int(condition[1]))
+            elif line == "#else":
+                active[-1] = active[-2] and not active[-1]
+            elif line == "#endif":
+                active.pop()
+            elif line.startswith(("#if", "#elif")):
+                errors.append(f"unsupported block version condition: {line}")
+                return
+            elif active[-1] and line.startswith("block."):
+                key, values = line.split("=", 1)
+                material = int(key.removeprefix("block."))
+                if material in mappings:
+                    errors.append(f"MC_VERSION={version}: duplicate {key}")
+                mappings[material] = values.split()
+
+        expected = {
+            5004: "standing_sign" if version < 11300 else "oak_sign",
+            5016: "skull" if version < 11300 else "skeleton_skull",
+            10548: "enchantment_table" if version < 11300 else "enchanting_table",
+            10604: "redstone_torch" if version < 11300 else "redstone_torch:lit=true",
+            10605: "unlit_redstone_torch" if version < 11300 else "redstone_torch:lit=false",
+        }
+        for material, block in expected.items():
+            if block not in mappings.get(material, []):
+                errors.append(f"MC_VERSION={version}: missing {block} mapping")
+
+
 def main() -> int:
     args = parse_args()
     errors: list[str] = []
@@ -342,6 +393,7 @@ def main() -> int:
     validate_counts(files, errors)
     validate_includes(files, errors)
     validate_json(errors)
+    validate_compatibility(errors)
     validate_delimiters(files, errors)
     validate_preprocessor(files, errors)
     validate_option_defaults(files, errors)

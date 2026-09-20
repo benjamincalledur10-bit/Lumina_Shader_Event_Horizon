@@ -2,6 +2,26 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [1.3.9] - Unreleased
+
+### Changed
+
+- Updated the development version and compatibility target to Minecraft Java
+  Edition 1.8 through 26.3 across pack metadata and current documentation.
+- Enabled separate entity draws when required by the installed Iris loader.
+
+### Fixed
+
+- Added Iris 26.3 inline enchantment glint for held items, dropped items, and
+  armor, while retaining the legacy glint pass on older loaders.
+- Restored legacy sign, skull, banner, bed, silver shulker box, enchanting table,
+  and redstone torch material mappings for pre-1.13 Minecraft versions.
+
+### Validation
+
+- Added version and legacy/modern block-mapping regression checks.
+- Full in-game verification across Minecraft 1.8 through 26.3 remains pending.
+
 ## [1.3.81] - 2026-08-17
 
 ### Fixed
@@ -122,6 +142,6 @@ All notable changes to Lumina Event Horizon are documented in this file.
 - Fixed invalid block mappings, texture metadata, and dormant GLSL source text.
 - Removed invalid empty temporary PNG files from the shader pack.
 
-[Unreleased]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.6...HEAD
+[1.3.9]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.81...luminahorizondev
 [1.3.6]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.5

@@ -155,6 +155,14 @@ void main() {
 
     float skyLightFactor = GetSkyLightFactor(lmCoordM, shadowMult);
 
+    // Iris 26.3 renders enchanted items and armor in their material pass.
+    #ifdef IRIS_INLINE_GLINT
+        if (mc_hasGlint()) {
+            vec3 glint = mc_sampleGlint();
+            color.rgb += glint * glint; // Legacy SRC_COLOR, ONE glint blend.
+        }
+    #endif
+
     #ifdef COLOR_CODED_PROGRAMS
         ColorCodeProgram(color, -1);
     #endif

@@ -22,8 +22,9 @@ Use one of the official distribution pages:
 - [Modrinth](https://modrinth.com/shader/lumina-shader-event-horizon)
 - [CurseForge](https://www.curseforge.com/minecraft/shaders/lumina-shaders-event-horizon)
 
-The current stable release is **v1.3.81**. Download the `.zip` file and keep it
-compressed when installing it.
+The development version is **v1.3.9**, targeting Minecraft **1.8 through 26.3**.
+The latest published stable release remains **v1.3.81** until v1.3.9 is released.
+Keep downloaded `.zip` files compressed when installing them.
 
 ## Highlights
 
@@ -46,19 +47,26 @@ compressed when installing it.
 
 | Component | Support |
 | --- | --- |
-| Game | Minecraft: Java Edition 1.8 through 26.2 |
-| Shader loaders | Iris and OptiFine |
+| Game | Minecraft: Java Edition 1.8 through 26.3 |
+| Shader loaders | Iris for modern versions; OptiFine for supported legacy versions |
 | Rendering profiles | Potato, Very Low, Low, Medium, High, Very High, Ultra |
 
 [Iris](https://www.irisshaders.dev/) is recommended for modern Minecraft
-versions. Performance depends on resolution, render distance, selected profile,
-resource packs, and GPU.
+versions, including 26.3. Install a loader build matching your Minecraft version;
+the shader pack does not run in vanilla Minecraft without a shader loader.
+The same pack contains legacy and modern rendering paths, selected automatically.
+Individual effects depend on loader and hardware capabilities.
+
+The 1.3.9 compatibility changes have static validation; in-game verification across
+the full version range is still pending. Performance depends on resolution,
+render distance, selected profile, resource packs, and GPU.
 
 ## Installation
 
 1. Install [Iris](https://www.irisshaders.dev/) or a compatible OptiFine
    version.
-2. Download `Lumina_Event_Horizon_v1.3.81.zip` from an official source above.
+2. Download the latest stable ZIP from an official source above. The upcoming
+   development package is named `Lumina_Event_Horizon_v1.3.9.zip`.
 3. Open Minecraft and go to **Options > Video Settings > Shader Packs**.
 4. Open the shader-pack folder and place the downloaded ZIP inside it. Do not
    extract the archive.
@@ -85,6 +93,9 @@ The default shader-pack directory is usually:
 
 - `main` contains the current stable, published state.
 - `luminahorizondev` is used for development and validation before a release.
+- The canonical source is `Lumina_Event_Horizon_v1.3.7_Real_Extracted/`; its
+  historical directory name does not indicate the current pack version.
+- Run `python3 scripts/validate_canonical.py` before packaging or pushing.
 - Every release is documented in [CHANGELOG.md](CHANGELOG.md).
 - Bugs and reproducible visual issues can be reported through
   [GitHub Issues](https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/issues).

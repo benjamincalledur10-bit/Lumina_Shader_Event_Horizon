@@ -163,7 +163,7 @@
 
     #define WORLD_BLUR 0 //[0 3 1 2]
     #define WB_AF_STRENGTH 1.0 //[0.25 0.5 0.75 1.0 1.5 2.0 3.0]
-    #define WB_AF_QUALITY 32 //[16 32 48]
+    #define WB_AF_QUALITY 64 //[16 32 48 64 96]
     //#define WB_FOV_SCALED
     //#define WB_CHROMATIC
     //#define WB_ANAMORPHIC

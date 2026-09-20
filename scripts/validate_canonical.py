@@ -339,10 +339,10 @@ def validate_compatibility(errors: list[str]) -> None:
         metadata = json.loads((SHADER_ROOT / "pack.json").read_text())
     except (OSError, UnicodeError, json.JSONDecodeError):
         return  # Already reported by validate_json.
-    if metadata.get("version") != "1.3.9-rc.1":
-        errors.append("canonical pack version must be exactly 1.3.9-rc.1")
+    if metadata.get("version") != "1.3.9-rc.2":
+        errors.append("canonical pack version must be exactly 1.3.9-rc.2")
     if metadata.get("description") != (
-        "Lumina Shader Event Horizon v1.3.9-rc.1 (compatible from 1.8 to 26.3)"
+        "Lumina Shader Event Horizon v1.3.9-rc.2 (compatible from 1.8 to 26.3)"
     ):
         errors.append("canonical compatibility description is out of date")
 
@@ -393,6 +393,11 @@ def validate_post_processing(errors: list[str]) -> None:
                for name, default, values in OPTION_RE.findall(common)}
     if options.get("WORLD_BLUR") != ("0", ["0", "3", "1", "2"]):
         errors.append("autofocus must be selectable while world blur defaults to off")
+    if options.get("WB_AF_QUALITY") != ("64", ["16", "32", "48", "64", "96"]):
+        errors.append("cinematic blur must expose all quality levels and default to 64 samples")
+    for quality in (16, 32, 48, 64, 96):
+        if f"value.WB_AF_QUALITY.{quality}=" not in labels:
+            errors.append(f"missing cinematic blur quality label: {quality}")
     for name in ("WB_AF_STRENGTH", "WB_AF_QUALITY", "WB_DOF_FOCUS"):
         if name not in options or name not in properties or f"option.{name}=" not in labels:
             errors.append(f"missing autofocus setting or label: {name}")

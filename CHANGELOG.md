@@ -2,6 +2,27 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [1.3.9-rc.2] - 2026-09-19
+
+### Changed
+
+- Replaced sparse, unfiltered blur samples with explicit bilinear/trilinear
+  filtering and overlapping mipmap footprints in all world-blur modes.
+- Added a soft circular aperture to reduce repeated outlines and hard bokeh rings.
+- Upgraded Distance Blur and legacy Depth of Field to the same cinematic filter.
+- Added Cinematic (64 samples, default) and Ultra (96 samples) blur quality.
+- Scaled the filtering footprint with rendering resolution, including 4K.
+- Protected nearby silhouettes from mipmap leakage and clamped texture reads.
+
+### Validation
+
+- Passed 432 composite3 preprocessing configurations and canonical validation.
+- Compiled and rendered the shared blur filter in an isolated Apple M4 OpenGL
+  harness, including synthetic tests at 3840 x 2160 for constant-color preservation,
+  fine-pattern smoothing, and foreground color leakage.
+- Visual testing in Minecraft remains necessary to assess softness, contours,
+  focus transitions, and performance on each GPU.
+
 ## [1.3.9-rc.1] - 2026-09-19
 
 ### Added
@@ -155,3 +176,5 @@ All notable changes to Lumina Event Horizon are documented in this file.
 [1.3.9-rc.1]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.1
 [1.3.6]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.5
+
+[1.3.9-rc.2]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.2

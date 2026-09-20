@@ -2,6 +2,61 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [1.3.9] - 2026-09-19
+
+# 🌌 Lumina Event Horizon v1.3.9 — Cinematic Focus
+
+Bring your subject into focus. This update introduces **Cinematic Autofocus**, smoother depth-of-field effects, and compatibility improvements targeting Minecraft Java **1.8–26.3**. ✨
+
+## 🎯 New Cinematic Autofocus
+
+* Added automatic focus that follows what you are looking at.
+* Keeps the focused subject and foreground sharp while softly blurring the background.
+* Added adjustable intensity and quality controls.
+* Added depth handling for Distant Horizons terrain.
+
+## 🎬 Smoother, Cleaner Blur
+
+* Improved **Cinematic Autofocus**, **Distance Blur**, and the previous depth-of-field mode.
+* Added bilinear and trilinear filtering with smoother sampling to reduce pixelation, halos, and repeated outlines.
+* Added **Cinematic quality — 64 samples**.
+* Added **Ultra quality — 96 samples**.
+* Adapted filtering to the rendering resolution, including **4K**.
+* Improved protection against background color bleeding onto hands and nearby objects.
+
+## 🧩 Minecraft 26.3 Compatibility
+
+* Updated the target compatibility range to **Minecraft Java Edition 1.8–26.3**.
+* Added support for Iris’s integrated enchantment glint rendering on 26.3.
+* Enabled separate entity rendering when required by Iris.
+* Corrected legacy identifiers for signs, skulls, banners, beds, silver shulker boxes, enchanting tables, and redstone torches.
+
+## 💨 Motion Blur Removed
+
+* Removed the motion blur effect and its settings.
+* Removed the auxiliary bloom correction associated with motion blur.
+* Checked that bloom retains its previous behavior after the removal.
+
+## 📖 Documentation and Credits
+
+* Updated the README, changelog, and package metadata.
+* Added instructions for enabling and adjusting Cinematic Autofocus.
+* Streamlined the README credits while retaining attribution to **Complementary Reimagined** and preserving the existing license.
+
+## 🛠️ Validation and Testing
+
+* Expanded automated checks for version metadata, settings, and compatibility requirements.
+* Performed shader preprocessing checks.
+* Ran isolated GPU tests of the blur filter on **Apple M4**, including **4K rendering**.
+* Verified the ZIP packages published with **RC1** and **RC2**.
+
+## 📦 Release Preparation
+
+* Published two release candidates for testing.
+* The current v1.3.9 development baseline builds on **RC2**, followed by the README credits update.
+
+Sharper subjects, smoother backgrounds, and more control over your cinematic style. 🌠
+
 ## [1.3.9-rc.2] - 2026-09-19
 
 ### Changed
@@ -178,3 +233,5 @@ All notable changes to Lumina Event Horizon are documented in this file.
 [1.3.5]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.5
 
 [1.3.9-rc.2]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.2
+
+[1.3.9]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9

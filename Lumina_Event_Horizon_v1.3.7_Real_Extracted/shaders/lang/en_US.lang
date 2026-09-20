@@ -1129,6 +1129,3 @@ option.EVENT_HORIZON_LENSING_STRENGTH=Gravitational Lensing Strength
 option.EVENT_HORIZON_LENSING_STRENGTH.comment=Controls how strongly the black hole bends the background sky.
 option.EVENT_HORIZON_ROTATION_SPEED=Disk Rotation Speed
 option.EVENT_HORIZON_ROTATION_SPEED.comment=Controls the animation speed of the black and white hole disks.
-
-option.LUMINA_CLOUD_SEPARATION=Cloud Separation
-option.LUMINA_CLOUD_SEPARATION.comment=Opens gaps between cloud groups. Higher values create more open sky; lower values connect formations.

@@ -2,25 +2,6 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [1.3.9-rc.3] - 2026-09-19
-
-### Changed
-
-- Rebuilt cloud formation with open weather regions, three-dimensional billows,
-  rounded variable-height tops and a Cloud Separation control.
-- Shared cloud density between visible clouds, reflections and ground shadows.
-- Increased vertical sampling and made opacity depend on ray-step length with
-  front-to-back compositing for softer cloud edges and more gradual density.
-
-### Validation
-
-- Passed 864 preprocessing combinations spanning quality, scale, dimensions,
-  legacy/modern versions, platforms, and Distant Horizons.
-- Compiled and rendered the density and volumetric cloud functions in an isolated
-  Apple M4 OpenGL harness using the pack's noise texture. Density tests showed
-  decreasing coverage as Cloud Separation increased.
-- In-game appearance and performance remain to be validated.
-
 ## [1.3.9-rc.2] - 2026-09-19
 
 ### Changed
@@ -197,5 +178,3 @@ All notable changes to Lumina Event Horizon are documented in this file.
 [1.3.5]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.5
 
 [1.3.9-rc.2]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.2
-
-[1.3.9-rc.3]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.3

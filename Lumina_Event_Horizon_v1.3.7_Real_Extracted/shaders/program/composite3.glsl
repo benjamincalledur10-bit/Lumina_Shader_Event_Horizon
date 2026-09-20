@@ -21,7 +21,7 @@
 
 //Common Variables//
 #if WORLD_BLUR > 0
-    #if WORLD_BLUR == 2 && WB_DOF_FOCUS >= 0
+    #if WORLD_BLUR >= 2 && WB_DOF_FOCUS >= 0
         #if WB_DOF_FOCUS == 0
             uniform float centerDepthSmooth;
         #else
@@ -57,9 +57,76 @@
 #endif
 
 //Common Functions//
+#if WORLD_BLUR == 3
+    // Axial view depth keeps an entire focus plane sharp, including screen edges.
+    float AutofocusViewDepth(vec2 uv, float depth, mat4 projectionInverse) {
+        vec4 p = projectionInverse * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+        return max(abs(p.z) / max(abs(p.w), 0.000001), 0.05);
+    }
+
+    float AutofocusSceneDepth(vec2 uv, float depth) {
+        float distance = AutofocusViewDepth(uv, depth, gbufferProjectionInverse);
+        #ifdef DISTANT_HORIZONS
+            if (depth >= 0.999999) {
+                float dhDepth = texture2DLod(dhDepthTex1, uv, 0.0).r;
+                distance = AutofocusViewDepth(uv, dhDepth, dhProjectionInverse);
+            }
+        #endif
+        return distance;
+    }
+
+    void DoCinematicAutofocus(inout vec3 color, float depth) {
+        float sceneDistance = AutofocusSceneDepth(texCoord, depth);
+        #if WB_DOF_FOCUS == 0
+            float focusDistance = AutofocusSceneDepth(vec2(0.5), centerDepthSmooth);
+        #elif WB_DOF_FOCUS > 0
+            float focusDistance = float(WB_DOF_FOCUS);
+        #else
+            float focusDistance = mix(1.0, 256.0, pow2(vsBrightness));
+        #endif
+        // Preserve the subject and foreground; blur only behind the focus plane.
+        float focusBand = max(0.1, focusDistance * 0.05);
+        float defocus = max(sceneDistance - focusDistance - focusBand, 0.0) / max(sceneDistance, 0.05);
+        float radius = min(24.0 * WB_AF_STRENGTH * defocus, 48.0);
+        #ifdef WB_FOV_SCALED
+            radius *= clamp(gbufferProjection[1][1] * 0.8, 0.25, 4.0);
+        #endif
+        radius = min(radius, 48.0);
+        if (radius < 0.5) return;
+
+        // Radius is measured in pixels at 1080p, with equal horizontal/vertical scale.
+        vec2 scale = vec2(1.0 / aspectRatio, 1.0) / 1080.0;
+        #ifdef WB_ANAMORPHIC
+            scale *= vec2(0.5, 1.5);
+        #endif
+        vec2 border = 0.5 / vec2(viewWidth, viewHeight);
+        vec3 sum = color;
+        float totalWeight = 1.0;
+        for (int i = 0; i < WB_AF_QUALITY; i++) {
+            float angle = float(i) * 2.39996323;
+            float diskRadius = sqrt((float(i) + 0.5) / float(WB_AF_QUALITY));
+            vec2 offset = vec2(cos(angle), sin(angle)) * diskRadius * radius * scale;
+            vec2 uv = clamp(texCoord + offset, border, 1.0 - border);
+            float sampleDepth = texture2DLod(depthtex1, uv, 0.0).r;
+            // Reject hands and nearer silhouettes instead of smearing them over the background.
+            if (sampleDepth < 0.56) continue;
+            float sampleDistance = AutofocusSceneDepth(uv, sampleDepth);
+            float tolerance = max(0.1, sceneDistance * 0.02);
+            float weight = smoothstep(sceneDistance - tolerance, sceneDistance, sampleDistance);
+            vec3 sampleColor = texture2DLod(colortex0, uv, 0.0).rgb;
+            sum += sampleColor * weight;
+            totalWeight += weight;
+        }
+        color = mix(color, sum / totalWeight, smoothstep(0.5, 1.5, radius));
+    }
+#endif
+
 #if WORLD_BLUR > 0
     void DoWorldBlur(inout vec3 color, float z1, float lViewPos0) {
         if (z1 < 0.56) return;
+        #if WORLD_BLUR == 3
+            DoCinematicAutofocus(color, z1);
+        #else
         vec3 dof = vec3(0.0);
         vec2 dofScale = vec2(1.0, aspectRatio);
 
@@ -115,6 +182,7 @@
             dof /= 18.0;
             color = dof;
         }
+        #endif
     }
 #endif
 

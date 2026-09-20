@@ -147,8 +147,6 @@
     #define BLOOM_ENABLED 1 //[-1 1]
     #define BLOOM_STRENGTH 0.12 //[0.027 0.036 0.045 0.054 0.063 0.072 0.081 0.09 0.10 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.21 0.23 0.25 0.28 0.32 10.00]
     #define IMAGE_SHARPENING 5 //[0 1 2 3 4 5 6 7 8 9 10]
-    #define MOTION_BLUR_EFFECT 1 //[-1 1]
-    #define MOTION_BLURRING_STRENGTH 1.50 //[0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 1.05 1.10 1.15 1.20 1.25 1.30 1.35 1.40 1.45 1.50 1.55 1.60 1.65 1.70 1.75 1.80 1.85 1.90 1.95 2.00]
     #define VIGNETTE_R
     #define CHROMA_ABERRATION 0 //[0 1 2 3 4 5 6 7 8]
     #define UNDERWATER_DISTORTION
@@ -163,7 +161,9 @@
     #define FXAA_TAA_INTERACTION 10 //[0 2 4 6 8 10]
     #define FXAA_STRENGTH 75 //[-1 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 
-    #define WORLD_BLUR 0 //[0 1 2]
+    #define WORLD_BLUR 0 //[0 3 1 2]
+    #define WB_AF_STRENGTH 1.0 //[0.25 0.5 0.75 1.0 1.5 2.0 3.0]
+    #define WB_AF_QUALITY 32 //[16 32 48]
     //#define WB_FOV_SCALED
     //#define WB_CHROMATIC
     //#define WB_ANAMORPHIC
@@ -507,7 +507,6 @@
         #undef PERPENDICULAR_TWEAKS
         #define LOW_QUALITY_NETHER_STORM
         #define LOW_QUALITY_ENDER_NEBULA
-        #define LOW_QUALITY_MOTION_BLUR
         #define WATER_MAT_QUALITY 1
     #endif
     #if DETAIL_QUALITY >= 1 // not an option for now
@@ -534,9 +533,6 @@
         #endif
         #if CLOUD_QUALITY >= 3
             #define ENTITY_TAA_NOISY_CLOUD_FIX
-        #endif
-        #if BLOOM_ENABLED == 1 && MOTION_BLUR_EFFECT == 1
-            #define MOTION_BLUR_BLOOM_FOG_FIX
         #endif
     #endif
     #if DETAIL_QUALITY >= 4 // Not an option yet

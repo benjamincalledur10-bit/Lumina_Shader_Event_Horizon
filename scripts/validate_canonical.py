@@ -16,7 +16,7 @@ CANONICAL_ROOT = REPOSITORY_ROOT / "Lumina_Event_Horizon_v1.3.7_Real_Extracted"
 SHADER_ROOT = CANONICAL_ROOT / "shaders"
 SHADER_SUFFIXES = {".csh", ".fsh", ".glsl", ".vsh"}
 EXPECTED_SHADER_FILES = 379
-EXPECTED_INCLUDES = 723
+EXPECTED_INCLUDES = 721
 EXPECTED_PACKAGE_FILES = 399
 HISTORICAL_ROOTS = (
     "Lumina_1.3.3_Extracted/",
@@ -385,6 +385,23 @@ def validate_compatibility(errors: list[str]) -> None:
                 errors.append(f"MC_VERSION={version}: missing {block} mapping")
 
 
+def validate_post_processing(errors: list[str]) -> None:
+    properties = (SHADER_ROOT / "shaders.properties").read_text()
+    labels = (SHADER_ROOT / "lang/en_US.lang").read_text()
+    common = (SHADER_ROOT / "lib/common.glsl").read_text()
+    options = {name: (default, values.split())
+               for name, default, values in OPTION_RE.findall(common)}
+    if options.get("WORLD_BLUR") != ("0", ["0", "3", "1", "2"]):
+        errors.append("autofocus must be selectable while world blur defaults to off")
+    for name in ("WB_AF_STRENGTH", "WB_AF_QUALITY", "WB_DOF_FOCUS"):
+        if name not in options or name not in properties or f"option.{name}=" not in labels:
+            errors.append(f"missing autofocus setting or label: {name}")
+    for path in SHADER_ROOT.rglob("*"):
+        if path.suffix in SHADER_SUFFIXES | {".properties", ".lang"}:
+            if "MOTION_BLUR" in path.read_text(encoding="utf-8-sig"):
+                errors.append(f"removed motion blur still referenced in {relative(path)}")
+
+
 def main() -> int:
     args = parse_args()
     errors: list[str] = []
@@ -394,6 +411,7 @@ def main() -> int:
     validate_includes(files, errors)
     validate_json(errors)
     validate_compatibility(errors)
+    validate_post_processing(errors)
     validate_delimiters(files, errors)
     validate_preprocessor(files, errors)
     validate_option_defaults(files, errors)

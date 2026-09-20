@@ -37,7 +37,7 @@ Keep downloaded `.zip` files compressed when installing them.
 - **Advanced lighting:** volumetric light shafts, colored lighting, shadows,
   ambient occlusion, reflections, and PBR material support.
 - **Cinematic post-processing:** bloom, temporal anti-aliasing, depth of field,
-  motion blur, color grading, vignette, and lens effects.
+  color grading, vignette, and lens effects.
 - **Scalable profiles:** presets ranging from Potato to Ultra, with additional
   controls for users who want to tune individual effects.
 - **Extended rendering support:** dedicated shader programs for Distant
@@ -78,6 +78,15 @@ The default shader-pack directory is usually:
 ```text
 ~/.minecraft/shaderpacks
 ```
+
+## Cinematic autofocus
+
+Open **Shader Settings > Cinematics > Focus & Depth of Field**, set **Blur Mode**
+to **Cinematic Autofocus**, and leave **Depth of Field Focus** on **Automatic**.
+The center focus plane and foreground stay sharp while the background blurs.
+Adjust **Autofocus Blur Strength** and **Autofocus Quality** to taste.
+The effect is off by default. Motion blur has been removed.
+Visual verification in Minecraft is still pending.
 
 ## Configuration tips
 

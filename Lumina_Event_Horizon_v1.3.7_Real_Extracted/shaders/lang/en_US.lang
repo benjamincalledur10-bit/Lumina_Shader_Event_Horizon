@@ -114,7 +114,7 @@ screen.TONEMAP_SETTINGS.comment=Settings that determine the color balance of the
 screen.COLORGRADING_SETTINGS=Color Grading
 screen.COLORGRADING_SETTINGS.comment=Settings to mix up the final color channels.
 
-screen.WORLD_BLUR_SETTINGS=World Blur
+screen.WORLD_BLUR_SETTINGS=Focus & Depth of Field
 screen.WORLD_BLUR_SETTINGS.comment=Settings that relate to fancy world blurring effects.
 
 screen.TAA_SETTINGS=Temporal Filter Settings
@@ -248,7 +248,7 @@ value.ENTITY_SHADOW.1=§cRegular Entities
 value.ENTITY_SHADOW.2=§4§k-§r§4§l§n§oFull§r§4§k- §r§c[-]
 
 option.DETAIL_QUALITY=Detail Quality
-option.DETAIL_QUALITY.comment=Adjusts several small things that affect performance. Adjust the quality of: Water material, TAA, lighting tweaks, Night Nebula, Nether Storm, Ender Beams, sky effect reflections, rain puddle accuracy, waving effect, motion blur
+option.DETAIL_QUALITY.comment=Adjusts several small things that affect performance. Adjust the quality of: Water material, TAA, lighting tweaks, Night Nebula, Nether Storm, Ender Beams, sky effect reflections, rain puddle accuracy, waving effect
 value.DETAIL_QUALITY.0=§aPotato
 value.DETAIL_QUALITY.1=§bLow
 value.DETAIL_QUALITY.2=§eMedium
@@ -701,16 +701,18 @@ value.FXAA_TAA_INTERACTION.10=100
 option.DISTANT_LIGHT_BOKEH=Distant Light Bokeh
 option.DISTANT_LIGHT_BOKEH.comment=Makes distant light sources look scattered by applying a single pixel blur in the distance. §a[+]§r This effect benefits from IntegratedPBR+ (optional) by adjusting distant light sources for better looks.
 
-option.MOTION_BLUR_EFFECT=§eMotion Blur§r
-option.MOTION_BLUR_EFFECT.comment=Applies blur to the image when moving the camera. §c[-]§r This effect can impact performance.
-value.MOTION_BLUR_EFFECT.-1=OFF
-value.MOTION_BLUR_EFFECT.1=§eON
 
-option.MOTION_BLURRING_STRENGTH=Motion Blur Strength
-option.MOTION_BLURRING_STRENGTH.comment=Adjusts the intensity of motion blur.
 
-option.WORLD_BLUR=§eWorld Blur§r
-option.WORLD_BLUR.comment=Enables world blurring. Distance Blur: Blur gets applied like fog, depending on the distance from the camera. Depth of Field: Blurring happens depending on the focus point of the camera. §c[-]§r This effect can severely impact performance.
+option.WORLD_BLUR=§eBlur Mode§r
+option.WORLD_BLUR.comment=Cinematic Autofocus: Keeps the center focus plane and foreground sharp while blurring the background. Use Automatic focus for crosshair targeting. Chromatic Blur applies only to Distance Blur and legacy Depth of Field. Distance Blur: Blur gets applied like fog, depending on the distance from the camera. Depth of Field: Blurring happens depending on the focus point of the camera. §c[-]§r This effect can severely impact performance.
+value.WORLD_BLUR.3=§eCinematic Autofocus
+option.WB_AF_STRENGTH=Autofocus Blur Strength
+option.WB_AF_STRENGTH.comment=Controls background blur in Cinematic Autofocus mode. The subject and foreground remain sharp.
+option.WB_AF_QUALITY=Autofocus Quality
+option.WB_AF_QUALITY.comment=Number of circular blur samples. Higher quality improves smoothness at a higher GPU cost.
+value.WB_AF_QUALITY.16=Low (16 samples)
+value.WB_AF_QUALITY.32=Medium (32 samples)
+value.WB_AF_QUALITY.48=High (48 samples)
 value.WORLD_BLUR.0=§aOFF
 value.WORLD_BLUR.1=§cDistance Blur
 value.WORLD_BLUR.2=§cDepth of Field

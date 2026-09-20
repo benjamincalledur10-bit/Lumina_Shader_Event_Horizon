@@ -4,6 +4,16 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [1.3.9] - Unreleased
 
+### Added
+
+- Added optional Cinematic Autofocus with background-only circular blur,
+  center focus, intensity and quality controls, and depth-aware silhouette protection.
+- Added Distant Horizons depth handling to the new autofocus mode.
+
+### Removed
+
+- Removed motion blur rendering, controls, and its bloom-fog workaround.
+
 ### Changed
 
 - Updated the development version and compatibility target to Minecraft Java

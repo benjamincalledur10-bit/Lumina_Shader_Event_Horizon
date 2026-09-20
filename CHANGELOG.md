@@ -2,7 +2,7 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [1.3.9] - Unreleased
+## [1.3.9-rc.1] - 2026-09-19
 
 ### Added
 
@@ -152,6 +152,6 @@ All notable changes to Lumina Event Horizon are documented in this file.
 - Fixed invalid block mappings, texture metadata, and dormant GLSL source text.
 - Removed invalid empty temporary PNG files from the shader pack.
 
-[1.3.9]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.81...luminahorizondev
+[1.3.9-rc.1]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.1
 [1.3.6]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.5

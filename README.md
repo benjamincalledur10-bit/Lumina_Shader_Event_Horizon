@@ -22,7 +22,7 @@ Use one of the official distribution pages:
 - [Modrinth](https://modrinth.com/shader/lumina-shader-event-horizon)
 - [CurseForge](https://www.curseforge.com/minecraft/shaders/lumina-shaders-event-horizon)
 
-The development version is **v1.3.9**, targeting Minecraft **1.8 through 26.3**.
+The current pre-release is **v1.3.9-rc.1**, targeting Minecraft **1.8 through 26.3**.
 The latest published stable release remains **v1.3.81** until v1.3.9 is released.
 Keep downloaded `.zip` files compressed when installing them.
 
@@ -57,7 +57,7 @@ the shader pack does not run in vanilla Minecraft without a shader loader.
 The same pack contains legacy and modern rendering paths, selected automatically.
 Individual effects depend on loader and hardware capabilities.
 
-The 1.3.9 compatibility changes have static validation; in-game verification across
+The 1.3.9-rc.1 compatibility changes have static validation; in-game verification across
 the full version range is still pending. Performance depends on resolution,
 render distance, selected profile, resource packs, and GPU.
 
@@ -65,8 +65,8 @@ render distance, selected profile, resource packs, and GPU.
 
 1. Install [Iris](https://www.irisshaders.dev/) or a compatible OptiFine
    version.
-2. Download the latest stable ZIP from an official source above. The upcoming
-   development package is named `Lumina_Event_Horizon_v1.3.9.zip`.
+2. Download the latest stable ZIP from an official source above. The pre-release
+   test package is named `Lumina_Event_Horizon_v1.3.9-rc.1.zip`.
 3. Open Minecraft and go to **Options > Video Settings > Shader Packs**.
 4. Open the shader-pack folder and place the downloaded ZIP inside it. Do not
    extract the archive.

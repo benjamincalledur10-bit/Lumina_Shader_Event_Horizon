@@ -4,6 +4,10 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Rebalanced End celestial highlights: reduced Black Hole disk and photon-ring emission, White Hole core/disk emission, corona spread, and anamorphic flare intensity to reduce bloom spill around terrain silhouettes.
+- Replaced the single tiny-star grid with two sparse world-space star layers featuring varied angular sizes, brightness, and cool/warm tints; added derivative filtering for unresolved stars and a smooth polar density fade. No new texture samples or animation were added.
+- End composition values are an initial artistic pass; in-game silhouette, temporal stability, and macOS checks remain pending.
+
 - Added **Black Hole Radial Rays** and a separate **Black Hole Ray Intensity** slider (0–150%) to Event Horizon settings, addressing issue #4.
 - Rays default to ON at 100%, preserving the existing rendering calculation. OFF and 0% use the same local back-disk mask, retaining the nearby Einstein ring, front accretion disk, event horizon, photon ring, and gravitational lensing.
 - White Hole rendering and its light-ray toggle remain independent.

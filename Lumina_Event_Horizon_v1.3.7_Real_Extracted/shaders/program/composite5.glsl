@@ -219,7 +219,7 @@ void main() {
             float distX = abs(texCoord.x - whiteHoleScreenPos.x) * 600.0;
             flareWH += max(0.0, 1.0 - abs(texCoord.y - whiteHoleScreenPos.y) * 1.2) * exp(-distX);
             
-            color += vec3(0.3, 0.7, 1.0) * flareWH * 2.5 * whiteHoleVisibility;
+            color += vec3(0.3, 0.7, 1.0) * flareWH * 1.35 * whiteHoleVisibility;
         }
         #endif
         #endif

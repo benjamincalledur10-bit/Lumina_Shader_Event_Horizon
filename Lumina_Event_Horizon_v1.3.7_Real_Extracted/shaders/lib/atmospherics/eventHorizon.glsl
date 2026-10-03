@@ -52,8 +52,8 @@ vec4 getDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     density *= (0.4 + detail * 1.5);
     
     float doppler = smoothstep(-R_out, R_out, disk_uv.x); // Right side approaching -> blueshift
-    vec3 colCore = vec3(1.0, 0.95, 0.85) * 5.0; // Brighter core
-    vec3 colDust = vec3(0.9, 0.4, 0.05) * 2.0; // Richer orange
+    vec3 colCore = vec3(1.0, 0.95, 0.85) * 3.8; // Retain warm detail below the bloom peak
+    vec3 colDust = vec3(0.9, 0.4, 0.05) * 1.7; // Warm outer disk
     
     vec3 color = mix(colDust, colCore, 1.0 - smoothstep(R_in, R_in + 1.0, R));
     
@@ -157,7 +157,7 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     
     // Photon ring glow
     float photonRing = (1.0 - smoothstep(1.0, 1.06, r)) * smoothstep(0.96, 1.0, r);
-    finalCol.rgb += vec3(1.0, 0.8, 0.6) * photonRing * 1.5 * (1.0 - finalCol.a);
+    finalCol.rgb += vec3(1.0, 0.8, 0.6) * photonRing * 1.15 * (1.0 - finalCol.a);
     finalCol.a = max(finalCol.a, photonRing);
 
     return finalCol;
@@ -187,9 +187,9 @@ vec4 getWhiteDisk(float R, vec2 disk_uv, float R_in, float R_out) {
     
     float doppler = smoothstep(-R_out, R_out, disk_uv.x);
     
-    // Blinding blue-white energy colors
-    vec3 colCore = vec3(0.9, 0.95, 1.0) * 8.0; 
-    vec3 colDust = vec3(0.2, 0.6, 1.0) * 3.0; 
+    // Blue-white energy with headroom for disk texture and bloom
+    vec3 colCore = vec3(0.9, 0.95, 1.0) * 4.8;
+    vec3 colDust = vec3(0.2, 0.6, 1.0) * 2.0;
     
     vec3 color = mix(colDust, colCore, 1.0 - smoothstep(R_in, R_in + 1.0, R));
     
@@ -231,7 +231,7 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     // 1. Bright White Sphere Core
     if (r <= 1.0) {
         float glow = 1.0 - smoothstep(0.0, 1.0, r);
-        finalCol = vec4(vec3(1.0, 0.95, 1.0) * (5.0 + glow * 5.0), 1.0);
+        finalCol = vec4(vec3(1.0, 0.95, 1.0) * (3.0 + glow * 2.0), 1.0);
     } else {
         // 2. Einstein Ring (Lensed back-disk)
         float R_back = mix(R_out, R_in, smoothstep(1.0, 1.35, r));
@@ -268,8 +268,10 @@ vec4 GetWhiteHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
     // 4. Outer Glow (Corona of expelled energy)
     if (r > 1.0) {
         float outerGlow = 1.0 - smoothstep(1.0, 3.5, r);
-        finalCol.rgb += vec3(0.5, 0.8, 1.0) * outerGlow * 1.5;
-        finalCol.a = max(finalCol.a, outerGlow * 0.5);
+        // A steeper corona falloff leaves the surrounding sky readable.
+        outerGlow *= outerGlow;
+        finalCol.rgb += vec3(0.5, 0.8, 1.0) * outerGlow * 0.85;
+        finalCol.a = max(finalCol.a, outerGlow * 0.35);
     }
     
     return finalCol;

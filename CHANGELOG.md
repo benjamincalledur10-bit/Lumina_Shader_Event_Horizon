@@ -4,6 +4,10 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Added **Selective Bloom**, enabled by default, and **Bloom Highlight Threshold** in Cinematics. A soft peak-channel HDR threshold favors bright sources while retaining saturated colors; additive composition preserves the sharp base image.
+- Weighted bloom toward compact halos and reduced humidity bloom amplification in selective mode. Disabling Selective Bloom restores the previous extraction, blend, and humidity calculations.
+- Selection uses brightness rather than material IDs. Extraction runs on existing mip-filtered samples, so tiny lights can lose broad halos; visual and GPU validation remain pending.
+
 - Rebalanced End celestial highlights: reduced Black Hole disk and photon-ring emission, White Hole core/disk emission, corona spread, and anamorphic flare intensity to reduce bloom spill around terrain silhouettes.
 - Replaced the single tiny-star grid with two sparse world-space star layers featuring varied angular sizes, brightness, and cool/warm tints; added derivative filtering for unresolved stars and a smooth polar density fade. No new texture samples or animation were added.
 - End composition values are an initial artistic pass; in-game silhouette, temporal stability, and macOS checks remain pending.

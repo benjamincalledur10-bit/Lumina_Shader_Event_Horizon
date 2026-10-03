@@ -4,6 +4,11 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Integrated Overworld water with depth: shallower optical paths retain more bed visibility, while thicker columns increase opacity and progressively attenuate the surface tint with wavelength-dependent coefficients. Applied a small desaturation to the base water tint while retaining biome colors and user color controls.
+- Reused the existing bottom-depth sample before normal generation to estimate vertical depth independently from viewing angle. Reduced waves/parallax in shallow water, softened small ripples, and added a modest rain response without adding texture fetches or normal samples.
+- Changed above-water Overworld reflection blending to Schlick's 2% normal-incidence response with strong grazing reflections, consistently in the regular and Distant Horizons paths. Guarded near-zero parallax divisors and made the DH reflection variable available before the underwater material branch.
+- Depth drives the shallow/river/deep-water distinction; this pass does not classify river/ocean biomes explicitly. Low material-quality profiles retain their existing depth-free fallback, and underwater fog retains its existing implementation. Static validation and isolated native GPU checks passed on Apple M4 for 18 style/quality/render-path combinations, plus legacy/TAA/custom-color/End branches. GPU readback verified monotone bounded attenuation and opacity, reflection endpoints, and camera-angle-invariant wave depth. Full in-game shoreline, river, ocean, and underwater checks remain pending.
+
 - Smoothed Overworld dawn/dusk sky and sunlight blends consistently across terrain, water, entities, atmospheric passes, and Distant Horizons. Eased the near-horizon noon color ramp without changing its daytime peak or nighttime endpoint.
 - Replaced abrupt solar/lunar sky-glare and volumetric-light response switches with continuous twilight blends, including safe normalization for dim light. Extended the existing shared rain smoothing with rise/fall parameters of 6/8 so lighting, cloud density/color, and atmospheric fog settle together.
 - Softened strong cloud forward-scattering boosts and added a hue-preserving HDR highlight shoulder to help retain interior shading under intense light. Cloud density, sample counts, and texture fetches are unchanged.

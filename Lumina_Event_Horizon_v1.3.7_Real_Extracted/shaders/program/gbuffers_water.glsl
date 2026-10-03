@@ -264,6 +264,12 @@ void main() {
             highlightColor *= pow2(moonPhaseInfluence);
         #endif
 
+        #ifdef OVERWORLD
+            if (mat == 32000 && isEyeInWater != 1) {
+                // Schlick water reflectance: clear near-normal views, strong grazing reflections.
+                fresnelM = (0.02 + 0.98 * pow2(pow2(fresnel)) * fresnel) * reflectMult;
+            } else
+        #endif
         fresnelM = (fresnelM * 0.85 + 0.15) * reflectMult;
 
         vec4 reflection = GetReflection(normalM, viewPos.xyz, nViewPos, playerPos, lViewPos, -1.0,

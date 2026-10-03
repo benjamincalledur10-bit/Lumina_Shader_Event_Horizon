@@ -134,12 +134,17 @@ void main() {
     vec3 normalM = normal, geoNormal = normal, shadowMult = vec3(1.0);
     vec3 worldGeoNormal = normalize(ViewToPlayer(geoNormal * 10000.0));
     float fresnel = clamp(1.0 + dot(normalM, nViewPos), 0.0, 1.0);
+    float fresnelM = 0.0; // Also available to the underwater material branch.
 
     if (mat == DH_BLOCK_WATER) {
         #include "/lib/materials/specificMaterials/translucents/water.glsl"
     }
     
-    float fresnelM = (pow3(fresnel) * 0.85 + 0.15) * reflectMult;
+    fresnelM = (pow3(fresnel) * 0.85 + 0.15) * reflectMult;
+    #ifdef OVERWORLD
+        if (mat == DH_BLOCK_WATER && isEyeInWater != 1)
+            fresnelM = (0.02 + 0.98 * pow2(pow2(fresnel)) * fresnel) * reflectMult;
+    #endif
 
     float lengthCylinder = max(length(playerPos.xz), abs(playerPos.y) * 2.0);
     color.a *= smoothstep(far * 0.5, far * 0.7, lengthCylinder);

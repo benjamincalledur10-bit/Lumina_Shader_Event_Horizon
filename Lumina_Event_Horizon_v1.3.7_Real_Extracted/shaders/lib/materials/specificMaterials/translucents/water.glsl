@@ -37,6 +37,10 @@
 #ifdef WATERCOLOR_CHANGED
     color.rgb *= vec3(WATERCOLOR_RM, WATERCOLOR_GM, WATERCOLOR_BM);
 #endif
+#ifdef OVERWORLD
+    // Keep biome tint, with less reliance on saturation; user color multipliers remain effective.
+    color.rgb = mix(color.rgb, vec3(GetLuminance(color.rgb)), 0.10);
+#endif
 // ============================== End of Step 1 ============================== //
 
 #define PHYSICS_OCEAN_INJECTION
@@ -49,6 +53,34 @@
     
     float fresnel2 = pow2(fresnel);
     float fresnel4 = pow2(fresnel2);
+
+    // Reuse the existing bottom-depth sample for opacity and surface-wave scale.
+    float waterDepthBlend = 1.0;
+    #if WATER_MAT_QUALITY >= 2
+        float depthT = 1.0;
+        vec3 viewPosT = viewPos;
+        float waterColumnLength = 0.0;
+        if (isEyeInWater != 1) {
+            #ifdef GBUFFERS_WATER
+                depthT = texelFetch(depthtex1, texelCoord, 0).r;
+            #elif defined DH_WATER
+                depthT = texelFetch(dhDepthTex1, texelCoord, 0).r;
+            #endif
+            vec3 screenPosT = vec3(screenPos.xy, depthT);
+            #ifdef TAA
+                viewPosT = ScreenToView(vec3(TAAJitter(screenPosT.xy, -0.5), screenPosT.z));
+            #else
+                viewPosT = ScreenToView(screenPosT);
+            #endif
+            waterColumnLength = max(length(viewPosT) - lViewPos, 0.0);
+            #ifdef OVERWORLD
+                // Separate optical path length from vertical depth at grazing angles.
+                vec3 waterWorldRay = mat3(gbufferModelViewInverse) * nViewPos;
+                float waterVerticalDepth = waterColumnLength * abs(waterWorldRay.y);
+                waterDepthBlend = smoothstep(0.75, 12.0, waterVerticalDepth);
+            #endif
+        }
+    #endif
 
     // ============================== Step 2: Water Normals ============================== //
     reflectMult = 1.0;
@@ -87,7 +119,11 @@
                 waterPosM *= 2.5; wind *= 2.5;
 
                 #if WATER_MAT_QUALITY >= 2
-                    vec2 parallaxMult = -0.01 * viewVector.xy / viewVector.z;
+                    float waterViewZ = viewVector.z < 0.0 ? min(viewVector.z, -0.05) : max(viewVector.z, 0.05);
+                    vec2 parallaxMult = -0.01 * viewVector.xy / waterViewZ;
+                    #ifdef OVERWORLD
+                        if (isEyeInWater != 1) parallaxMult *= mix(0.45, 1.0, waterDepthBlend);
+                    #endif
                     for (int i = 0; i < 2; i++) { // Reduced iterations for performance
                         waterPosM += parallaxMult * texture2D(gaux4, waterPosM - wind).a;
                         waterPosM += parallaxMult * texture2D(gaux4, waterPosM * 0.25 - 0.5 * wind).a;
@@ -98,7 +134,14 @@
                 vec2 normalSmall = texture2D(gaux4, waterPosM * 4.0 - 2.0 * wind).rg - 0.5;
                 vec2 normalBig = texture2D(gaux4, waterPosM * 0.25 - 0.5 * wind).rg - 0.5;
 
-                normalMap.xy = normalMed * WATER_BUMP_MED + normalSmall * WATER_BUMP_SMALL + normalBig * WATER_BUMP_BIG;
+                #ifdef OVERWORLD
+                    float waterWaveScale = isEyeInWater != 1 ? mix(0.45, 1.0, waterDepthBlend) : 1.0;
+                    float waterSmallScale = isEyeInWater != 1 ? mix(0.55, 0.85, waterDepthBlend) : 1.0;
+                    waterWaveScale *= 1.0 + 0.12 * rainFactor;
+                    normalMap.xy = (normalMed * WATER_BUMP_MED + normalSmall * WATER_BUMP_SMALL * waterSmallScale + normalBig * WATER_BUMP_BIG) * waterWaveScale;
+                #else
+                    normalMap.xy = normalMed * WATER_BUMP_MED + normalSmall * WATER_BUMP_SMALL + normalBig * WATER_BUMP_BIG;
+                #endif
                 normalMap.xy *= 6.0 * (1.0 - 0.7 * fresnel) * WATER_BUMPINESS_M;
             #endif
 
@@ -147,19 +190,7 @@
             color.rgb = pow(color.rgb, vec3(1.0 + noise));
 
             // Water Alpha //
-            #ifdef GBUFFERS_WATER
-                float depthT = texelFetch(depthtex1, texelCoord, 0).r;
-            #elif defined DH_WATER
-                float depthT = texelFetch(dhDepthTex1, texelCoord, 0).r;
-            #endif
-            vec3 screenPosT = vec3(screenPos.xy, depthT);
-            #ifdef TAA
-                vec3 viewPosT = ScreenToView(vec3(TAAJitter(screenPosT.xy, -0.5), screenPosT.z));
-            #else
-                vec3 viewPosT = ScreenToView(screenPosT);
-            #endif
-            float lViewPosT = length(viewPosT);
-            float lViewPosDifM = lViewPos - lViewPosT;
+            float lViewPosDifM = -waterColumnLength;
 
             #if WATER_STYLE < 3
                 color.a = sqrt1(color.a);
@@ -176,8 +207,17 @@
                 lViewPosDifM *= WATER_FOG_MULT_M;
             #endif
 
-            float waterFog = max0(1.0 - exp(lViewPosDifM * 0.075));
-            color.a *= 0.25 + 0.75 * waterFog;
+            #ifdef OVERWORLD
+                // Shallows retain the bed; optical thickness gradually darkens deep water.
+                float waterOpticalDepth = max(-lViewPosDifM, 0.0);
+                float waterFog = 1.0 - exp(-waterOpticalDepth * mix(0.045, 0.075, waterDepthBlend));
+                color.a *= 0.10 + 0.90 * waterFog;
+                vec3 waterAbsorption = exp(-vec3(0.028, 0.012, 0.006) * min(waterOpticalDepth, 48.0));
+                color.rgb *= waterAbsorption;
+            #else
+                float waterFog = max0(1.0 - exp(lViewPosDifM * 0.075));
+                color.a *= 0.25 + 0.75 * waterFog;
+            #endif
 
             #if defined BRIGHT_CAVE_WATER && WATER_ALPHA_MULT < 200
                 // For better water visibility in caves and some extra color pop outdoors

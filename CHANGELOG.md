@@ -4,6 +4,11 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Smoothed Overworld dawn/dusk sky and sunlight blends consistently across terrain, water, entities, atmospheric passes, and Distant Horizons. Eased the near-horizon noon color ramp without changing its daytime peak or nighttime endpoint.
+- Replaced abrupt solar/lunar sky-glare and volumetric-light response switches with continuous twilight blends, including safe normalization for dim light. Extended the existing shared rain smoothing with rise/fall parameters of 6/8 so lighting, cloud density/color, and atmospheric fog settle together.
+- Softened strong cloud forward-scattering boosts and added a hue-preserving HDR highlight shoulder to help retain interior shading under intense light. Cloud density, sample counts, and texture fetches are unchanged.
+- The shared tone map/exposure settings and the approved Nether/End palettes are unchanged. Static validation and isolated native GPU checks passed on Apple M4: transition continuity, bounded monotone blends, dim-light safety, and hue-preserving cloud highlights. Volumetric cloud functions compiled/linked at all three quality levels; full in-game dawn/dusk, weather, and cloud-volume comparison remains pending.
+
 - Refined the End palette with slightly cooler blue-violet terrain lighting and a subtle violet tint in its dark sky/far-fog color. Precomputed constants preserve the previous luminance and keep shared tone mapping unchanged.
 - Black Hole/White Hole rendering, star layers, bloom settings, and other dimensions are unchanged by this pass. Static and numerical validation and isolated native OpenGL palette compilation/linking passed on Apple M4; in-game visual checks remain pending.
 

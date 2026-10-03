@@ -15,7 +15,7 @@
         float VdotSM1 = pow2(max(VdotS, 0.0));
         float VdotSM2 = pow2(VdotSM1);
         float VdotSM3 = pow2(pow2(max(-VdotS, 0.0)));
-        float VdotSML = sunVisibility > 0.5 ? VdotS : -VdotS;
+        float skyDayBlend = smoothstep(0.35, 0.65, sunVisibility);
 
         float VdotUmax0 = max(VdotU, 0.0);
         float VdotUmax0M = 1.0 - pow2(VdotUmax0);
@@ -56,7 +56,7 @@
 
         // Sun/Moon Glare
         if (doGlare) {
-            if (0.0 < VdotSML) {
+            if (abs(VdotS) > 0.0) {
                 float glareScatter = 3.0 * (2.0 - clamp01(VdotS * 1000.0));
                 #ifndef SUN_MOON_DURING_RAIN
                     glareScatter *= 1.0 - 0.75 * rainFactor2;
@@ -65,7 +65,7 @@
 
                 float visfactor = 0.075;
                 float glare = visfactor / (1.0 - (1.0 - visfactor) * VdotSM4) - visfactor;
-                glare *= 0.7;
+                glare *= 0.7 * mix(1.0 - skyDayBlend, skyDayBlend, step(0.0, VdotS));
 
                 float glareWaterFactor = isEyeInWater * sunVisibility;
                 vec3 glareColor = mix(vec3(0.38, 0.4, 0.5) * 0.3, vec3(1.5, 0.7, 0.3) + vec3(0.0, 0.5, 0.5) * noonFactor, sunVisibility);

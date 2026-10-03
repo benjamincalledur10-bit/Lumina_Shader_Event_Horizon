@@ -1,3 +1,12 @@
+// Shared sky/lighting transitions. Inline expressions avoid new dynamic globals.
+#ifdef OVERWORLD
+    #define LUMINA_DAY_BLEND(elevation) (0.5 * smoothstep(-0.375, 0.0, (elevation)) + 0.5 * smoothstep(0.0, 0.0625, (elevation)))
+    #define LUMINA_SUN_VISIBILITY(elevation) smoothstep(-0.0625, 0.0625, (elevation))
+#else
+    #define LUMINA_DAY_BLEND(elevation) ((elevation) < 0.0 ? clamp((elevation) + 0.375, 0.0, 0.75) / 0.75 : clamp((elevation) + 0.03125, 0.0, 0.0625) / 0.0625)
+    #define LUMINA_SUN_VISIBILITY(elevation) (clamp((elevation) + 0.0625, 0.0, 0.125) / 0.125)
+#endif
+
 #ifdef VERTEX_SHADER
     vec2 GetLightMapCoordinates() {
         vec2 lmCoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;

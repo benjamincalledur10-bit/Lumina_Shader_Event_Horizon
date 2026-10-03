@@ -44,20 +44,20 @@ vec4 GetVolumetricLight(inout vec3 color, inout float vlFactor, vec3 translucent
             vlColor *= 1.0 + 0.6 * inDry * rainFactor;
         #endif
 
-        if (sunVisibility < 0.5) {
-            vlSceneIntensity = 0.0;
-            
-            float vlMultNightModifier = (0.3 + 0.4 * rainFactor2 + 0.5 * max0(far - lViewPos1) / far);
-            #ifdef SPECIAL_PALE_GARDEN_LIGHTSHAFTS
-                vlMultNightModifier = mix(vlMultNightModifier, 1.0, inPaleGarden);
-            #endif
-            vlMult *= vlMultNightModifier;
+        // Blend both shaft responses through twilight instead of switching at 0.5.
+        float vlDayBlend = smoothstep(0.35, 0.65, sunVisibility);
+        vlSceneIntensity *= vlDayBlend;
+        float vlMultNightModifier = 0.3 + 0.4 * rainFactor2 + 0.5 * max0(far - lViewPos1) / far;
+        #ifdef SPECIAL_PALE_GARDEN_LIGHTSHAFTS
+            vlMultNightModifier = mix(vlMultNightModifier, 1.0, inPaleGarden);
+        #endif
+        vlMult *= mix(vlMultNightModifier, 1.0, vlDayBlend);
 
-            vlColor = normalize(pow(vlColor, vec3(1.0 - max0(1.0 - 1.5 * nightFactor) + rainFactor)));
-            vlColor *= 0.0766 + 0.0766 * vsBrightness;
-        } else {
-            vlColorReducer = 1.0 / sqrt(vlColor);
-        }
+        vec3 vlNightColor = pow(max(vlColor, vec3(0.0)), vec3(1.0 - max0(1.0 - 1.5 * nightFactor) + rainFactor));
+        vlNightColor *= inversesqrt(max(dot(vlNightColor, vlNightColor), 1e-8));
+        vlNightColor *= 0.0766 + 0.0766 * vsBrightness;
+        vlColorReducer = mix(vec3(1.0), inversesqrt(max(vlColor, vec3(1e-6))), vlDayBlend);
+        vlColor = mix(vlNightColor, vlColor, vlDayBlend);
 
         #ifdef SPECIAL_PALE_GARDEN_LIGHTSHAFTS
             vlSceneIntensity = mix(vlSceneIntensity, 1.0, inPaleGarden);

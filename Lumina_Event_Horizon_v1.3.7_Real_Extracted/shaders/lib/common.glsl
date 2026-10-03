@@ -677,7 +677,12 @@
     #endif
 
     const float shadowMapBias = 1.0 - 25.6 / shadowDistance;
-    float noonFactor = sqrt(max(sin(timeAngle*6.28318530718),0.0));
+    #ifdef OVERWORLD
+        // Ease the sunrise/sunset color ramp before the square root amplifies it.
+        float noonFactor = sqrt(max(sin(timeAngle*6.28318530718), 0.0) * smoothstep(0.0, 0.12, sin(timeAngle*6.28318530718)));
+    #else
+        float noonFactor = sqrt(max(sin(timeAngle*6.28318530718),0.0));
+    #endif
     float nightFactor = max(sin(timeAngle*(-6.28318530718)),0.0);
     float invNightFactor = 1.0 - nightFactor;
     float rainFactor2 = rainFactor * rainFactor;

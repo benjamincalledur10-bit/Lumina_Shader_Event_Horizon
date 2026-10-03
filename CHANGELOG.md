@@ -4,6 +4,9 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Refined the End palette with slightly cooler blue-violet terrain lighting and a subtle violet tint in its dark sky/far-fog color. Precomputed constants preserve the previous luminance and keep shared tone mapping unchanged.
+- Black Hole/White Hole rendering, star layers, bloom settings, and other dimensions are unchanged by this pass. Static and numerical validation and isolated native OpenGL palette compilation/linking passed on Apple M4; in-game visual checks remain pending.
+
 - Refined Nether ambient and atmospheric colors with a subtle luminance-preserving red/amber tint, strongest in Nether Wastes and Crimson Forest. Warped Forest, Soul Sand Valley, and Basalt Deltas receive only a small tint to retain their individual palettes; biome transitions use the existing smooth weights.
 - Applied the palette to macOS and other platforms in biome and classic color modes; vanilla fog-color mode retains its original colors. Lava emission, block lighting, fog density, bloom, and shared tone mapping remain unchanged.
 - Replaced the initial Nether palette's chained dynamic global initializers with precomputed per-biome constants after a macOS native OpenGL linker crash when loading the development pack. Static/numerical checks and isolated native OpenGL compilation/linking of the corrected palette passed for all three macOS color modes on Apple M4. In-game confirmation of the fix, material detail, and biome transitions remains pending.

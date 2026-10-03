@@ -792,7 +792,8 @@
         vec3 lavaLightColor = vec3(0.19, 0.072, 0.012);
     #endif
 
-    const vec3 endSkyColor = vec3(0.005, 0.006, 0.01);
+    // Lumina cosmic palette: precomputed tint preserves the existing luminance.
+    const vec3 endSkyColor = vec3(0.00517540, 0.00585219, 0.01030105);
 
     #if WEATHER_TEX_OPACITY == 100
         const float rainTexOpacity = 0.25;

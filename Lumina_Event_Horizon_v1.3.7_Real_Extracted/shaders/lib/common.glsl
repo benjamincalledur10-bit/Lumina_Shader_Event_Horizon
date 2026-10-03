@@ -732,39 +732,43 @@
     vec3 waterFogColor = underwaterColorM2 * vec3(0.2 + 0.1 * vsBrightness);
 
     #ifdef NETHER
+    // Lumina red/amber palette uses precomputed, luminance-preserving constants.
+    // Avoid chained dynamic global initializers on the macOS OpenGL linker.
+    // Warm biomes receive the full tint; cool biomes retain their identity.
+    // Vanilla fog-color mode keeps its original palette.
     #ifdef MC_OS_MAC
         #if NETHER_COLOR_MODE == 3
             float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
-            vec3 netherColorBase = mix(
+            vec3 netherColor = mix(
                 fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
                 (
-                    inNetherWastes * vec3(0.4, 0.14, 0.06) + inCrimsonForest * vec3(0.36, 0.07, 0.05) +
-                    inWarpedForest * vec3(0.18, 0.1, 0.25) + inBasaltDeltas * vec3(0.25, 0.235, 0.23) +
-                    inSoulValley * vec3(0.1, vec2(0.24))
+                    inNetherWastes * vec3(0.39878538, 0.14161744, 0.05485731) + inCrimsonForest * vec3(0.35970038, 0.07096528, 0.04581550) +
+                    inWarpedForest * vec3(0.18029461, 0.10038820, 0.24722839) + inBasaltDeltas * vec3(0.25002495, 0.23555028, 0.22710112) +
+                    inSoulValley * vec3(0.10001602, 0.24057652, 0.23698940)
                 ),
                 netherColorMixer
             );
         #elif NETHER_COLOR_MODE == 2
-            vec3 netherColorBase = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
+            vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
         #elif NETHER_COLOR_MODE == 0
-            vec3 netherColorBase = vec3(0.7, 0.26, 0.08) * 0.6;
+            vec3 netherColor = vec3(0.69722423, 0.26275879, 0.07307493) * 0.6;
         #endif
     #else
     #if NETHER_COLOR_MODE == 3
         float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
-        vec3 netherColorBase = mix(
+        vec3 netherColor = mix(
             fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
             (
-                inNetherWastes * vec3(0.44, 0.14, 0.035) + inCrimsonForest * vec3(0.42, 0.045, 0.035) +
-                inWarpedForest * vec3(0.055, 0.28, 0.27) + inBasaltDeltas * vec3(0.22, 0.22, 0.23) +
-                inSoulValley * vec3(0.08, 0.20, 0.30)
+                inNetherWastes * vec3(0.43824534, 0.14148231, 0.03196956) + inCrimsonForest * vec3(0.41985012, 0.04564224, 0.03208611) +
+                inWarpedForest * vec3(0.05500586, 0.28065756, 0.26659877) + inBasaltDeltas * vec3(0.22004336, 0.22053661, 0.22712321) +
+                inSoulValley * vec3(0.08007813, 0.20064409, 0.29647857)
             ),
             clamp01(netherColorMixer)
         );
     #elif NETHER_COLOR_MODE == 2
-        vec3 netherColorBase = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
+        vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
     #elif NETHER_COLOR_MODE == 0
-        vec3 netherColorBase = vec3(0.7, 0.26, 0.08) * 0.6;
+        vec3 netherColor = vec3(0.69722423, 0.26275879, 0.07307493) * 0.6;
     #endif
 
     float GetNetherBiomeFogDensity() {
@@ -781,19 +785,6 @@
         #endif
     }
     #endif
-
-    // Lumina Nether palette: a restrained red/amber tint, strongest in warm biomes.
-    // Retain cool biome identities and the existing luminance/fog density.
-    #if NETHER_COLOR_MODE == 3
-        float netherPaletteWarmth = mix(0.15, 1.0, clamp01(inNetherWastes + inCrimsonForest));
-    #else
-        float netherPaletteWarmth = 1.0;
-    #endif
-    vec3 netherPaletteTint = mix(vec3(1.0), vec3(1.025, 1.04, 0.94), netherPaletteWarmth);
-    vec3 netherPaletteLumaWeights = vec3(0.299, 0.587, 0.114);
-    vec3 netherColor = netherColorBase * netherPaletteTint
-                    * (dot(netherColorBase, netherPaletteLumaWeights)
-                    / max(dot(netherColorBase * netherPaletteTint, netherPaletteLumaWeights), 1e-6));
     #endif
     #ifdef MC_OS_MAC
         vec3 lavaLightColor = vec3(0.15, 0.06, 0.01);

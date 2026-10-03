@@ -280,8 +280,13 @@ def validate_nether_features(errors: list[str]) -> None:
         if re.search(rf"^\s*(?:const\s+)?float\s+{name}\b", common, re.MULTILINE):
             errors.append(f"forbidden global Nether fog calculation: {name}")
 
+    # Chained Nether global initializers triggered a native macOS linker crash.
+    for name in ("netherColorBase", "netherPaletteWarmth", "netherPaletteTint"):
+        if re.search(rf"^\s*(?:const\s+)?(?:float|vec3)\s+{name}\b", common, re.MULTILINE):
+            errors.append(f"unsafe chained Nether palette global: {name}")
+
     mac_v137_signatures = (
-        (common, "inWarpedForest * vec3(0.18, 0.1, 0.25)", "v1.3.7 macOS Nether color"),
+        (common, "inWarpedForest * vec3(0.18029461, 0.10038820, 0.24722839)", "macOS Nether palette"),
         (common, "vec3 lavaLightColor = vec3(0.15, 0.06, 0.01)", "v1.3.7 macOS lava ambience"),
         (fog, "float fog = lPos / farM", "v1.3.7 macOS Nether fog"),
         (storm, "float stormSample = pow2(Noise3D(tracePosM + wind))", "v1.3.7 macOS storm sampling"),

@@ -4,6 +4,9 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Refined Nether ambient and atmospheric colors with a subtle luminance-preserving red/amber tint, strongest in Nether Wastes and Crimson Forest. Warped Forest, Soul Sand Valley, and Basalt Deltas receive only a small tint to retain their individual palettes; biome transitions use the existing smooth weights.
+- Applied the palette to both macOS and other platforms and all supported Nether color modes. Lava emission, block lighting, fog density, bloom, and shared tone mapping remain unchanged. Static/numerical checks passed; in-game material detail and biome transition checks remain pending.
+
 - Refined the Overworld daytime palette with slightly warmer direct sunlight and subtly cooler ambient skylight. Luminance-preserving tints keep the existing lighting brightness and shared tone mapping; extra solar warmth fades toward sunset.
 - The palette blends through the existing daylight and weather transitions, leaving nighttime and full-rain lighting unchanged. No texture samples or new settings were added; Nether and End lighting are unchanged.
 - Static and numerical palette checks performed; in-game verification of daytime materials, sunrise/sunset, and weather transitions remains pending.

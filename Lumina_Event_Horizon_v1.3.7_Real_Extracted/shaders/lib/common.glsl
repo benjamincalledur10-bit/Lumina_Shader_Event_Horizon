@@ -735,7 +735,7 @@
     #ifdef MC_OS_MAC
         #if NETHER_COLOR_MODE == 3
             float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
-            vec3 netherColor = mix(
+            vec3 netherColorBase = mix(
                 fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
                 (
                     inNetherWastes * vec3(0.4, 0.14, 0.06) + inCrimsonForest * vec3(0.36, 0.07, 0.05) +
@@ -745,14 +745,14 @@
                 netherColorMixer
             );
         #elif NETHER_COLOR_MODE == 2
-            vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
+            vec3 netherColorBase = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
         #elif NETHER_COLOR_MODE == 0
-            vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
+            vec3 netherColorBase = vec3(0.7, 0.26, 0.08) * 0.6;
         #endif
     #else
     #if NETHER_COLOR_MODE == 3
         float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
-        vec3 netherColor = mix(
+        vec3 netherColorBase = mix(
             fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
             (
                 inNetherWastes * vec3(0.44, 0.14, 0.035) + inCrimsonForest * vec3(0.42, 0.045, 0.035) +
@@ -762,9 +762,9 @@
             clamp01(netherColorMixer)
         );
     #elif NETHER_COLOR_MODE == 2
-        vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
+        vec3 netherColorBase = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
     #elif NETHER_COLOR_MODE == 0
-        vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
+        vec3 netherColorBase = vec3(0.7, 0.26, 0.08) * 0.6;
     #endif
 
     float GetNetherBiomeFogDensity() {
@@ -781,6 +781,19 @@
         #endif
     }
     #endif
+
+    // Lumina Nether palette: a restrained red/amber tint, strongest in warm biomes.
+    // Retain cool biome identities and the existing luminance/fog density.
+    #if NETHER_COLOR_MODE == 3
+        float netherPaletteWarmth = mix(0.15, 1.0, clamp01(inNetherWastes + inCrimsonForest));
+    #else
+        float netherPaletteWarmth = 1.0;
+    #endif
+    vec3 netherPaletteTint = mix(vec3(1.0), vec3(1.025, 1.04, 0.94), netherPaletteWarmth);
+    vec3 netherPaletteLumaWeights = vec3(0.299, 0.587, 0.114);
+    vec3 netherColor = netherColorBase * netherPaletteTint
+                    * (dot(netherColorBase, netherPaletteLumaWeights)
+                    / max(dot(netherColorBase * netherPaletteTint, netherPaletteLumaWeights), 1e-6));
     #endif
     #ifdef MC_OS_MAC
         vec3 lavaLightColor = vec3(0.15, 0.06, 0.01);

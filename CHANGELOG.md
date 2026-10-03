@@ -2,7 +2,7 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [Unreleased]
+## [1.4.0-beta.2] - 2026-10-03
 
 - Integrated Overworld water with depth: shallower optical paths retain more bed visibility, while thicker columns increase opacity and progressively attenuate the surface tint with wavelength-dependent coefficients. Applied a small desaturation to the base water tint while retaining biome colors and user color controls.
 - Reused the existing bottom-depth sample before normal generation to estimate vertical depth independently from viewing angle. Reduced waves/parallax in shallow water, softened small ripples, and added a modest rain response without adding texture fetches or normal samples.
@@ -12,14 +12,14 @@ All notable changes to Lumina Event Horizon are documented in this file.
 - Smoothed Overworld dawn/dusk sky and sunlight blends consistently across terrain, water, entities, atmospheric passes, and Distant Horizons. Eased the near-horizon noon color ramp without changing its daytime peak or nighttime endpoint.
 - Replaced abrupt solar/lunar sky-glare and volumetric-light response switches with continuous twilight blends, including safe normalization for dim light. Extended the existing shared rain smoothing with rise/fall parameters of 6/8 so lighting, cloud density/color, and atmospheric fog settle together.
 - Softened strong cloud forward-scattering boosts and added a hue-preserving HDR highlight shoulder to help retain interior shading under intense light. Cloud density, sample counts, and texture fetches are unchanged.
-- The shared tone map/exposure settings and the approved Nether/End palettes are unchanged. Static validation and isolated native GPU checks passed on Apple M4: transition continuity, bounded monotone blends, dim-light safety, and hue-preserving cloud highlights. Volumetric cloud functions compiled/linked at all three quality levels; full in-game dawn/dusk, weather, and cloud-volume comparison remains pending.
+- The shared tone map/exposure settings and the approved Nether/End palettes are unchanged. Static validation and isolated native GPU checks passed on Apple M4: transition continuity, bounded monotone blends, dim-light safety, and hue-preserving cloud highlights. Volumetric cloud functions compiled/linked at all three quality levels; The author visually tested and accepted the atmosphere changes on macOS; broader in-game/profile/version coverage remains pending.
 
 - Refined the End palette with slightly cooler blue-violet terrain lighting and a subtle violet tint in its dark sky/far-fog color. Precomputed constants preserve the previous luminance and keep shared tone mapping unchanged.
-- Black Hole/White Hole rendering, star layers, bloom settings, and other dimensions are unchanged by this pass. Static and numerical validation and isolated native OpenGL palette compilation/linking passed on Apple M4; in-game visual checks remain pending.
+- Black Hole/White Hole rendering, star layers, bloom settings, and other dimensions are unchanged by this pass. Static and numerical validation and isolated native OpenGL palette compilation/linking passed on Apple M4; The author visually tested and accepted the End palette on macOS; broader hardware/version coverage remains pending.
 
 - Refined Nether ambient and atmospheric colors with a subtle luminance-preserving red/amber tint, strongest in Nether Wastes and Crimson Forest. Warped Forest, Soul Sand Valley, and Basalt Deltas receive only a small tint to retain their individual palettes; biome transitions use the existing smooth weights.
 - Applied the palette to macOS and other platforms in biome and classic color modes; vanilla fog-color mode retains its original colors. Lava emission, block lighting, fog density, bloom, and shared tone mapping remain unchanged.
-- Replaced the initial Nether palette's chained dynamic global initializers with precomputed per-biome constants after a macOS native OpenGL linker crash when loading the development pack. Static/numerical checks and isolated native OpenGL compilation/linking of the corrected palette passed for all three macOS color modes on Apple M4. In-game confirmation of the fix, material detail, and biome transitions remains pending.
+- Replaced the initial Nether palette's chained dynamic global initializers with precomputed per-biome constants after a macOS native OpenGL linker crash when loading the development pack. Static/numerical checks and isolated native OpenGL compilation/linking of the corrected palette passed for all three macOS color modes on Apple M4. Subsequent author screenshots show the Nether loading after the fix; extended stability and biome-transition checks remain pending.
 
 - Refined the Overworld daytime palette with slightly warmer direct sunlight and subtly cooler ambient skylight. Luminance-preserving tints keep the existing lighting brightness and shared tone mapping; extra solar warmth fades toward sunset.
 - The palette blends through the existing daylight and weather transitions, leaving nighttime and full-rain lighting unchanged. No texture samples or new settings were added; Nether and End lighting are unchanged.
@@ -273,3 +273,5 @@ Sharper subjects, smoother backgrounds, and more control over your cinematic sty
 [1.3.9-rc.2]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.2
 
 [1.3.9]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9
+
+[1.4.0-beta.2]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.4.0-beta.2

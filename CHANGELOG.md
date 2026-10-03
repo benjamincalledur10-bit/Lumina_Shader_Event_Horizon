@@ -2,7 +2,7 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [Unreleased]
+## [1.4.0-beta.1] - 2026-10-03
 
 - Added **Selective Bloom**, enabled by default, and **Bloom Highlight Threshold** in Cinematics. A soft peak-channel HDR threshold favors bright sources while retaining saturated colors; additive composition preserves the sharp base image.
 - Weighted bloom toward compact halos and reduced humidity bloom amplification in selective mode. Disabling Selective Bloom restores the previous extraction, blend, and humidity calculations.
@@ -13,7 +13,7 @@ All notable changes to Lumina Event Horizon are documented in this file.
 - End composition values are an initial artistic pass; in-game silhouette, temporal stability, and macOS checks remain pending.
 
 - Added **Black Hole Radial Rays** and a separate **Black Hole Ray Intensity** slider (0–150%) to Event Horizon settings, addressing issue #4.
-- Rays default to ON at 100%, preserving the existing rendering calculation. OFF and 0% use the same local back-disk mask, retaining the nearby Einstein ring, front accretion disk, event horizon, photon ring, and gravitational lensing.
+- Rays default to ON at 100%, preserving the ray-control calculation; celestial emission is rebalanced separately in this beta. OFF and 0% use the same local back-disk mask, retaining the nearby Einstein ring, front accretion disk, event horizon, photon ring, and gravitational lensing.
 - White Hole rendering and its light-ray toggle remain independent.
 - Static validation performed; visual verification in Minecraft, including macOS, is pending.
 

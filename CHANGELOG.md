@@ -2,6 +2,13 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased]
+
+- Added **Black Hole Radial Rays** and a separate **Black Hole Ray Intensity** slider (0–150%) to Event Horizon settings, addressing issue #4.
+- Rays default to ON at 100%, preserving the existing rendering calculation. OFF and 0% use the same local back-disk mask, retaining the nearby Einstein ring, front accretion disk, event horizon, photon ring, and gravitational lensing.
+- White Hole rendering and its light-ray toggle remain independent.
+- Static validation performed; visual verification in Minecraft, including macOS, is pending.
+
 ## [1.3.9] - 2026-09-19
 
 # 🌌 Lumina Event Horizon v1.3.9 — Cinematic Focus

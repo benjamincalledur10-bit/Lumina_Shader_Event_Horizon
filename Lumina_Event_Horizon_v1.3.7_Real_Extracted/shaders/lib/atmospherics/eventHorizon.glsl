@@ -119,6 +119,20 @@ vec4 GetBlackHole(vec3 nViewPos, vec3 upVec, vec3 eastVec, float dither) {
         // The back disk is lensed over the poles. Fade it at the equator to avoid clipping the front disk.
         float poleMask = smoothstep(0.0, 0.5, abs(uv.y) / r);
         backDisk.a *= poleMask;
+
+        // The full-sky rays are the extended back disk. Preserve the local
+        // Einstein ring, fading only its extension between r=1.1 and r=1.5.
+        // At the default ON/100 setting, compile the original math unchanged.
+        #if !defined BLACK_HOLE_RAYS || BLACK_HOLE_RAY_INTENSITY == 0
+            backDisk.a *= 1.0 - smoothstep(1.1, 1.5, r);
+        #elif BLACK_HOLE_RAY_INTENSITY != 100
+            float rayWeight = smoothstep(1.1, 1.5, r);
+            float rayIntensity = float(BLACK_HOLE_RAY_INTENSITY) * 0.01;
+            // This layer is premultiplied here and blended by alpha again in
+            // deferred1. sqrt keeps the emitted contribution linear below 100%.
+            backDisk.a *= mix(1.0, sqrt(min(rayIntensity, 1.0)), rayWeight);
+            backDisk.rgb *= mix(1.0, max(rayIntensity, 1.0), rayWeight);
+        #endif
         
         finalCol.rgb = backDisk.rgb * backDisk.a;
         finalCol.a = backDisk.a;

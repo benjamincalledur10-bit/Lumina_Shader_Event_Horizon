@@ -1117,6 +1117,11 @@ option.XLIGHT_I=Blocklight Intensity
 
 option.XLIGHT_CURVE=Blocklight Contrast
 option.XLIGHT_CURVE.comment=Adjusts how quickly the intensity of blocklight fades away as it travels distance away from the light source.
+option.BLACK_HOLE_RAYS=Black Hole Radial Rays
+option.BLACK_HOLE_RAYS.comment=Toggles the radial light rays extending across the End sky. Keeps the black hole, accretion disk, gravitational lensing, and photon ring visible. Independent of White Hole Light Rays.
+option.BLACK_HOLE_RAY_INTENSITY=Black Hole Ray Intensity
+option.BLACK_HOLE_RAY_INTENSITY.comment=Controls only the extended Black Hole rays. 100% preserves the original appearance; 0% removes the rays just like disabling Black Hole Radial Rays.
+suffix.BLACK_HOLE_RAY_INTENSITY=%
 option.WHITE_HOLE_RAYS=White Hole Light Rays
 option.WHITE_HOLE_RAYS.comment=Toggles the horizontal and vertical energy rays around the White Hole.
 option.WHITE_HOLE=White Hole

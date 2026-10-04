@@ -4,6 +4,8 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [1.4.0-beta.4] - 2026-10-04
 
+- Further updated this same beta: dry-weather clouds now thin smoothly around noon and especially midnight, while mornings and early nights retain more coverage. Rain reduces this daily clearing; user coverage controls remain active. Medium/High edge erosion has slightly finer definition while preserving the accepted cumulus volume. Added native GPU checks for the solar coverage cycle, continuous transitions and rain override.
+
 - Updated this same beta after in-game feedback: replaced the continuous smooth noise sheet with sparsely distributed cumulus clusters, overlapping crowns, domain-warped boundaries and explicit clear-sky gaps. Reduced excessive direct/forward illumination to retain interior contrast. Cloud sampling, water reflections and terrain shadows use the corrected shared shape. Replaced the beta.4 tag and ZIP with this revision; download the updated asset again.
 
 - Rebuilt Overworld clouds with a shared three-dimensional density field, rounded height profiles, regional coverage, and finer edge erosion at Medium/High. All qualities use the same layer geometry and wind; water reflections use the same base shape with a smaller sampling budget.

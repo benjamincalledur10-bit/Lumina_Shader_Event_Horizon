@@ -32,7 +32,7 @@ fixture = """
 #define LUMINA_CLOUD_SCALE 100
 #define LUMINA_CLOUD_RAIN_DENSITY 0.40
 uniform sampler2D noisetex;
-uniform float rainFactor, syncedTime, frameTimeCounter, skyFade, terrainDistance;
+uniform float rainFactor, syncedTime, frameTimeCounter, skyFade, terrainDistance, timeAngle;
 uniform vec3 ray, cameraPosition;
 const mat4 gbufferModelViewInverse = mat4(1.0);
 const vec3 lightVec = vec3(0.4, 0.8, 0.2);
@@ -173,6 +173,23 @@ for quality in (0, 1, 2, 3):
         assert v == 1
 print(
     "GPU clouds: bounded shared density, coverage/rain monotonicity, above-layer and disabled shadows.",
+    flush=True,
+)
+# Actual solar phase: morning/evening cloudy, noon/midnight clear, rain preserved.
+daily = build(3, body="result=vec4(LuminaCloudDailyCoverage());")
+values = [
+    draw(daily, timeAngle=t, rainFactor=0)[0] for t in (0.0, 0.25, 0.5, 0.75, 1.0)
+]
+assert values[1] < 0.08 and values[3] < 0.02
+assert values[0] > 0.45 and values[2] > 0.45 and abs(values[0] - values[4]) < 1e-5
+for center in (0.0, 0.25, 0.5, 0.75, 1.0):
+    a = draw(daily, timeAngle=center - 1e-4)[0]
+    b = draw(daily, timeAngle=center + 1e-4)[0]
+    assert abs(a - b) < 0.001
+assert draw(daily, timeAngle=0.25, rainFactor=1)[0] > 0.45
+assert draw(daily, timeAngle=0.75, rainFactor=1)[0] > 0.45
+print(
+    "GPU cloud daily cycle: noon/midnight clearing, morning/evening coverage, smooth joins and rain override.",
     flush=True,
 )
 # Periodic wrapping and spatially monotone weather controls across many clusters.

@@ -29,6 +29,16 @@ float LuminaCloudLobe(vec3 delta, vec3 radius) {
     return max(1.0 - dot(q, q), 0.0);
 }
 
+// Solar phase is shared by sky, reflected clouds and terrain shadows.
+// Dry weather clears around noon and midnight; rain retains its own coverage.
+float LuminaCloudDailyCoverage() {
+    float zenith = abs(sin(timeAngle * 6.28318530718));
+    float clearing = smoothstep(0.70, 0.98, zenith);
+    float day = smoothstep(-0.10, 0.10, sin(timeAngle * 6.28318530718));
+    float minimum = mix(0.0, 0.065, day);
+    return mix(0.48, minimum, clearing * (1.0 - rainFactor));
+}
+
 float LuminaCloudShape(vec3 worldPos, int altitude, float horizontalDistance, bool detail) {
     float h = (worldPos.y - (float(altitude) - cloudStretch)) / cloudTallness;
     if (h <= 0.0 || h >= 1.0) return 0.0;
@@ -40,8 +50,8 @@ float LuminaCloudShape(vec3 worldPos, int altitude, float horizontalDistance, bo
     float scale = float(LUMINA_CLOUD_SCALE) * 0.01;
     vec2 horizontal = (worldPos.xz - vec2(0.7, 0.24) * cloudTime) * scale;
     vec2 cell = floor(horizontal / 512.0);
-    float coverage = clamp(0.48 + 0.30 * (float(LUMINA_CLOUD_COVERAGE) - 1.0)
-                         + 0.55 * float(LUMINA_CLOUD_RAIN_DENSITY) * rainFactor, 0.10, 0.98);
+    float coverage = clamp(LuminaCloudDailyCoverage() + 0.30 * (float(LUMINA_CLOUD_COVERAGE) - 1.0)
+                         + 0.55 * float(LUMINA_CLOUD_RAIN_DENSITY) * rainFactor, 0.0, 0.98);
     vec3 p = vec3(horizontal.x, h * 128.0, horizontal.y) / 32.0;
     vec3 warp = (vec3(LuminaCloudNoise(p), LuminaCloudNoise(p + vec3(19.0, 7.0, 3.0)),
                      LuminaCloudNoise(p + vec3(5.0, 13.0, 23.0))) - 0.5) * 28.0;
@@ -71,14 +81,14 @@ float LuminaCloudShape(vec3 worldPos, int altitude, float horizontalDistance, bo
         if (detail) {
             float small = LuminaCloudNoise(p * 2.0 + vec3(5.0, 9.0, 1.0));
             #if CLOUD_QUALITY >= 3
-                small = small * 0.65 + LuminaCloudNoise(p * 4.0) * 0.35;
+                small = small * 0.55 + LuminaCloudNoise(p * 4.0) * 0.45;
             #endif
-            erosion = mix(erosion, erosion * 0.65 + small * 0.35,
+            erosion = mix(erosion, erosion * 0.50 + small * 0.50,
                           1.0 - smoothstep(1600.0, 3600.0, horizontalDistance));
         }
     #endif
     // Remove wispy edges rather than turning the whole slab into opaque haze.
-    float density = max(shape - (1.0 - erosion) * 0.26 * (1.0 - shape), 0.0);
+    float density = max(shape - (1.0 - erosion) * 0.32 * (1.0 - shape), 0.0);
     float base = smoothstep(0.0, 0.10, h);
     return clamp(density * base * 1.25, 0.0, 1.0);
 }

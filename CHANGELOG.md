@@ -4,6 +4,8 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [1.4.0-beta.4] - 2026-10-04
 
+- Updated this same beta after in-game feedback: replaced the continuous smooth noise sheet with sparsely distributed cumulus clusters, overlapping crowns, domain-warped boundaries and explicit clear-sky gaps. Reduced excessive direct/forward illumination to retain interior contrast. Cloud sampling, water reflections and terrain shadows use the corrected shared shape. Replaced the beta.4 tag and ZIP with this revision; download the updated asset again.
+
 - Rebuilt Overworld clouds with a shared three-dimensional density field, rounded height profiles, regional coverage, and finer edge erosion at Medium/High. All qualities use the same layer geometry and wind; water reflections use the same base shape with a smaller sampling budget.
 - Replaced additive opacity with distance-aware Beer–Lambert absorption and front-to-back transmittance. Corrected ray sample positions and terrain clipping, including horizontal rays and cameras inside/above the cloud layer. Lighting probes now estimate internal sunlight attenuation, with forward scattering, ambient shading and a bounded multiple-scattering approximation.
 - Ground cloud shadows now sample the shared density field at the actual configured/offset layer altitude; they fade at grazing light angles and disappear above the cloud layer. Repeated sky reflection calls no longer compound cloud color multipliers.

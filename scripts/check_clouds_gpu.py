@@ -97,16 +97,16 @@ for reflection in (False, True):
     for quality in (1, 2, 3):
         p = build(quality, reflection=reflection)
         for camera, ray in (
-            ((0, 64, 0), (0, 1, 0)),
-            ((0, 192, 0), (1, 0, 0)),
-            ((0, 400, 0), (0, -1, 0)),
+            ((112, 64, 112), (0, 1, 0)),
+            ((112, 192, 112), (1, 0, 0)),
+            ((112, 400, 112), (0, -1, 0)),
         ):
             v = draw(p, skyFade=1, terrainDistance=1e9, cameraPosition=camera, ray=ray)
             assert 0 < v[3] <= 1, (quality, camera, v)
         for camera, ray in (
-            ((0, 64, 0), (1, 0, 0)),
-            ((0, 400, 0), (0, 1, 0)),
-            ((0, 64, 0), (0, -1, 0)),
+            ((112, 64, 112), (1, 0, 0)),
+            ((112, 400, 112), (0, 1, 0)),
+            ((112, 64, 112), (0, -1, 0)),
         ):
             assert (
                 draw(p, skyFade=1, terrainDistance=1e9, cameraPosition=camera, ray=ray)[
@@ -119,7 +119,7 @@ for reflection in (False, True):
                 p,
                 skyFade=0,
                 terrainDistance=32,
-                cameraPosition=(0, 64, 0),
+                cameraPosition=(112, 64, 112),
                 ray=(0, 1, 0),
             )[3]
             == 0
@@ -129,7 +129,7 @@ for reflection in (False, True):
                 p,
                 skyFade=1,
                 terrainDistance=1e9,
-                cameraPosition=(0, 64, 0),
+                cameraPosition=(112, 64, 112),
                 ray=(0, 1, 0),
             )[3]
         )
@@ -161,13 +161,13 @@ for coverage in (0.7, 1.0, 2.0):
     p = build(
         3, coverage, body="result=vec4(LuminaCloudShape(cameraPosition,192,0.0,false));"
     )
-    densities.append(draw(p, cameraPosition=(0, 180, 0), rainFactor=0)[0])
-    assert draw(p, cameraPosition=(0, 180, 0), rainFactor=1)[0] >= densities[-1]
+    densities.append(draw(p, cameraPosition=(200, 180, 112), rainFactor=0)[0])
+    assert draw(p, cameraPosition=(200, 180, 112), rainFactor=1)[0] >= densities[-1]
 assert densities == sorted(densities) and densities[-1] > densities[0]
 for quality in (0, 1, 2, 3):
     p = build(quality, body="result=vec4(GetCloudShadow(vec3(0.0)));")
-    assert draw(p, cameraPosition=(0, 400, 0))[0] == 1
-    v = draw(p, cameraPosition=(0, 64, 0))[0]
+    assert draw(p, cameraPosition=(112, 400, 112))[0] == 1
+    v = draw(p, cameraPosition=(112, 64, 112))[0]
     assert 0.15 <= v <= 1
     if quality == 0:
         assert v == 1
@@ -175,6 +175,15 @@ print(
     "GPU clouds: bounded shared density, coverage/rain monotonicity, above-layer and disabled shadows.",
     flush=True,
 )
+# Periodic wrapping and spatially monotone weather controls across many clusters.
+periodic = build(
+    3, body="result=vec4(LuminaCloudShape(cameraPosition,192,0.0,false));", speed=0
+)
+for pos in ((112, 180, 112), (200, 180, 112), (700, 192, 1400)):
+    a = draw(periodic, cameraPosition=pos)
+    b = draw(periodic, cameraPosition=(pos[0] + 131072, pos[1], pos[2] - 131072))
+    assert max(abs(x - y) for x, y in zip(a, b)) < 0.002, (pos, a, b)
+print("GPU clouds: camera-wrap period preserves cloud density.", flush=True)
 # Deterministic noise and a perspective sky fixture rendered by the actual integrator.
 rng = random.Random(1404)
 values = []
@@ -198,7 +207,7 @@ assert max(differences) > 0.02
 print("GPU clouds: wind changes the density field; zero speed freezes it.", flush=True)
 p = build(
     3,
-    body="vec2 uv=gl_FragCoord.xy/vec2(640.0,360.0);vec3 direction=normalize(vec3((uv.x-0.5)*1.8,uv.y*0.75+0.04,1.0));float depth=1.0;vec4 cloud=GetVolumetricClouds(192,4000.0,depth,1.0,1.0,cameraPosition,direction,1e9,dot(direction,normalize(lightVec)),direction.y,0.5);result=vec4(mix(GetSky(direction.y,0.0,0.0,true,false),cloud.rgb,cloud.a),1.0);",
+    body="vec2 uv=gl_FragCoord.xy/vec2(640.0,360.0);vec3 direction=normalize(vec3((uv.x-0.5)*1.8,uv.y*0.75+0.04,1.0));float depth=1.0;vec4 cloud=GetVolumetricClouds(192,4000.0,depth,1.0,1.0,cameraPosition,direction,1e9,dot(direction,normalize(lightVec)),direction.y,0.5);result=vec4(mix(GetSky(direction.y,0.0,0.0,true,false),cloud.rgb,cloud.a),cloud.a);",
 )
 g.glActiveTexture(0x84C0)
 g.glBindTexture(0x0DE1, tex)
@@ -208,6 +217,17 @@ draw(p, cameraPosition=(200, 64, 450), syncedTime=0)
 output = (c.c_float * (640 * 360 * 4))()
 g.glReadPixels(0, 0, 640, 360, 0x1908, 0x1406, output)
 assert all(math.isfinite(v) for v in output)
+alpha = list(output)[3::4]
+clear_fraction = sum(v < 0.02 for v in alpha) / len(alpha)
+cloud_fraction = sum(v > 0.2 for v in alpha) / len(alpha)
+assert clear_fraction > 0.25 and 0.01 < cloud_fraction < 0.70, (
+    clear_fraction,
+    cloud_fraction,
+)
+print(
+    f"GPU clear-day fixture: {clear_fraction:.1%} clear sky, {cloud_fraction:.1%} visible clouds.",
+    flush=True,
+)
 from PIL import Image
 
 rgb = bytes(

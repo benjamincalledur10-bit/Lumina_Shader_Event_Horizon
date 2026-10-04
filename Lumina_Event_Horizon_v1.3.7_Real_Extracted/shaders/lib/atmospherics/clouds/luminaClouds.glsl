@@ -52,7 +52,7 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
     float stepLength = interval / float(max(sampleCount, 1));
     vec3 worldLightDir = normalize(mat3(gbufferModelViewInverse) * lightVec);
     float forwardLight = max(mix(-VdotS, VdotS, smoothstep(0.35, 0.65, sunVisibility)), 0.0);
-    float phase = 0.65 + pow(forwardLight, 8.0) * 1.8 * invRainFactor;
+    float phase = 0.55 + pow(forwardLight, 8.0) * 0.85 * invRainFactor;
     vec3 skyColor = GetSky(VdotU, VdotS, dither, isEyeInWater == 0, false);
     vec3 accumulated = vec3(0.0);
     float transmittance = 1.0;
@@ -87,8 +87,8 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
         float height = clamp((tracePos.y - lowerPlaneAltitude) / cloudTallness, 0.0, 1.0);
         float ambientVisibility = 0.35 + 0.65 * height;
         float multipleScattering = 0.22 * (1.0 - exp(-density * 3.0)) * exp(-sunOpticalDepth * 0.25);
-        vec3 sampleColor = cloudAmbientColor * ambientVisibility
-                         + cloudLightColor * (sunlight * phase + multipleScattering);
+        vec3 sampleColor = cloudAmbientColor * ambientVisibility * 0.75
+                         + cloudLightColor * (sunlight * phase + multipleScattering) * 0.70;
         float peak = max(sampleColor.r, max(sampleColor.g, sampleColor.b));
         sampleColor /= 1.0 + 0.12 * max(peak - 2.5, 0.0);
         float haze = 1.0 - exp(-horizontalDistance * 0.00035);

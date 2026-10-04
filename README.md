@@ -101,13 +101,13 @@ Visual verification in Minecraft is still pending.
 
 ## Development
 
-The development preview is **v1.4.0-beta.3**, with upgraded water color,
-depth response, directional waves, and reflection handling across quality levels.
+The development preview is **v1.4.0-beta.4**, with upgraded water color,
+depth response, directional waves, High reflections, and rebuilt volumetric clouds.
 Minecraft visual and performance testing remains pending.
 
-Development also adds **High** to Water Reflection Quality, selected by the High,
+This preview also adds **High** to Water Reflection Quality, selected by the High,
 Very High, and Ultra profiles. It uses refined scene-depth intersections and
-filtered reflection colors, with greater GPU cost. This addition awaits a tagged release.
+filtered reflection colors, with greater GPU cost. The cloud model uses 3D density, internal light attenuation and matching ground shadows.
 
 
 - `main` contains the current stable, published state.

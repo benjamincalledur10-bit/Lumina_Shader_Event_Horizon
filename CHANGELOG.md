@@ -2,7 +2,14 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [Unreleased] — High Water Reflections
+## [1.4.0-beta.4] - 2026-10-04
+
+- Rebuilt Overworld clouds with a shared three-dimensional density field, rounded height profiles, regional coverage, and finer edge erosion at Medium/High. All qualities use the same layer geometry and wind; water reflections use the same base shape with a smaller sampling budget.
+- Replaced additive opacity with distance-aware Beer–Lambert absorption and front-to-back transmittance. Corrected ray sample positions and terrain clipping, including horizontal rays and cameras inside/above the cloud layer. Lighting probes now estimate internal sunlight attenuation, with forward scattering, ambient shading and a bounded multiple-scattering approximation.
+- Ground cloud shadows now sample the shared density field at the actual configured/offset layer altitude; they fade at grazing light angles and disappear above the cloud layer. Repeated sky reflection calls no longer compound cloud color multipliers.
+- Main-ray budgets are 32/48/64 samples for Low/Medium/High; reflections use up to 16 and the AMD compatibility cap remains active. These are work limits, not measured performance claims.
+- Added portable cloud integration preprocessing and native macOS GPU tests for density bounds, coverage/rain behavior, ray clipping, quality opacity consistency, shadows, and a synthetic sky render. Canonical validation (400 package files), 768 water and 150 cloud preprocessing configurations, and isolated native Apple M4 GPU checks passed. Minecraft appearance, motion, actual frame times and final artistic polish remain for in-game testing.
+
 
 - Added a distinct High water-reflection option (value 3) and selected it in the High, Very High and Ultra profiles. Existing lower reflection modes retain their algorithms and the standalone default remains Medium.
 - High Overworld water traces front-to-back scene-depth crossings with up to 48 adaptive steps and seven bisection refinements, using the actual wave normal. Invalid/discontinuous intersections fall back to the sky; this path does not substitute mirrored terrain for missing geometry.

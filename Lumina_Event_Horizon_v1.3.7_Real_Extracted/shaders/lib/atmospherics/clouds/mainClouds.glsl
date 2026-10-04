@@ -74,6 +74,8 @@ vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset
     //float thresholdMix = pow2(clamp01(VdotU * 15.0));
     //thresholdF = mix(far, thresholdF, thresholdMix * 0.5 + 0.5);
 
+    vec3 savedCloudAmbient = cloudAmbientColor;
+    vec3 savedCloudLight = cloudLightColor;
     cloudAmbientColor *= 1.0 - 0.25 * rainFactor;
 
     vec3 cloudColorMult = vec3(1.0);
@@ -100,5 +102,7 @@ vec4 GetClouds(inout float cloudLinearDepth, float skyFade, vec3 cameraPosOffset
         clouds.rgb += nightNebula * 0.2;
     #endif
 
+    cloudAmbientColor = savedCloudAmbient;
+    cloudLightColor = savedCloudLight;
     return clouds;
 }

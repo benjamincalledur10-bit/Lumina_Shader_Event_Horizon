@@ -4,6 +4,11 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [1.4.0-beta.2] - 2026-10-03
 
+- Guarded zero and near-zero water-foam thresholds to prevent undefined divisions while preserving the existing shoreline response for ordinary inputs.
+- Preserved the Distant Horizons underwater material's full-reflection override when world-space reflections are active. Other DH paths continue to derive their reflection response from the updated wave normal, including the Overworld Schlick curve.
+- Moved selective bloom extraction to full resolution in composite3, before mipmap generation. Reuses colortex8's HDR storage after SSR consumption in composite1, retaining small bright-source energy without altering the sharp scene output. The selective path adds an HDR output write and mipmap generation; disabling selective bloom retains the previous bloom path.
+- Added reproducible native macOS GPU regression checks in `scripts/check_render_polish_gpu.py`. Isolated Apple M4 checks passed for degenerate foam, DH underwater/non-water/quality/reflection branches, hue preservation, actual mipmap energy retention, and selective/legacy bloom tile compilation. Preprocessing passed 96 dimension/blur/bloom configurations. Canonical validation passed; Minecraft loader integration, visual balance, and frame-time impact remain pending.
+
 - Integrated Overworld water with depth: shallower optical paths retain more bed visibility, while thicker columns increase opacity and progressively attenuate the surface tint with wavelength-dependent coefficients. Applied a small desaturation to the base water tint while retaining biome colors and user color controls.
 - Reused the existing bottom-depth sample before normal generation to estimate vertical depth independently from viewing angle. Reduced waves/parallax in shallow water, softened small ripples, and added a modest rain response without adding texture fetches or normal samples.
 - Changed above-water Overworld reflection blending to Schlick's 2% normal-incidence response with strong grazing reflections, consistently in the regular and Distant Horizons paths. Guarded near-zero parallax divisors and made the DH reflection variable available before the underwater material branch.

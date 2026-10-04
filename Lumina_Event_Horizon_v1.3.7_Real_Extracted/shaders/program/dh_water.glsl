@@ -134,13 +134,18 @@ void main() {
     vec3 normalM = normal, geoNormal = normal, shadowMult = vec3(1.0);
     vec3 worldGeoNormal = normalize(ViewToPlayer(geoNormal * 10000.0));
     float fresnel = clamp(1.0 + dot(normalM, nViewPos), 0.0, 1.0);
-    float fresnelM = 0.0; // Also available to the underwater material branch.
+    float fresnelM = pow3(fresnel); // The underwater material can override this seed.
 
     if (mat == DH_BLOCK_WATER) {
         #include "/lib/materials/specificMaterials/translucents/water.glsl"
     }
     
-    fresnelM = (pow3(fresnel) * 0.85 + 0.15) * reflectMult;
+    // Refresh the wave-normal response unless the material requested full underwater WSR.
+    #if WORLD_SPACE_REFLECTIONS_INTERNAL > 0 && WATER_MAT_QUALITY >= 2
+        if (mat != DH_BLOCK_WATER || isEyeInWater != 1)
+    #endif
+    fresnelM = pow3(fresnel);
+    fresnelM = (fresnelM * 0.85 + 0.15) * reflectMult;
     #ifdef OVERWORLD
         if (mat == DH_BLOCK_WATER && isEyeInWater != 1)
             fresnelM = (0.02 + 0.98 * pow2(pow2(fresnel)) * fresnel) * reflectMult;

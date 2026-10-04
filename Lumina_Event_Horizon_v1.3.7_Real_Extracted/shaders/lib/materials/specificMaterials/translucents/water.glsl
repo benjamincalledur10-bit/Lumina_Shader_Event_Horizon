@@ -247,7 +247,10 @@
                     #else
                         float foamThreshold = pow2(texture2DLod(noisetex, waterPos * 4.0 + wind * 0.5, 0.0).g) * 1.6;
                     #endif
-                    float foam = pow2(clamp((foamThreshold + yPosDif) / foamThreshold, 0.0, 1.0));
+                    // Zero texture/noise values must not produce an undefined foam ratio.
+                    float foam = foamThreshold > 0.000001
+                        ? pow2(clamp((foamThreshold + yPosDif) / max(foamThreshold, 0.000001), 0.0, 1.0))
+                        : 0.0;
                     #ifndef END
                         foam *= 0.4 + 0.25 * lmCoord.y;
                     #else

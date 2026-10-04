@@ -234,7 +234,21 @@ void main() {
         #endif
     #endif
 
-    /* DRAWBUFFERS:0 */
+    #if BLOOM_ENABLED == 1 && defined BLOOM_SELECTIVE
+        // colortex8's SSR data was consumed in composite1; reuse its HDR storage.
+        // Threshold at full resolution so mipmaps retain energy from small lights.
+        vec3 bloomSource = max(color, vec3(0.0));
+        float peak = max(bloomSource.r, max(bloomSource.g, bloomSource.b));
+        float knee = BLOOM_THRESHOLD * 0.5;
+        float soft = clamp(peak - BLOOM_THRESHOLD + knee, 0.0, 2.0 * knee);
+        soft = soft * soft / (4.0 * knee);
+        float contribution = max(peak - BLOOM_THRESHOLD, soft);
+        bloomSource *= contribution / max(peak, 0.0001);
+        /* DRAWBUFFERS:08 */
+        gl_FragData[1] = vec4(bloomSource, 1.0);
+    #else
+        /* DRAWBUFFERS:0 */
+    #endif
     gl_FragData[0] = vec4(color, 1.0);
 }
 

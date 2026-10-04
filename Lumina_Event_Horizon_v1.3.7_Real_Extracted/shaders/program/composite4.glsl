@@ -12,7 +12,11 @@ noperspective in vec2 texCoord;
 
 
 //Pipeline Constants//
-const bool colortex0MipmapEnabled = true;
+#if BLOOM_ENABLED == 1 && defined BLOOM_SELECTIVE
+    const bool colortex8MipmapEnabled = true;
+#else
+    const bool colortex0MipmapEnabled = true;
+#endif
 
 //Common Variables//
 float weight[7] = float[7](1.0, 6.0, 15.0, 20.0, 15.0, 6.0, 1.0);
@@ -33,17 +37,10 @@ vec3 BloomTile(float lod, vec2 offset, vec2 scaledCoord) {
                 float wg = weight[i + 3] * weight[j + 3];
                 vec2 pixelOffset = vec2(i, j) / view;
                 vec2 bloomCoord = (scaledCoord - offset + pixelOffset) * scale;
-                vec3 sampleColor = texture2D(colortex0, bloomCoord).rgb;
                 #ifdef BLOOM_SELECTIVE
-                    sampleColor = max(sampleColor, vec3(0.0));
-                    // Soft HDR threshold; peak channel retains saturated lava
-                    // and colored lights without shifting their hue.
-                    float peak = max(sampleColor.r, max(sampleColor.g, sampleColor.b));
-                    float knee = BLOOM_THRESHOLD * 0.5;
-                    float soft = clamp(peak - BLOOM_THRESHOLD + knee, 0.0, 2.0 * knee);
-                    soft = soft * soft / (4.0 * knee);
-                    float contribution = max(peak - BLOOM_THRESHOLD, soft);
-                    sampleColor *= contribution / max(peak, 0.0001);
+                    vec3 sampleColor = texture2D(colortex8, bloomCoord).rgb;
+                #else
+                    vec3 sampleColor = texture2D(colortex0, bloomCoord).rgb;
                 #endif
                 bloom += sampleColor * wg;
             }

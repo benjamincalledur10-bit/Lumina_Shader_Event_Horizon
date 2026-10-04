@@ -1,10 +1,18 @@
 void AddBackgroundReflection(inout vec4 reflection, vec3 color, vec3 playerPos, vec3 normalM, vec3 normalMR, vec3 nViewPos, vec3 nViewPosR,
                              vec3 shadowMult, float RVdotU, float RVdotS, float z0, float dither, float skyLightFactor, float smoothness, float highlightMult) {
     #ifdef OVERWORLD
+        bool waterSurface = false;
+        #ifdef GBUFFERS_WATER
+            waterSurface = mat == 32000;
+        #elif defined DH_WATER
+            waterSurface = mat == DH_BLOCK_WATER;
+        #endif
         #if defined COMPOSITE || WATER_REFLECT_QUALITY >= 2
             vec3 skyReflection = GetSky(RVdotU, RVdotS, dither, isEyeInWater == 0, true);
         #else
-            vec3 skyReflection = GetLowQualitySky(RVdotU, RVdotS, dither, isEyeInWater == 0, true);
+            vec3 skyReflection;
+            if (waterSurface) skyReflection = GetSky(RVdotU, RVdotS, dither, isEyeInWater == 0, true);
+            else skyReflection = GetLowQualitySky(RVdotU, RVdotS, dither, isEyeInWater == 0, true);
         #endif
 
         #ifdef ATM_COLOR_MULTS
@@ -54,7 +62,8 @@ void AddBackgroundReflection(inout vec4 reflection, vec3 color, vec3 playerPos, 
 
                 skyReflection = mix(color * 0.5, skyReflection, skyLightFactor);
             #else
-                skyReflection = mix(color, skyReflection, skyLightFactor * 0.5);
+                if (waterSurface) skyReflection = mix(color * 0.5, skyReflection, skyLightFactor);
+                else skyReflection = mix(color, skyReflection, skyLightFactor * 0.5);
             #endif
         #endif
     #elif defined END

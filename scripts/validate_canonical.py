@@ -344,10 +344,10 @@ def validate_compatibility(errors: list[str]) -> None:
         metadata = json.loads((SHADER_ROOT / "pack.json").read_text())
     except (OSError, UnicodeError, json.JSONDecodeError):
         return  # Already reported by validate_json.
-    if metadata.get("version") != "1.4.0-beta.2":
-        errors.append("canonical pack version must be exactly 1.4.0-beta.2")
+    if metadata.get("version") != "1.4.0-beta.3":
+        errors.append("canonical pack version must be exactly 1.4.0-beta.3")
     if metadata.get("description") != (
-        "Lumina Shader Event Horizon v1.4.0-beta.2 (compatible from 1.8 to 26.3)"
+        "Lumina Shader Event Horizon v1.4.0-beta.3 (compatible from 1.8 to 26.3)"
     ):
         errors.append("canonical compatibility description is out of date")
 

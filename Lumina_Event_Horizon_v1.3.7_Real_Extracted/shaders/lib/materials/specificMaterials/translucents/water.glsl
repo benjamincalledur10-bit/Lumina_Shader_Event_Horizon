@@ -9,7 +9,9 @@
 
         #ifdef GBUFFERS_WATER
             translucentMultCalculated = true;
-            translucentMult.rgb = normalize(sqrt2(glColor.rgb));
+            vec3 waterTransmissionTint = sqrt2(max(glColor.rgb, vec3(0.0)));
+            translucentMult.rgb = waterTransmissionTint
+                * inversesqrt(max(dot(waterTransmissionTint, waterTransmissionTint), 0.000001));
             translucentMult.g *= 0.88;
         #endif
 
@@ -39,7 +41,8 @@
 #endif
 #ifdef OVERWORLD
     // Keep biome tint, with less reliance on saturation; user color multipliers remain effective.
-    color.rgb = mix(color.rgb, vec3(GetLuminance(color.rgb)), 0.10);
+    color.rgb = mix(color.rgb, vec3(GetLuminance(color.rgb)), 0.16);
+    color.rgb *= vec3(0.86, 0.97, 1.04);
 #endif
 // ============================== End of Step 1 ============================== //
 
@@ -56,7 +59,7 @@
 
     // Reuse the existing bottom-depth sample for opacity and surface-wave scale.
     float waterDepthBlend = 1.0;
-    #if WATER_MAT_QUALITY >= 2
+    #if WATER_MAT_QUALITY >= 2 || defined OVERWORLD
         float depthT = 1.0;
         vec3 viewPosT = viewPos;
         float waterColumnLength = 0.0;
@@ -77,7 +80,7 @@
                 // Separate optical path length from vertical depth at grazing angles.
                 vec3 waterWorldRay = mat3(gbufferModelViewInverse) * nViewPos;
                 float waterVerticalDepth = waterColumnLength * abs(waterWorldRay.y);
-                waterDepthBlend = smoothstep(0.75, 12.0, waterVerticalDepth);
+                waterDepthBlend = depthT < 1.0 ? smoothstep(0.5, 10.0, waterVerticalDepth) : 1.0;
             #endif
         }
     #endif
@@ -124,20 +127,51 @@
                     #ifdef OVERWORLD
                         if (isEyeInWater != 1) parallaxMult *= mix(0.45, 1.0, waterDepthBlend);
                     #endif
-                    for (int i = 0; i < 2; i++) { // Reduced iterations for performance
+                    #if defined OVERWORLD && WATER_MAT_QUALITY == 2
+                        const int waterParallaxSteps = 1;
+                    #else
+                        const int waterParallaxSteps = 2;
+                    #endif
+                    for (int i = 0; i < waterParallaxSteps; i++) {
                         waterPosM += parallaxMult * texture2D(gaux4, waterPosM - wind).a;
                         waterPosM += parallaxMult * texture2D(gaux4, waterPosM * 0.25 - 0.5 * wind).a;
                     }
                 #endif
 
-                vec2 normalMed = texture2D(gaux4, waterPosM + wind).rg - 0.5;
-                vec2 normalSmall = texture2D(gaux4, waterPosM * 4.0 - 2.0 * wind).rg - 0.5;
-                vec2 normalBig = texture2D(gaux4, waterPosM * 0.25 - 0.5 * wind).rg - 0.5;
+                #ifdef OVERWORLD
+                    // Independent advection directions avoid a single sliding noise pattern.
+                    vec2 normalMed = texture2D(gaux4, waterPosM + rawWind * vec2(1.30, -1.80)).rg - 0.5;
+                    vec2 normalSmall = texture2D(gaux4, waterPosM * 4.0 + rawWind * vec2(-2.30, -0.70)).rg - 0.5;
+                    vec2 swellPosition = worldPos.xz;
+                    #if WATER_SIZE_MULT != 100
+                        swellPosition *= WATER_SIZE_MULT_M;
+                    #endif
+                    vec2 swellPhase = vec2(dot(swellPosition, vec2(0.16, 0.07)),
+                                          dot(swellPosition, vec2(-0.09, 0.13)))
+                                    + rawWind * vec2(-11.0, -8.0);
+                    vec2 swell = cos(swellPhase.x) * vec2(0.70, 0.30)
+                               + cos(swellPhase.y) * vec2(-0.40, 0.65);
+                    #if WATER_MAT_QUALITY >= 2
+                        vec2 normalBig = texture2D(gaux4, waterPosM * 0.25 + rawWind * vec2(0.20, 0.50)).rg - 0.5;
+                        normalBig = normalBig * 0.75 + swell * 0.18;
+                    #else
+                        // Potato replaces the third normal fetch with inexpensive broad swells.
+                        vec2 normalBig = swell * 0.35;
+                    #endif
+                    // Attenuate unresolved fine detail before it creates sparkling reflections.
+                    vec2 rippleFootprint = fwidth(waterPosM * 4.0);
+                    float rippleFilter = inversesqrt(1.0 + 16.0 * dot(rippleFootprint, rippleFootprint));
+                    normalSmall *= rippleFilter;
+                #else
+                    vec2 normalMed = texture2D(gaux4, waterPosM + wind).rg - 0.5;
+                    vec2 normalSmall = texture2D(gaux4, waterPosM * 4.0 - 2.0 * wind).rg - 0.5;
+                    vec2 normalBig = texture2D(gaux4, waterPosM * 0.25 - 0.5 * wind).rg - 0.5;
+                #endif
 
                 #ifdef OVERWORLD
-                    float waterWaveScale = isEyeInWater != 1 ? mix(0.45, 1.0, waterDepthBlend) : 1.0;
+                    float waterWaveScale = isEyeInWater != 1 ? mix(0.55, 1.10, waterDepthBlend) : 1.0;
                     float waterSmallScale = isEyeInWater != 1 ? mix(0.55, 0.85, waterDepthBlend) : 1.0;
-                    waterWaveScale *= 1.0 + 0.12 * rainFactor;
+                    waterWaveScale *= 1.0 + 0.25 * rainFactor;
                     normalMap.xy = (normalMed * WATER_BUMP_MED + normalSmall * WATER_BUMP_SMALL * waterSmallScale + normalBig * WATER_BUMP_BIG) * waterWaveScale;
                 #else
                     normalMap.xy = normalMed * WATER_BUMP_MED + normalSmall * WATER_BUMP_SMALL + normalBig * WATER_BUMP_BIG;
@@ -162,6 +196,10 @@
                 normalMap.xy *= 2.0 - 1.8 * fresnel2;
         #endif
 
+            // Bound user-selected wave strengths without letting the tangent normal collapse.
+            #ifdef OVERWORLD
+                normalMap.xy *= inversesqrt(max(dot(normalMap.xy, normalMap.xy) / 0.64, 1.0));
+            #endif
             normalMap.z = sqrt(max(1.0 - (pow2(normalMap.x) + pow2(normalMap.y)), 0.0));
             normalM = clamp(normalize(normalMap * tbnMatrix), vec3(-1.0), vec3(1.0));
 
@@ -178,8 +216,24 @@
             fresnel = clamp(1.0 + dot(normalM, nViewPos), 0.0, 1.0);
         #endif
     #endif
+    #ifdef OVERWORLD
+        // Opacity and highlights must use the same unit normal as reflections.
+        normalM = normalize(normalM);
+        fresnel = clamp(1.0 + dot(normalM, nViewPos), 0.0, 1.0);
+        fresnel2 = pow2(fresnel);
+        fresnel4 = pow2(fresnel2);
+    #endif
     // ============================== End of Step 2 ============================== //
 
+    #ifdef OVERWORLD
+        float waterFog = 0.0;
+        if (isEyeInWater != 1) {
+            float waterOpticalDepth = waterColumnLength * (WATER_FOG_MULT * 0.01);
+            waterFog = 1.0 - exp(-waterOpticalDepth * mix(0.045, 0.085, waterDepthBlend));
+            vec3 waterAbsorption = exp(-vec3(0.045, 0.018, 0.008) * min(waterOpticalDepth, 64.0));
+            color.rgb *= waterAbsorption;
+        }
+    #endif
     // ============================== Step 3: Water Material Features ============================== //
     #if WATER_MAT_QUALITY >= 2
         if (isEyeInWater != 1) {
@@ -208,12 +262,7 @@
             #endif
 
             #ifdef OVERWORLD
-                // Shallows retain the bed; optical thickness gradually darkens deep water.
-                float waterOpticalDepth = max(-lViewPosDifM, 0.0);
-                float waterFog = 1.0 - exp(-waterOpticalDepth * mix(0.045, 0.075, waterDepthBlend));
-                color.a *= 0.10 + 0.90 * waterFog;
-                vec3 waterAbsorption = exp(-vec3(0.028, 0.012, 0.006) * min(waterOpticalDepth, 48.0));
-                color.rgb *= waterAbsorption;
+                color.a *= 0.06 + 0.94 * waterFog;
             #else
                 float waterFog = max0(1.0 - exp(lViewPosDifM * 0.075));
                 color.a *= 0.25 + 0.75 * waterFog;
@@ -290,12 +339,31 @@
             #endif
 
             #if WORLD_SPACE_REFLECTIONS_INTERNAL > 0
-                reflectMult = 1.0 / color.a;
+                reflectMult = 1.0 / max(color.a, 0.0001);
                 fresnelM = 1.0;
             #endif
         }
     #else
         shadowMult = vec3(0.0);
+        #ifdef OVERWORLD
+            if (isEyeInWater != 1) {
+                #if WATER_STYLE < 3
+                    color.a = sqrt1(color.a);
+                #else
+                    color.a = 0.98;
+                #endif
+                #ifdef DISTANT_HORIZONS
+                    if (depthT == 1.0) color.a *= 1.0 - smoothstep(far * 0.9, far, lViewPos);
+                #endif
+                color.a *= 0.06 + 0.94 * waterFog;
+                #if defined BRIGHT_CAVE_WATER && WATER_ALPHA_MULT < 200
+                    color.rgb *= 2.5 - sqrt2(waterFog) - 0.5 * lmCoordM.y;
+                #endif
+                #if WATER_ALPHA_MULT != 100
+                    color.a = pow(color.a, 100.0 / WATER_ALPHA_MULT);
+                #endif
+            }
+        #endif
     #endif
     // ============================== End of Step 3 ============================== //
 
@@ -320,6 +388,10 @@
             highlightMult = min(pow2(pow2(dot(colorP.rgb, colorP.rgb) * 0.4)), 0.5);
             highlightMult *= (16.0 - 15.0 * fresnel2) * (sunVisibility > 0.5 ? 0.85 : 0.425);
         #endif
+    #elif defined DH_WATER && defined OVERWORLD
+        // Give distant water the same glossy material response as nearby water.
+        smoothnessG = WATER_STYLE >= 2 ? 1.0 : 0.5;
+        highlightMult = WATER_STYLE >= 2 ? 0.24 : 0.16;
     #endif
     // ============================== End of Step 4 ============================== //
 #endif

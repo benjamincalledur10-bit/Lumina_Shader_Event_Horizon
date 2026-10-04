@@ -40,3 +40,6 @@ jobs:
 
       - name: Validate canonical package
         run: python3 scripts/validate_canonical.py --base-ref "${{ steps.comparison.outputs.base_ref }}"
+
+      - name: Preprocess water shader variants
+        run: python3 scripts/check_water_preprocess.py

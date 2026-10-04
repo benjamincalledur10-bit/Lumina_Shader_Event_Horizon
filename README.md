@@ -101,6 +101,11 @@ Visual verification in Minecraft is still pending.
 
 ## Development
 
+The development preview is **v1.4.0-beta.3**, with upgraded water color,
+depth response, directional waves, and reflection handling across quality levels.
+Minecraft visual and performance testing remains pending.
+
+
 - `main` contains the current stable, published state.
 - `luminahorizondev` is used for development and validation before a release.
 - The canonical source is `Lumina_Event_Horizon_v1.3.7_Real_Extracted/`; its

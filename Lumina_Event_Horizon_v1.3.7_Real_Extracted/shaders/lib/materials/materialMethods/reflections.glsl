@@ -34,6 +34,12 @@ float refDist = far;
 vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, float lViewPos, float z0,
                    sampler2D depthtex, float dither, float skyLightFactor, float fresnel,
                    float smoothness, vec3 geoNormal, vec3 color, vec3 shadowMult, float highlightMult) {
+    bool waterSurface = false;
+    #if defined OVERWORLD && defined GBUFFERS_WATER
+        waterSurface = mat == 32000;
+    #elif defined OVERWORLD && defined DH_WATER
+        waterSurface = mat == DH_BLOCK_WATER;
+    #endif
     // ============================== Step 1: Prepare ============================== //
     #if WORLD_SPACE_REFLECTIONS_INTERNAL == -1
         vec2 rEdge = vec2(0.6, 0.55);
@@ -46,12 +52,13 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
         normalMR = normalize(mix(geoNormal, normalM, 0.05));
     #endif
 
+    if (waterSurface) normalMR = normalize(mix(geoNormal, normalM, 0.90));
     vec3 nViewPosR = normalize(reflect(nViewPos, normalMR));
     float RVdotU = dot(nViewPosR, upVec);
     float RVdotS = dot(nViewPosR, sunVec);
 
     #if defined GBUFFERS_WATER && WATER_STYLE >= 2
-        normalMR = normalize(mix(geoNormal, normalM, 0.8));
+        if (!waterSurface) normalMR = normalize(mix(geoNormal, normalM, 0.8));
     #endif
     // ============================== End of Step 1 ============================== //
 
@@ -97,16 +104,30 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
                 int refinementCount = 3;
             #endif
 
+            if (waterSurface) {
+                #if DETAIL_QUALITY >= 3
+                    sampleCount = 16;
+                #else
+                    sampleCount = 12;
+                #endif
+                refinementCount = 3;
+                viewPosRT = start + vector;
+            }
+            float hitDepth = 1.0;
             int sr = 0;
             float dist = 0.0;
             vec3 refPos = vec3(0.0);
             vec3 rfragpos = vec3(0.0);
             float err = 9999999.0;
             for (int i = 0; i < sampleCount; i++) {
-                refPos = nvec3(gbufferProjection * vec4(viewPosRT, 1.0)) * 0.5 + 0.5;
+                vec4 rayClip = gbufferProjection * vec4(viewPosRT, 1.0);
+                if (waterSurface && rayClip.w <= 0.000001) break;
+                refPos = nvec3(rayClip) * 0.5 + 0.5;
+                if (waterSurface && (min(refPos.x, refPos.y) <= 0.0 || max(refPos.x, refPos.y) >= 1.0)) break;
                 if (abs(refPos.x - 0.5) > rEdge.x || abs(refPos.y - 0.5) > rEdge.y) break;
 
                 rfragpos = vec3(refPos.xy, texture2D(depthtex, refPos.xy).r);
+                hitDepth = rfragpos.z;
                 rfragpos = nvec3(gbufferProjectionInverse * vec4(rfragpos * 2.0 - 1.0, 1.0));
                 dist = length(start - rfragpos);
 
@@ -127,6 +148,7 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
             // Finalizing Terrain Reflection and Alpha
             if (
                 refPos.z < 0.99997
+                && (!waterSurface || (sr >= refinementCount && hitDepth < 0.99997 && refPos.z > 0.0))
                 #if WORLD_SPACE_REFLECTIONS_INTERNAL > 0 && COLORED_LIGHTING_INTERNAL >= 256
                     && (err < 2.0 + pow2(lViewPosRT) * 0.001 || lViewPosRT > 0.25 * COLORED_LIGHTING_INTERNAL)
                 #endif
@@ -134,16 +156,22 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
                 vec2 absPos = abs(refPos.xy - 0.5);
                 vec2 cdist = absPos / rEdge;
                 float border = clamp(1.0 - pow(max(cdist.x, cdist.y), 50.0), 0.0, 1.0);
+                if (waterSurface) {
+                    float edgeDistance = min(min(refPos.x, refPos.y), min(1.0 - refPos.x, 1.0 - refPos.y));
+                    border = smoothstep(0.02, 0.12, edgeDistance);
+                }
                 reflection.a = border;
 
                 if (reflection.a > 0.001) {
                     vec2 edgeFactor = pow2(pow2(pow2(cdist)));
                     #if WORLD_SPACE_REFLECTIONS_INTERNAL == -1
-                        refPos.y += (dither - 0.5) * (0.05 * (edgeFactor.x + edgeFactor.y));
+if (!waterSurface) refPos.y += (dither - 0.5) * (0.05 * (edgeFactor.x + edgeFactor.y));
                     #endif
 
                     #ifdef GBUFFERS_WATER
-                        reflection = texture2D(gaux2, refPos.xy);
+                        // The scene texture alpha is not ray-hit confidence.
+                        if (waterSurface) reflection.rgb = texture2D(gaux2, refPos.xy).rgb;
+                        else reflection = texture2D(gaux2, refPos.xy);
                         reflection.rgb = pow2(reflection.rgb * 2.0);
                     #else
                         float smoothnessDM = pow2(smoothness);
@@ -191,19 +219,28 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
             #endif
 
             vec4 clipPosR = gbufferProjection * vec4(nViewPosR + verticalStretch * viewPos, 1.0);
-            vec3 screenPosR = clipPosR.xyz / clipPosR.w * 0.5 + 0.5;
+            float reflectionClipW = abs(clipPosR.w) < 0.000001
+                ? (clipPosR.w < 0.0 ? -0.000001 : 0.000001) : clipPosR.w;
+            vec3 screenPosR = clipPosR.xyz / reflectionClipW * 0.5 + 0.5;
             vec2 screenPosRM = abs(screenPosR.xy - 0.5);
 
-            if (screenPosRM.x < rEdge.x && screenPosRM.y < rEdge.y) {
+            if (screenPosRM.x < rEdge.x && screenPosRM.y < rEdge.y
+                && (!waterSurface || (abs(clipPosR.w) >= 0.000001
+                    && min(screenPosR.x, screenPosR.y) > 0.0 && max(screenPosR.x, screenPosR.y) < 1.0))) {
                 vec2 edgeFactor = pow2(pow2(pow2(screenPosRM / rEdge)));
-                screenPosR.y += (dither - 0.5) * (0.03 * (edgeFactor.x + edgeFactor.y) + 0.004);
-                float z1R = texture2D(depthtex1, screenPosR.xy).x;
+                if (!waterSurface) screenPosR.y += (dither - 0.5) * (0.03 * (edgeFactor.x + edgeFactor.y) + 0.004);
+                #ifdef DH_WATER
+                    // Match depthtex1: opaque DH terrain, reconstructed with the DH projection.
+                    float z1R = texture2D(dhDepthTex1, screenPosR.xy).x;
+                #else
+                    float z1R = texture2D(depthtex1, screenPosR.xy).x;
+                #endif
                 screenPosR.z = z1R;
                 vec3 viewPosR = ScreenToView(screenPosR);
                 float lViewPosR = length(viewPosR);
 
-                #ifdef DISTANT_HORIZONS
-                    float z1RDH = texture2D(dhDepthTex, screenPosR.xy).x;
+                #if defined DISTANT_HORIZONS && !defined DH_WATER
+                    float z1RDH = texture2D(dhDepthTex1, screenPosR.xy).x;
                     vec4 screenPos1DH = vec4(screenPosR.xy, z1RDH, 1.0);
                     vec4 viewPos1DH = dhProjectionInverse * (screenPos1DH * 2.0 - 1.0);
                     viewPos1DH /= viewPos1DH.w;
@@ -218,6 +255,10 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
 
                     edgeFactor = 1.0 - edgeFactor;
                     reflection.a = edgeFactor.x * pow2(edgeFactor.y);
+                    if (waterSurface) {
+                        float edgeDistance = min(min(screenPosR.x, screenPosR.y), min(1.0 - screenPosR.x, 1.0 - screenPosR.y));
+                        reflection.a *= smoothstep(0.02, 0.12, edgeDistance);
+                    }
                     reflection.a *= clamp01((dot(nViewPos, nViewPosR) - 0.45) * 10.0); // Fixes perpendicular ref bug
 
                     #ifdef BORDER_FOG

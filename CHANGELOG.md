@@ -2,12 +2,22 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [1.4.0-beta.2] - 2026-10-03
+## [1.4.0-beta.3] - 2026-10-04
+
+- Upgraded Overworld water coloration with a restrained cool tint, reduced saturation, clearer shallows, and stronger wavelength-dependent absorption at depth. Potato now uses bottom depth for absorption, transparency, and wave scaling; biome and custom-color controls remain active. Depth does not explicitly classify river/ocean biomes.
+- Added crossing broad swells and independently advected medium/fine waves. Rain increases surface activity; derivative filtering reduces unresolved fine ripples. Wave normals are bounded at extreme slider values, normalized before Fresnel evaluation, and respect water speed/size controls. Existing vertex displacement is unchanged.
+- Balanced work by quality: Potato replaces one normal texture fetch with analytical swells while adding one bottom-depth fetch; material quality 2 uses one parallax iteration instead of two. Water SSR uses 12 march iterations at normal detail and 16 at high detail, with three refinements. These are work budgets, not measured FPS claims.
+- Improved Sky only and Potato water reflections with the full atmospheric sky gradient and consistent wave direction. Sky only still performs no terrain reflection lookup. Water SSR requires a refined terrain hit, rejects invalid/off-screen projections, preserves confidence independently of scene alpha, and fades at screen borders. Removed water-only edge jitter from both reflection methods.
+- Corrected DH mirrored reflection depth reconstruction to use the DH depth texture with its matching projection. Added a glossy DH water material response, protected near-zero mirrored projection divisors, zero biome-tint normalization, and underwater alpha divisors.
+- Added `scripts/check_water_preprocess.py` and `scripts/check_water_beta3_gpu.py`. Canonical validation and 624 preprocessing configurations passed. Isolated native Apple M4 checks cover full materials in all three dimensions, styles and quality levels; above/below-water branches; bounded normals; monotone opacity/attenuation; animated and speed-zero waves; and synthetic terrain-hit/sky/off-screen/zero-W reflection cases.
+- This beta also includes the rendering polish below. Minecraft integration, actual shoreline/DH seams, temporal behavior in motion, artistic balance, and frame-time impact remain pending visual testing.
 
 - Guarded zero and near-zero water-foam thresholds to prevent undefined divisions while preserving the existing shoreline response for ordinary inputs.
 - Preserved the Distant Horizons underwater material's full-reflection override when world-space reflections are active. Other DH paths continue to derive their reflection response from the updated wave normal, including the Overworld Schlick curve.
 - Moved selective bloom extraction to full resolution in composite3, before mipmap generation. Reuses colortex8's HDR storage after SSR consumption in composite1, retaining small bright-source energy without altering the sharp scene output. The selective path adds an HDR output write and mipmap generation; disabling selective bloom retains the previous bloom path.
 - Added reproducible native macOS GPU regression checks in `scripts/check_render_polish_gpu.py`. Isolated Apple M4 checks passed for degenerate foam, DH underwater/non-water/quality/reflection branches, hue preservation, actual mipmap energy retention, and selective/legacy bloom tile compilation. Preprocessing passed 96 dimension/blur/bloom configurations. Canonical validation passed; Minecraft loader integration, visual balance, and frame-time impact remain pending.
+
+## [1.4.0-beta.2] - 2026-10-03
 
 - Integrated Overworld water with depth: shallower optical paths retain more bed visibility, while thicker columns increase opacity and progressively attenuate the surface tint with wavelength-dependent coefficients. Applied a small desaturation to the base water tint while retaining biome colors and user color controls.
 - Reused the existing bottom-depth sample before normal generation to estimate vertical depth independently from viewing angle. Reduced waves/parallax in shallow water, softened small ripples, and added a modest rain response without adding texture fetches or normal samples.

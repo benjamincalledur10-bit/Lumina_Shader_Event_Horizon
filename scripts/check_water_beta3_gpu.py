@@ -244,7 +244,7 @@ b = -2 * 100 * 0.1 / (100 - 0.1)
 projection = (c.c_float * 16)(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, a, -1, 0, 0, b, 0)
 inverse = (c.c_float * 16)(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 / b, 0, 0, -1, a / b)
 for path in ("GBUFFERS_WATER", "DH_WATER"):
-    for quality in (0, 1, 2):
+    for quality in (0, 1, 2, 3):
         for detail in (0, 2, 3):
             defines = f"#define OVERWORLD\n#define {path}\n#define WATER_REFLECT_QUALITY {quality}\n#define DETAIL_QUALITY {detail}\n"
             if path == "DH_WATER":
@@ -300,8 +300,32 @@ void main(){result=GetReflection(vec3(0,1,0),testPosition,normalize(testDirectio
             ):
                 v = draw(p, testPosition=pos, testDirection=direction, testDither=0.5)
                 assert v[3] == 0, (path, quality, detail, pos, v)
+            if quality == 3:
+                center = draw(
+                    p,
+                    testPosition=(0.0, -1.0, -5.0),
+                    testDirection=(0.0, -1.0, -5.0),
+                    testDither=0.0,
+                )
+                stable = draw(
+                    p,
+                    testPosition=(0.0, -1.0, -5.0),
+                    testDirection=(0.0, -1.0, -5.0),
+                    testDither=1.0,
+                )
+                edge = draw(
+                    p,
+                    testPosition=(0.0, -1.0, -5.0),
+                    testDirection=(6.0, -1.0, -5.0),
+                    testDither=0.5,
+                )
+                assert max(abs(a - b) for a, b in zip(center, stable)) < 1e-6, (
+                    center,
+                    stable,
+                )
+                assert edge[3] < center[3], (edge, center)
     print(
-        f"GPU full reflections passed: {path}, Sky only/Potato/Medium, 3 detail levels, valid terrain hits and sky/off-screen/zero-W fallbacks.",
+        f"GPU full reflections passed: {path}, Sky only/Potato/Medium/High, 3 detail levels, valid terrain hits and sky/off-screen/zero-W fallbacks.",
         flush=True,
     )
 
@@ -369,5 +393,91 @@ v = draw(
 assert all(x == 0 for x in v[:3]), v
 print(
     "GPU zero-biome-tint transmission passed: finite output instead of zero-vector normalization.",
+    flush=True,
+)
+
+# Bilinear reflection filtering must preserve linear HDR energy and clamp borders.
+sample_function = reflection[
+    reflection.index("vec3 SampleHighWaterReflection(") : reflection.index(
+        "vec3 HighWaterScenePosition("
+    )
+]
+p = program(
+    "uniform sampler2D gaux2;uniform vec3 testUV;vec3 pow2(vec3 x){return x*x;}"
+    + sample_function
+    + "out vec4 result;void main(){result=vec4(SampleHighWaterReflection(testUV.xy),1);}"
+)
+integer(p, "gaux2", 2)
+g.glActiveTexture(0x84C2)
+encoded = (c.c_float * 16)(
+    0, 0, 0, 1, 0.25, 0.25, 0.25, 1, 0.5, 0.5, 0.5, 1, 1, 1, 1, 1
+)
+g.glTexImage2D(0x0DE1, 0, 0x8814, 2, 2, 0, 0x1908, 0x1406, encoded)
+for uv, expected in (
+    ((0.5, 0.5, 0), 1.3125),
+    ((0, 0, 0), 0),
+    ((1, 1, 0), 4),
+    ((-1, -1, 0), 0),
+    ((2, 2, 0), 4),
+):
+    v = draw(p, testUV=uv)
+    assert max(abs(x - expected) for x in v[:3]) < 1e-6, (uv, v, expected)
+print(
+    "GPU High reflection passed: no dither jitter, edge fading, linear HDR bilinear filtering and clamped borders.",
+    flush=True,
+)
+
+# Regular High water must reconstruct distant hits with the DH near/far planes.
+g.glActiveTexture(0x84C4)
+empty_depth = c.c_uint()
+g.glGenTextures(1, c.byref(empty_depth))
+g.glBindTexture(0x0DE1, empty_depth)
+g.glTexImage2D(0x0DE1, 0, 0x8814, 1, 1, 0, 0x1908, 0x1406, (c.c_float * 4)(1, 1, 1, 1))
+g.glTexParameteri(0x0DE1, 0x2801, 0x2600)
+g.glTexParameteri(0x0DE1, 0x2800, 0x2600)
+g.glActiveTexture(0x84C3)
+dh_depth = 1000 / 999 - 1000 / (999 * 20)
+g.glTexImage2D(
+    0x0DE1,
+    0,
+    0x8814,
+    1,
+    1,
+    0,
+    0x1908,
+    0x1406,
+    (c.c_float * 4)(dh_depth, dh_depth, dh_depth, 1),
+)
+p = program(
+    "#define OVERWORLD\n#define GBUFFERS_WATER\n#define DISTANT_HORIZONS\n#define WATER_REFLECT_QUALITY 3\n#define DETAIL_QUALITY 2\n"
+    + REFLECTION_FIXTURE
+    + background
+    + "\n"
+    + reflection
+    + """
+out vec4 result;void main(){result=GetReflection(vec3(0,1,0),testPosition,normalize(testDirection),testPosition,length(testPosition),-1.,depthtex1,testDither,1.,.3,1.,vec3(0,1,0),vec3(.1),vec3(1),0.);}
+"""
+)
+integer(p, "gaux2", 2)
+integer(p, "depthtex1", 4)
+integer(p, "dhDepthTex1", 3)
+integer(p, "mat", 32000)
+dh_a = -1001 / 999
+dh_b = -2000 / 999
+dh_inverse = (c.c_float * 16)(
+    1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1 / dh_b, 0, 0, -1, dh_a / dh_b
+)
+for name, matrix in (
+    ("gbufferProjection", projection),
+    ("gbufferProjectionInverse", inverse),
+    ("dhProjectionInverse", dh_inverse),
+):
+    g.glUniformMatrix4fv(g.glGetUniformLocation(p, name.encode()), 1, 0, matrix)
+v = draw(
+    p, testPosition=(0.0, -1.0, -5.0), testDirection=(0.0, -1.0, -5.0), testDither=0.5
+)
+assert v[3] > 0.9, v
+print(
+    "GPU High DH fallback passed: regular-depth sky and opaque DH hit with different near/far planes.",
     flush=True,
 )

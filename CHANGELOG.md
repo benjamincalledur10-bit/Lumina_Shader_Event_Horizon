@@ -2,6 +2,13 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased] — High Water Reflections
+
+- Added a distinct High water-reflection option (value 3) and selected it in the High, Very High and Ultra profiles. Existing lower reflection modes retain their algorithms and the standalone default remains Medium.
+- High Overworld water traces front-to-back scene-depth crossings with up to 48 adaptive steps and seven bisection refinements, using the actual wave normal. Invalid/discontinuous intersections fall back to the sky; this path does not substitute mirrored terrain for missing geometry.
+- Added explicitly clamped bilinear scene filtering with sqrt-encoded texels decoded before interpolation, smooth hit-confidence border fading, and detailed sky effects at normal detail. High DH water uses opaque DH depth; regular High water can reconstruct DH hits when regular depth is empty, using the matching DH projection.
+- Expanded preprocessing to 768 configurations and native macOS GPU tests to include High hits/fallbacks, dither independence, edge fading, linear HDR filtering, texture borders, and DH reconstruction with different near/far planes. These isolated checks passed on Apple M4. Full in-game visual, temporal and frame-time testing remains pending; High increases GPU work and cannot recover off-screen scene geometry.
+
 ## [1.4.0-beta.3] - 2026-10-04
 
 - Upgraded Overworld water coloration with a restrained cool tint, reduced saturation, clearer shallows, and stronger wavelength-dependent absorption at depth. Potato now uses bottom depth for absorption, transparency, and wave scaling; biome and custom-color controls remain active. Depth does not explicitly classify river/ocean biomes.

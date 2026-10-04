@@ -64,7 +64,7 @@ for dimension, profile, style, reflection, path, suffix in itertools.product(
     ("world0", "world-1", "world1"),
     ("POTATO", "MEDIUM", "HIGH", "ULTRA"),
     (1, 2, 3),
-    (-1, 0, 1, 2),
+    (-1, 0, 1, 2, 3),
     ("gbuffers_water", "dh_water"),
     ("fsh", "vsh"),
 ):
@@ -81,7 +81,7 @@ for dimension, profile, style, reflection, path, suffix in itertools.product(
         if reflection == 0:
             assert "// Method 1: Ray Marched Reflection" not in output
             assert "// Method 2: Mirorred Image Reflection" not in output
-        if path == "dh_water" and reflection >= 1:
+        if path == "dh_water" and reflection in (1, 2):
             assert "float z1R = texture2D(dhDepthTex1," in output
     count += 1
 

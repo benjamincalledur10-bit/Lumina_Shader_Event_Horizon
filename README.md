@@ -105,6 +105,10 @@ The development preview is **v1.4.0-beta.3**, with upgraded water color,
 depth response, directional waves, and reflection handling across quality levels.
 Minecraft visual and performance testing remains pending.
 
+Development also adds **High** to Water Reflection Quality, selected by the High,
+Very High, and Ultra profiles. It uses refined scene-depth intersections and
+filtered reflection colors, with greater GPU cost. This addition awaits a tagged release.
+
 
 - `main` contains the current stable, published state.
 - `luminahorizondev` is used for development and validation before a release.

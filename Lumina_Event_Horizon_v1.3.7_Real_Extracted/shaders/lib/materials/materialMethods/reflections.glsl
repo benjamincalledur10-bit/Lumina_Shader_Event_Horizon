@@ -31,6 +31,41 @@ float refDist = far;
 
 #include "/lib/materials/materialMethods/reflectionBackground.glsl"
 
+#if WATER_REFLECT_QUALITY >= 3 && (defined GBUFFERS_WATER || defined DH_WATER)
+vec3 SampleHighWaterReflection(vec2 uv) {
+    // Decode each texel before bilinear interpolation; the scene is sqrt-encoded.
+    ivec2 size = textureSize(gaux2, 0);
+    vec2 pixel = uv * vec2(size) - 0.5;
+    ivec2 base = ivec2(floor(pixel));
+    vec2 blend = fract(pixel);
+    ivec2 last = size - 1;
+    vec3 a = pow2(texelFetch(gaux2, clamp(base, ivec2(0), last), 0).rgb * 2.0);
+    vec3 b = pow2(texelFetch(gaux2, clamp(base + ivec2(1, 0), ivec2(0), last), 0).rgb * 2.0);
+    vec3 c = pow2(texelFetch(gaux2, clamp(base + ivec2(0, 1), ivec2(0), last), 0).rgb * 2.0);
+    vec3 d = pow2(texelFetch(gaux2, clamp(base + ivec2(1), ivec2(0), last), 0).rgb * 2.0);
+    return mix(mix(a, b, blend.x), mix(c, d, blend.x), blend.y);
+}
+
+vec3 HighWaterScenePosition(vec2 uv, out bool valid) {
+    #ifdef DH_WATER
+        float depth = texture2D(dhDepthTex1, uv).r;
+    #else
+        float depth = texture2D(depthtex1, uv).r;
+    #endif
+    valid = depth < 0.99997;
+    vec3 scenePosition = ScreenToView(vec3(uv, depth));
+    #if defined DISTANT_HORIZONS && !defined DH_WATER
+        if (!valid) {
+            float dhDepth = texture2D(dhDepthTex1, uv).r;
+            valid = dhDepth < 0.99997;
+            vec4 dhPosition = dhProjectionInverse * vec4(vec3(uv, dhDepth) * 2.0 - 1.0, 1.0);
+            scenePosition = dhPosition.xyz / dhPosition.w;
+        }
+    #endif
+    return scenePosition;
+}
+#endif
+
 vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, float lViewPos, float z0,
                    sampler2D depthtex, float dither, float skyLightFactor, float fresnel,
                    float smoothness, vec3 geoNormal, vec3 color, vec3 shadowMult, float highlightMult) {
@@ -52,7 +87,13 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
         normalMR = normalize(mix(geoNormal, normalM, 0.05));
     #endif
 
-    if (waterSurface) normalMR = normalize(mix(geoNormal, normalM, 0.90));
+    if (waterSurface) {
+        #if WATER_REFLECT_QUALITY >= 3
+            normalMR = normalize(normalM);
+        #else
+            normalMR = normalize(mix(geoNormal, normalM, 0.90));
+        #endif
+    }
     vec3 nViewPosR = normalize(reflect(nViewPos, normalMR));
     float RVdotU = dot(nViewPosR, upVec);
     float RVdotS = dot(nViewPosR, sunVec);
@@ -78,6 +119,64 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
     #endif
 
     vec4 reflection = vec4(0.0);
+    bool highWaterTrace = false;
+    #if WATER_REFLECT_QUALITY >= 3 && (defined GBUFFERS_WATER || defined DH_WATER)
+    if (waterSurface) {
+        highWaterTrace = true;
+        // Bracket a front-to-back depth crossing, then refine the actual intersection.
+        vec3 origin = viewPos + normalMR * max(0.025, lViewPos * 0.001);
+        float rayDistance = 0.08;
+        float previousDistance = 0.0;
+        float previousGap = 0.0;
+        bool previousValid = false;
+        float maximumDistance = min(renderDistance * 2.0, 512.0);
+        for (int step = 0; step < 48; step++) {
+            if (rayDistance > maximumDistance) break;
+            vec3 rayPosition = origin + nViewPosR * rayDistance;
+            vec4 clip = gbufferProjection * vec4(rayPosition, 1.0);
+            if (clip.w <= 0.000001) break;
+            vec2 uv = clip.xy / clip.w * 0.5 + 0.5;
+            if (min(uv.x, uv.y) <= 0.0 || max(uv.x, uv.y) >= 1.0) break;
+            bool valid;
+            vec3 scenePosition = HighWaterScenePosition(uv, valid);
+            float gap = scenePosition.z - rayPosition.z;
+            if (valid && previousValid && previousGap <= 0.0 && gap >= 0.0) {
+                float low = previousDistance, high = rayDistance;
+                bool bracketValid = true;
+                for (int refinement = 0; refinement < 7; refinement++) {
+                    float middle = (low + high) * 0.5;
+                    rayPosition = origin + nViewPosR * middle;
+                    clip = gbufferProjection * vec4(rayPosition, 1.0);
+                    uv = clip.xy / clip.w * 0.5 + 0.5;
+                    scenePosition = HighWaterScenePosition(uv, valid);
+                    if (!valid) { bracketValid = false; break; }
+                    gap = scenePosition.z - rayPosition.z;
+                    if (gap >= 0.0) high = middle;
+                    else low = middle;
+                }
+                float thickness = max(0.10, -scenePosition.z * 0.003);
+                if (bracketValid && abs(gap) <= thickness) {
+                    float edge = min(min(uv.x, uv.y), min(1.0 - uv.x, 1.0 - uv.y));
+                    reflection.rgb = SampleHighWaterReflection(uv);
+                    reflection.a = smoothstep(0.015, 0.10, edge);
+                    float skyFade = 0.0;
+                    float confidence = reflection.a;
+                    DoFog(reflection, skyFade, length(scenePosition), ViewToPlayer(scenePosition),
+                          RVdotU, RVdotS, dither, true, lViewPos);
+                    reflection.a = confidence;
+                    refDist = length(scenePosition - viewPos);
+                }
+                // Rejected intersections fall back to the sky instead of mirrored terrain.
+                break;
+            }
+            previousValid = valid;
+            previousDistance = rayDistance;
+            previousGap = gap;
+            rayDistance += max(0.08, rayDistance * 0.18);
+        }
+    }
+    #endif
+    if (!highWaterTrace) {
     #if (defined COMPOSITE || WATER_REFLECT_QUALITY >= 1) && (WORLD_SPACE_REFLECTIONS_INTERNAL == -1 || WORLD_SPACE_REF_MODE == 2)
         #if defined COMPOSITE || WATER_REFLECT_QUALITY >= 2 && !defined DH_WATER
             // Method 1: Ray Marched Reflection //
@@ -165,7 +264,7 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
                 if (reflection.a > 0.001) {
                     vec2 edgeFactor = pow2(pow2(pow2(cdist)));
                     #if WORLD_SPACE_REFLECTIONS_INTERNAL == -1
-if (!waterSurface) refPos.y += (dither - 0.5) * (0.05 * (edgeFactor.x + edgeFactor.y));
+                        if (!waterSurface) refPos.y += (dither - 0.5) * (0.05 * (edgeFactor.x + edgeFactor.y));
                     #endif
 
                     #ifdef GBUFFERS_WATER
@@ -275,6 +374,7 @@ if (!waterSurface) refPos.y += (dither - 0.5) * (0.05 * (edgeFactor.x + edgeFact
         #endif
     #endif
 
+    }
     // ============================== End of Step 2 ============================== //
 
     // ============================== Step 3: Add Sky or WSR Reflection ============================== //

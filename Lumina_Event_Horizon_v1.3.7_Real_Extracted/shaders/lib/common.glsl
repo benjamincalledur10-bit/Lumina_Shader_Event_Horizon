@@ -22,7 +22,7 @@
     #define DETAIL_QUALITY 1 //[0 1 2 3]
     #define CLOUD_QUALITY 1 //[0 1 2 3]
     #define LIGHTSHAFT_QUALI_DEFINE 1 //[0 1 2 3 4]
-    #define WATER_REFLECT_QUALITY 2 //[-1 0 1 2]
+    #define WATER_REFLECT_QUALITY 2 //[-1 0 1 2 3]
     #define BLOCK_REFLECT_QUALITY 1 //[0 1 3]
     #define ANISOTROPIC_FILTER 0 //[0 4 8 16]
     #define ENTITY_SHADOW -1 //[-1 1 2]
@@ -640,6 +640,11 @@
         #endif
     #endif
 
+
+// High water reflections include sky detail even with the normal-detail profile.
+#if WATER_REFLECT_QUALITY >= 3 && !defined SKY_EFFECT_REFLECTION
+    #define SKY_EFFECT_REFLECTION
+#endif
 
 //Activate Settings//
     #ifdef POM_ALLOW_CUTOUT

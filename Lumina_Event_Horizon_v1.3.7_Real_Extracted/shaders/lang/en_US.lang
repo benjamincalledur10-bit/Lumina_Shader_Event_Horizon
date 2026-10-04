@@ -194,11 +194,12 @@ value.RP_MODE.2=§eseuspbr (RP Required)
 value.RP_MODE.3=§elabPBR (RP Required)
 
 option.WATER_REFLECT_QUALITY=Water Reflection Quality
-option.WATER_REFLECT_QUALITY.comment=Adjusts the visual quality of reflections that appear on translucents. §cMedium§r: Screenspace ray-traced reflections on water and translucents. §ePotato§r: Replaces water and translucent reflections with a faster method, may look incorrect in some situations. §aOFF§r: No reflections.
+option.WATER_REFLECT_QUALITY.comment=§bHigh§r: Refined depth-crossing water reflections, filtered scene sampling, and detailed sky reflections. Higher GPU cost; off-screen geometry falls back to the sky. §cMedium§r: Faster screenspace ray-traced reflections. §ePotato§r: Fast approximate reflections. §aSky only§r: Sky reflections without terrain tracing. §aOFF§r: No reflections.
 value.WATER_REFLECT_QUALITY.-1=§aOFF
 value.WATER_REFLECT_QUALITY.0=§aSky only
 value.WATER_REFLECT_QUALITY.1=§ePotato
 value.WATER_REFLECT_QUALITY.2=§cMedium
+value.WATER_REFLECT_QUALITY.3=§bHigh
 
 option.BLOCK_REFLECT_QUALITY=Block Reflection Quality §e[*]§r
 option.BLOCK_REFLECT_QUALITY.comment=Adjusts the visual quality of reflections that appear on solid materials. §cHigh§r: Sun/moon highlights + advanced specular reflections. §eLow§r: Sun/moon highlights only. §e[*]§r RP Support option must be set to anything but Basic for any specular reflections to appear.

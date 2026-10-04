@@ -396,6 +396,14 @@ def validate_post_processing(errors: list[str]) -> None:
     common = (SHADER_ROOT / "lib/common.glsl").read_text()
     options = {name: (default, values.split())
                for name, default, values in OPTION_RE.findall(common)}
+    if options.get("WATER_REFLECT_QUALITY") != ("2", ["-1", "0", "1", "2", "3"]):
+        errors.append("water reflections must expose OFF/Sky only/Potato/Medium/High")
+    if "value.WATER_REFLECT_QUALITY.3=" not in labels:
+        errors.append("missing High water reflection label")
+    for profile in ("HIGH", "VERYHIGH", "ULTRA"):
+        match = re.search(r"profile\." + profile + r"\s*=([^\n]+)", properties)
+        if not match or "WATER_REFLECT_QUALITY=3" not in match[1]:
+            errors.append(f"{profile} must select High water reflections")
     if options.get("WORLD_BLUR") != ("0", ["0", "3", "1", "2"]):
         errors.append("autofocus must be selectable while world blur defaults to off")
     if options.get("WB_AF_QUALITY") != ("64", ["16", "32", "48", "64", "96"]):

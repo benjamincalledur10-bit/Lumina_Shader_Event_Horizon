@@ -2,6 +2,7 @@
 """Expand beta.5 shader variants and optionally compile with glslangValidator."""
 
 import itertools
+import re
 import shutil
 import subprocess
 import tempfile
@@ -18,10 +19,16 @@ def check(dimension, stage, options, platform="mac"):
     output = water.preprocess(path, options, platform)
     assert "#include" not in output
     if compiler:
-        version = "430 compatibility" if platform != "mac" else "130"
+        # Compile modern settings with a profile supporting matrix intrinsics.
+        # Custom-image/storage paths require GLSL 430.
+        version = "430 compatibility" if platform != "mac" else "150 compatibility"
         suffix = ".vert" if stage.endswith(".vsh") else ".frag"
         with tempfile.NamedTemporaryFile("w", suffix=suffix) as f:
-            f.write("#version " + version + "\n" + output)
+            # C preprocessing preserves decorative comments with backslashes;
+            # remove comments before GLSL parsing (they do not affect shader code).
+            compiled_source = re.sub(r"/\*.*?\*/|//[^\n]*", "", output, flags=re.S)
+            loader_constants = "#define DH_BLOCK_WATER 1\n"  # DH injects this enum during loading.
+            f.write("#version " + version + "\n" + loader_constants + compiled_source)
             f.flush()
             result = subprocess.run([compiler, f.name], text=True, capture_output=True)
             if result.returncode:

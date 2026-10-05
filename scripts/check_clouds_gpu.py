@@ -201,6 +201,22 @@ for pos in ((112, 180, 112), (200, 180, 112), (700, 192, 1400)):
     b = draw(periodic, cameraPosition=(pos[0] + 131072, pos[1], pos[2] - 131072))
     assert max(abs(x - y) for x, y in zip(a, b)) < 0.002, (pos, a, b)
 print("GPU clouds: camera-wrap period preserves cloud density.", flush=True)
+# All morphologies coexist spatially and retain periodic world coordinates.
+morphology = build(3, body="result=vec4(LuminaCloudMorphology(cameraPosition.xz),1.0);")
+classes = set()
+for x in range(8):
+    for z in range(8):
+        position = (float(x), 0.0, float(z))
+        v = draw(morphology, cameraPosition=position)
+        classes.add(round(v[2]))
+        assert 0.4 <= v[0] <= 1.4 and 0.4 <= v[1] <= 1.0, v
+        wrapped = draw(morphology, cameraPosition=(x + 256.0, 0.0, z - 256.0))
+        assert max(abs(a - b) for a, b in zip(v, wrapped)) < 1e-5, (v, wrapped)
+assert classes == {0, 1, 2}, classes
+print(
+    "GPU clouds: cumulus, flat banks and broken fragments coexist with periodic morphology.",
+    flush=True,
+)
 # Deterministic noise and a perspective sky fixture rendered by the actual integrator.
 rng = random.Random(1404)
 values = []

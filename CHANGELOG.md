@@ -4,6 +4,8 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Added spatially mixed cloud morphologies inspired by clear-sky reference photographs: rounded cumulus, flatter stratocumulus banks and smaller detached fragments. Independent periodic seeds select the form while shared density preserves wind, reflections, shadows and the accepted noon/midnight clearing.
+
 - Medium water now uses the depth-crossing tracer with 32 steps and five refinements, including opaque DH terrain, to recover nearby cave geometry more reliably. Medium and High decode scene HDR before filtering and seed tracing at the water surface; colored emissive reflections remain independent of skylight. Added dark-cave red/blue HDR regression checks.
 
 ## [1.4.0-beta.5] - 2026-10-05

@@ -24,6 +24,15 @@ vec3 LuminaCloudSeed(vec2 cell) {
     return fract((p.xxy + p.yzz) * p.zyx);
 }
 
+// A second independent seed selects morphology without biasing weather activation.
+// x: horizontal extent, y: vertical extent, z: low/fragmented cloud class.
+vec3 LuminaCloudMorphology(vec2 tile) {
+    float kind = LuminaCloudSeed(tile + vec2(71.0, 113.0)).z;
+    if (kind < 0.55) return vec3(1.0, 1.0, 0.0); // rounded cumulus
+    if (kind < 0.80) return vec3(1.32, 0.48, 1.0); // flatter stratocumulus banks
+    return vec3(0.62, 0.65, 2.0); // small broken fair-weather fragments
+}
+
 float LuminaCloudLobe(vec3 delta, vec3 radius) {
     vec3 q = delta / radius;
     return max(1.0 - dot(q, q), 0.0);
@@ -69,13 +78,23 @@ float LuminaCloudShape(vec3 worldPos, int altitude, float horizontalDistance, bo
         vec2 center = (tile + 0.22 + seed.xy * 0.56) * 512.0;
         vec2 deltaXZ = horizontal + warp.xz - center;
         float radius = mix(105.0, 185.0, seed.x) * (0.85 + coverage * 0.45);
+        vec3 morphology = LuminaCloudMorphology(tile);
+        radius *= morphology.x;
         float crown = mix(0.36, 0.58, seed.y);
-        vec3 delta = vec3(deltaXZ.x, (h - crown) * 128.0 + warp.y, deltaXZ.y);
+        crown = mix(crown, 0.34, morphology.z == 1.0 ? 0.7 : 0.0);
+        vec3 delta = vec3(deltaXZ.x, ((h - crown) * 128.0 + warp.y) / morphology.y, deltaXZ.y);
         float body = LuminaCloudLobe(delta, vec3(radius, 34.0, radius * 0.82));
         body = max(body, LuminaCloudLobe(delta - vec3(radius * 0.35, 24.0, radius * 0.12),
                                        vec3(radius * 0.48, 42.0, radius * 0.47)));
         body = max(body, LuminaCloudLobe(delta - vec3(-radius * 0.38, 13.0, -radius * 0.22),
                                        vec3(radius * 0.52, 37.0, radius * 0.48)));
+        if (morphology.z == 2.0) {
+            // Detached, asymmetrical puffs rather than repeating the large crown.
+            body = max(body, LuminaCloudLobe(delta - vec3(radius * 1.35, -8.0, radius * 0.42),
+                                           vec3(radius * 0.40, 24.0, radius * 0.36)));
+            body = max(body, LuminaCloudLobe(delta - vec3(-radius * 1.20, 6.0, -radius * 0.55),
+                                           vec3(radius * 0.32, 20.0, radius * 0.42)));
+        }
         shape = max(shape, body * activation);
     }
     if (shape <= 0.0) return 0.0;

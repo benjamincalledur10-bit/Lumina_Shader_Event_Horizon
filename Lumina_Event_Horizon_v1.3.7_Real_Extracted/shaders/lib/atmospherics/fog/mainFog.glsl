@@ -118,6 +118,34 @@
         return altitudeFactor;
     }
 
+    #ifdef OVERWORLD
+    float LuminaAerialDensity(float altitude) {
+        return exp(-max(altitude - float(ATM_FOG_ALTITUDE), 0.0) / 180.0);
+    }
+
+    float LuminaAerialDepth(vec3 playerPos, float distance) {
+        // Integrate the air along the view ray, including air below high peaks.
+        // World distances keep regular and DH terrain on the same curve.
+        float cameraHeight = cameraPosition.y;
+        float targetHeight = cameraHeight + playerPos.y;
+        float density = (LuminaAerialDensity(cameraHeight)
+                       + 4.0 * LuminaAerialDensity((cameraHeight + targetHeight) * 0.5)
+                       + LuminaAerialDensity(targetHeight)) / 6.0;
+        return max(distance, 0.0) * smoothstep(24.0, 96.0, distance)
+             * density * (0.055 / float(ATM_FOG_DISTANCE));
+    }
+
+    vec3 LuminaTerrainColor(vec3 color, float distance) {
+        // Mild mid-distance chroma recovery before aerial perspective is applied.
+        float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+        float daylight = sunVisibility * invRainFactor * eyeBrightnessM;
+        float range = smoothstep(24.0, 96.0, distance) * exp(-distance * 0.0008);
+        float peak = max(color.r, max(color.g, color.b));
+        float strength = 0.10 * daylight * range / (1.0 + peak * 2.0);
+        return max(mix(vec3(luma), color, 1.0 + strength), vec3(0.0));
+    }
+    #endif
+
     void DoAtmosphericFog(inout vec4 color, vec3 playerPos, float lViewPos, float VdotS) {
         #ifndef DISTANT_HORIZONS
             float renDisFactor = min1(192.0 / renderDistance);
@@ -176,6 +204,17 @@
 
         fog *= altitudeFactor;
 
+        #ifdef OVERWORLD
+            float clearWeather = isEyeInWater == 0 ? invRainFactor * invRainFactor : 0.0;
+            float outdoor = eyeBrightnessM;
+            #ifdef CAVE_FOG
+                outdoor *= 1.0 - GetCaveFactor();
+            #endif
+            float aerialDepth = LuminaAerialDepth(playerPos, lViewPos);
+            float aerialFog = (1.0 - exp(-aerialDepth)) * ATM_FOG_MULT * outdoor;
+            fog = mix(fog, aerialFog, clearWeather);
+        #endif
+
         if (fog > 0.0) {
             fog = clamp(fog, 0.0, 1.0);
 
@@ -192,7 +231,16 @@
                 fogColorM *= moonPhaseInfluence;
             #endif
 
-            color = mix(color, vec4(fogColorM, 0.0), fog);
+            #ifdef OVERWORLD
+                // Wavelength-dependent extinction gives distant ridges a cooler
+                // cast while retaining more blue-channel terrain information.
+                vec3 spectralFog = vec3(1.0) - pow(vec3(max(1.0 - fog, 0.00001)), vec3(1.12, 1.0, 0.86));
+                spectralFog = mix(vec3(fog), spectralFog, clearWeather);
+                color.rgb = mix(color.rgb, fogColorM, spectralFog);
+                color.a *= 1.0 - fog;
+            #else
+                color = mix(color, vec4(fogColorM, 0.0), fog);
+            #endif
         }
     }
 #endif

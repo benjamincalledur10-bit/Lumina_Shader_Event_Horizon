@@ -244,6 +244,9 @@ void main() {
             chunkFade = texture6.b > 0.50001 ? (1.0 - texture6.b) * 2.0 : 1.0;
         #endif
 
+        #if defined OVERWORLD && defined ATMOSPHERIC_FOG
+            if (isEyeInWater == 0) color.rgb = LuminaTerrainColor(color.rgb, lViewPos);
+        #endif
         waterRefColor = color.rgb;
         DoFog(color, skyFade, lViewPos, playerPos, VdotU, VdotS, dither, false, 0.0);
     } else { // Sky
@@ -255,6 +258,9 @@ void main() {
                 viewPosDH /= viewPosDH.w;
                 lViewPos = length(viewPosDH.xyz);
                 playerPos = ViewToPlayer(viewPosDH.xyz);
+                #if defined OVERWORLD && defined ATMOSPHERIC_FOG
+                    if (isEyeInWater == 0) color.rgb = LuminaTerrainColor(color.rgb, lViewPos);
+                #endif
                 waterRefColor = color.rgb;
                 
                 DoFog(color, skyFade, lViewPos, playerPos, VdotU, VdotS, dither, false, 0.0);

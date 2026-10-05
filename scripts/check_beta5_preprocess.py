@@ -87,8 +87,30 @@ for enabled, nebula, stage in itertools.product(
         "world0",
         stage,
         water.profiles["HIGH"]
-        | {"SHOOTING_STARS": enabled, "NIGHT_NEBULAE": nebula, "NIGHT_STAR_AMOUNT": 0},
+        | {
+            "SHOOTING_STARS": enabled,
+            "METEORS": enabled,
+            "NIGHT_NEBULAE": nebula,
+            "NIGHT_STAR_AMOUNT": 0,
+        },
     )
+for stars, meteors, stage in itertools.product(
+    (0, 1, 5, 10, 50, 100),
+    (0, 1, 5),
+    ("deferred1.fsh", "gbuffers_water.fsh", "dh_water.fsh"),
+):
+    check(
+        "world0",
+        stage,
+        water.profiles["HIGH"]
+        | {
+            "SHOOTING_STARS": stars,
+            "METEORS": meteors,
+            "NIGHT_NEBULAE": 0,
+            "NIGHT_STAR_AMOUNT": 0,
+        },
+    )
+
 print(
     f"Shared shader variants passed: {count}; "
     + (

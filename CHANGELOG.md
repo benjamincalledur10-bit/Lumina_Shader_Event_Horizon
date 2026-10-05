@@ -2,6 +2,11 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased]
+
+- Split Shooting Stars (0/1/5/10/50/100) and Meteors (0/1/5) into independent frequency controls, defaulting to 1 each. Zero disables only the corresponding event type.
+- Replaced the global event-lane search and per-ray angular trigonometry with local world-sky cells. Each ray evaluates at most one candidate per enabled type at every frequency; trails remain inside their cell. Moved derivative filtering before divergent event branches. Minecraft FPS still requires in-game measurement.
+
 ## [1.4.0-beta.6] - 2026-10-05
 
 - Added occasional distant shooting stars and rarer atmospheric meteors as dry skies clear near midnight. Events follow deterministic world-space sky paths, with smooth appearance, motion and fade; larger meteors develop a green entry glow with a warm/white core. Rain and the horizon suppress visibility. Existing cloud compositing hides events behind clouds, and sky-effect water reflections use the same event clock and directions.

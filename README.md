@@ -106,8 +106,9 @@ depth response, directional waves, High reflections, evolving volumetric clouds,
 and filtered air/water light shafts.
 This preview includes the cave-water reflection fixes, mixed cloud shapes,
 height-aware mountain depth, and occasional shooting stars/green meteors around
-midnight. Toggle **Environment → Shooting Stars and Meteors** to control the
-new effect. Meteors are visual sky events; they do not impact terrain.
+midnight. Adjust **Environment → Shooting Stars** (0/1/5/10/50/100) and
+**Meteors** (0/1/5) independently. Values set frequency; 0 disables that type.
+Meteors are visual sky events; they do not impact terrain.
 Minecraft visual and performance testing remains pending.
 
 This preview also adds **High** to Water Reflection Quality, selected by the High,

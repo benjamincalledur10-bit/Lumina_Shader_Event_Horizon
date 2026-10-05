@@ -11,16 +11,17 @@ g, program, draw, root = (h[k] for k in ("g", "program", "draw", "root"))
 source = (root / "lib/atmospherics/meteors.glsl").read_text()
 fixture = """
 #define SHOOTING_STARS 1
+#define METEORS 1
 uniform int worldDay,testLane;
 uniform float timeAngle,sunVisibility,invRainFactor,frameTimeCounter,testSlot,maxBlindnessDarkness;
-uniform vec3 testRay;
+uniform vec3 testRay,testCell;
 uniform mat4 gbufferModelViewInverse;
 out vec4 result;
 """
 seed_program = program(
     fixture
     + source
-    + "void main(){result=vec4(LuminaMeteorSeed(testSlot,testLane),1.0);}"
+    + "void main(){result=vec4(LuminaSkyEventSeed(testCell.xy,testSlot,testLane==1),1.0);}"
 )
 p = program(
     fixture
@@ -59,35 +60,47 @@ def unit(v):
 
 
 def trajectory(seed, progress, fireball):
-    azimuth = seed[1] * 2 * math.pi
-    elevation = 0.35 + 0.45 * seed[2]
-    horizontal = math.sqrt(1 - elevation * elevation)
-    start = (math.cos(azimuth) * horizontal, elevation, math.sin(azimuth) * horizontal)
-    right = (-math.sin(azimuth), 0, math.cos(azimuth))
-    up = unit(tuple((1 if i == 1 else 0) - start[i] * start[1] for i in range(3)))
-    sign = -0.8 if seed[2] < 0.5 else 0.8
-    travel = unit(tuple(right[i] * sign - up[i] * 0.6 for i in range(3)))
-    angle = progress * (0.24 if fireball else 0.32)
-    return tuple(
-        start[i] * math.cos(angle) + travel[i] * math.sin(angle) for i in range(3)
+    scale = 3 if fireball else 6
+    center = tuple((0.5 + (seed[i] - 0.5) * 0.16) / scale for i in range(2))
+    raw = tuple(seed[i + 1] * 2 - 1 + center[i] * 0.6 for i in range(2))
+    length = max(sum(x * x for x in raw), 0.0001) ** 0.5
+    direction = tuple(x / length for x in raw)
+    if sum(x * x for x in direction) < 0.1:
+        direction = (0.6, 0.8)
+    q = tuple(
+        center[i] + direction[i] * ((progress - 0.5) * 0.32 / scale) for i in range(2)
+    )
+    squared = sum(x * x for x in q)
+    return (
+        2 * q[0] / (1 + squared),
+        (1 - squared) / (1 + squared),
+        2 * q[1] / (1 + squared),
     )
 
 
 events = []
-for lane in (0, 1, 2):
+for lane in (0, 1):
     integer(seed_program, "testLane", lane)
-    for slot in range(30):
+    for slot in range(1000):
         seed = draw(seed_program, testSlot=slot)[:3]
-        if seed[0] < (0.24 if lane == 2 else 0.55):
+        if seed[0] < (0.008 if lane == 1 else 0.01):
             break
     else:
         raise AssertionError("No seeded event found")
-    interval = (13, 19, 67)[lane]
-    duration = (1.6 + 0.8 * seed[1]) if lane == 2 else (0.55 + 0.35 * seed[1])
+    p = program(
+        fixture.replace("SHOOTING_STARS 1", f"SHOOTING_STARS {int(lane == 0)}").replace(
+            "METEORS 1", f"METEORS {int(lane == 1)}"
+        )
+        + source
+        + "void main(){result=vec4(GetLuminaMeteors(testRay),LuminaMeteorNightWindow());}"
+    )
+    matrix(p, identity)
+    interval = (20, 67)[lane]
+    duration = (1.6 + 0.8 * seed[1]) if lane == 1 else (0.55 + 0.35 * seed[1])
     delay = 1 + seed[2] * (interval - duration - 2)
     start = slot * interval + delay
     for progress in (0.2, 0.5, 0.8):
-        direction = trajectory(seed, progress, lane == 2)
+        direction = trajectory(seed, progress, lane == 1)
         v = draw(
             p,
             timeAngle=0.75,
@@ -98,7 +111,7 @@ for lane in (0, 1, 2):
         )
         assert all(math.isfinite(x) and x >= 0 for x in v), v
         assert max(v[:3]) > 0.1, (lane, progress, v)
-        if lane == 2 and progress == 0.5:
+        if lane == 1 and progress == 0.5:
             assert v[1] > v[0] and v[1] > v[2], v
         rain = draw(p, invRainFactor=0)
         assert max(rain[:3]) == 0, rain
@@ -119,19 +132,53 @@ assert max(abs(a - b) for a, b in zip(expected, actual)) < 0.01, (expected, actu
 matrix(p, identity)
 # Slot boundaries are empty and event endpoints fade rather than pop.
 for lane, seed, start, duration in events:
-    direction = trajectory(seed, 0.99, lane == 2)
+    p = program(
+        fixture.replace("SHOOTING_STARS 1", f"SHOOTING_STARS {int(lane == 0)}").replace(
+            "METEORS 1", f"METEORS {int(lane == 1)}"
+        )
+        + source
+        + "void main(){result=vec4(GetLuminaMeteors(testRay),1.0);}"
+    )
+    matrix(p, identity)
+    draw(p, timeAngle=0.75, sunVisibility=0, invRainFactor=1)
+    direction = trajectory(seed, 0.99, lane == 1)
     after = draw(p, frameTimeCounter=start + duration + 0.001, testRay=direction)
     before = draw(
-        p, frameTimeCounter=start - 0.001, testRay=trajectory(seed, 0, lane == 2)
+        p, frameTimeCounter=start - 0.001, testRay=trajectory(seed, 0, lane == 1)
     )
     assert max(after[:3]) == 0 and max(before[:3]) == 0, (before, after)
 # Option off does not depend on the static-star or nebula options.
 off = program(
-    fixture.replace("SHOOTING_STARS 1", "SHOOTING_STARS 0")
+    fixture.replace("SHOOTING_STARS 1", "SHOOTING_STARS 0").replace(
+        "METEORS 1", "METEORS 0"
+    )
     + source
     + "void main(){result=vec4(GetLuminaMeteors(testRay),1.0);}"
 )
 assert draw(off, testRay=direction, timeAngle=0.75, invRainFactor=1)[:3] == (0, 0, 0)
+# Every independent frequency combination must compile and link on the GPU.
+for stars in (0, 1, 5, 10, 50, 100):
+    for meteors in (0, 1, 5):
+        variant = program(
+            fixture.replace("SHOOTING_STARS 1", f"SHOOTING_STARS {stars}").replace(
+                "METEORS 1", f"METEORS {meteors}"
+            )
+            + source
+            + "void main(){result=vec4(GetLuminaMeteors(testRay),1.0);}"
+        )
+        matrix(variant, identity)
+        value = draw(variant, testRay=direction, timeAngle=0.75, invRainFactor=1)
+        assert all(math.isfinite(x) for x in value)
+# Higher frequency admits more deterministic candidates, without adding loops.
+for fireball, frequencies in ((False, (1, 5, 10, 50, 100)), (True, (1, 5))):
+    integer(seed_program, "testLane", int(fireball))
+    seeds = [draw(seed_program, testSlot=slot)[0] for slot in range(300)]
+    counts = [
+        sum(x < min(f * (0.008 if fireball else 0.01), 1) for x in seeds)
+        for f in frequencies
+    ]
+    assert counts == sorted(counts) and counts[-1] > counts[0], counts
+
 # Render the green event in a sky patch, including actual derivative filtering.
 lane, seed, start, duration = events[-1]
 direction = trajectory(seed, 0.5, True)

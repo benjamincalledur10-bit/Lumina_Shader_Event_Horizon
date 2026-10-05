@@ -230,6 +230,7 @@ void DoFog(inout vec4 col,inout float sky,float len,vec3 pos,float u,float s,flo
 """
 REFLECTION_FIXTURE += """
 #define SHOOTING_STARS 1
+#define METEORS 1
 const mat4 gbufferModelViewInverse=mat4(1.0);
 const int worldDay=0;
 float timeAngle=0.25,sunVisibility=1.0,frameTimeCounter=0.0,maxBlindnessDarkness=0.0;

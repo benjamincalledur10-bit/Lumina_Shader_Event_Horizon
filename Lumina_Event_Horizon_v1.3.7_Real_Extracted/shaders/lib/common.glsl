@@ -11,7 +11,8 @@
 ---------------------------------------------------------------------*/
 
 //User Settings//
-    #define SHOOTING_STARS 1 //[0 1]
+    #define SHOOTING_STARS 1 //[0 1 5 10 50 100]
+    #define METEORS 1 //[0 1 5]
 
     #define SHADER_STYLE 4 //[4]
 

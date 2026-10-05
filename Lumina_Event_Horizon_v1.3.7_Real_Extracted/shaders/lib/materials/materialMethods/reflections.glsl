@@ -31,7 +31,7 @@ float refDist = far;
 
 #include "/lib/materials/materialMethods/reflectionBackground.glsl"
 
-#if WATER_REFLECT_QUALITY >= 3 && (defined GBUFFERS_WATER || defined DH_WATER)
+#if WATER_REFLECT_QUALITY >= 2 && (defined GBUFFERS_WATER || defined DH_WATER)
 vec3 SampleHighWaterReflection(vec2 uv) {
     // Decode each texel before bilinear interpolation; the scene is sqrt-encoded.
     ivec2 size = textureSize(gaux2, 0);
@@ -120,7 +120,7 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
 
     vec4 reflection = vec4(0.0);
     bool highWaterTrace = false;
-    #if WATER_REFLECT_QUALITY >= 3 && (defined GBUFFERS_WATER || defined DH_WATER)
+    #if WATER_REFLECT_QUALITY >= 2 && (defined GBUFFERS_WATER || defined DH_WATER)
     if (waterSurface) {
         highWaterTrace = true;
         // Bracket a front-to-back depth crossing, then refine the actual intersection.
@@ -128,9 +128,22 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
         float rayDistance = 0.08;
         float previousDistance = 0.0;
         float previousGap = 0.0;
-        bool previousValid = false;
+        // Seed the crossing at the surface so nearby cave walls are not skipped.
+        vec4 originClip = gbufferProjection * vec4(origin, 1.0);
+        vec2 originUV = originClip.xy / max(originClip.w, 0.000001) * 0.5 + 0.5;
+        bool previousValid;
+        vec3 originScene = HighWaterScenePosition(clamp(originUV, vec2(0.0), vec2(1.0)), previousValid);
+        previousValid = previousValid && originClip.w > 0.000001;
+        previousGap = originScene.z - origin.z;
+        #if WATER_REFLECT_QUALITY >= 3
+            const int waterTraceSteps = 48;
+            const int waterRefineSteps = 7;
+        #else
+            const int waterTraceSteps = 32;
+            const int waterRefineSteps = 5;
+        #endif
         float maximumDistance = min(renderDistance * 2.0, 512.0);
-        for (int step = 0; step < 48; step++) {
+        for (int step = 0; step < waterTraceSteps; step++) {
             if (rayDistance > maximumDistance) break;
             vec3 rayPosition = origin + nViewPosR * rayDistance;
             vec4 clip = gbufferProjection * vec4(rayPosition, 1.0);
@@ -143,7 +156,7 @@ vec4 GetReflection(vec3 normalM, vec3 viewPos, vec3 nViewPos, vec3 playerPos, fl
             if (valid && previousValid && previousGap <= 0.0 && gap >= 0.0) {
                 float low = previousDistance, high = rayDistance;
                 bool bracketValid = true;
-                for (int refinement = 0; refinement < 7; refinement++) {
+                for (int refinement = 0; refinement < waterRefineSteps; refinement++) {
                     float middle = (low + high) * 0.5;
                     rayPosition = origin + nViewPosR * middle;
                     clip = gbufferProjection * vec4(rayPosition, 1.0);

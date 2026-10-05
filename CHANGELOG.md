@@ -2,6 +2,10 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased]
+
+- Medium water now uses the depth-crossing tracer with 32 steps and five refinements, including opaque DH terrain, to recover nearby cave geometry more reliably. Medium and High decode scene HDR before filtering and seed tracing at the water surface; colored emissive reflections remain independent of skylight. Added dark-cave red/blue HDR regression checks.
+
 ## [1.4.0-beta.5] - 2026-10-05
 
 - Cloud bodies now translate with their wind while smaller billows evolve independently, shared by the sky, reflections and terrain shadows. Preserves the accepted cumulus volume and dry-weather noon/midnight clearing. Medium/High primary-ray budgets increase to 64/80 with shorter target steps; reflection and AMD caps remain unchanged.

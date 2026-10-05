@@ -209,6 +209,7 @@ REFLECTION_FIXTURE = r"""
 #define DH_BLOCK_WATER 1
 uniform int mat;
 uniform float testDither;
+uniform float testSkyLight;
 uniform sampler2D depthtex1,dhDepthTex1,gaux2,colortex0;
 uniform mat4 gbufferProjection,gbufferProjectionInverse,dhProjectionInverse;
 uniform vec3 testPosition,testDirection;
@@ -252,10 +253,11 @@ for path in ("GBUFFERS_WATER", "DH_WATER"):
             p = program(
                 defines + REFLECTION_FIXTURE + background + "\n" + reflection + """
 out vec4 result;
-void main(){result=GetReflection(vec3(0,1,0),testPosition,normalize(testDirection),testPosition,length(testPosition),-1.,depthtex1,testDither,1.,.3,1.,vec3(0,1,0),vec3(.1),vec3(1),0.);}
+void main(){result=GetReflection(vec3(0,1,0),testPosition,normalize(testDirection),testPosition,length(testPosition),-1.,depthtex1,testDither,testSkyLight,.3,1.,vec3(0,1,0),vec3(.1),vec3(1),0.);}
 """
             )
             samplers(p, ("gaux2", "colortex0"))
+            draw(p, testSkyLight=1.0)
             integer(p, "depthtex1", 3)
             integer(p, "dhDepthTex1", 3)
             integer(p, "mat", 32000 if path == "GBUFFERS_WATER" else 1)
@@ -293,6 +295,40 @@ void main(){result=GetReflection(vec3(0,1,0),testPosition,normalize(testDirectio
                         assert v[3] == 0, v
                     else:
                         assert v[3] > 0.05, (path, quality, detail, dither, v)
+            # Cave hits must preserve colored HDR emitters even without sky light.
+            if quality >= 2:
+                for emitted in ((4.0, 0.05, 0.01), (0.01, 0.1, 6.0)):
+                    g.glActiveTexture(0x84C2)
+                    g.glBindTexture(0x0DE1, input_texture)
+                    encoded = (c.c_float * 4)(
+                        *(math.sqrt(x) * 0.5 for x in emitted), 1.0
+                    )
+                    g.glTexImage2D(0x0DE1, 0, 0x8814, 1, 1, 0, 0x1908, 0x1406, encoded)
+                    for distance in (5.02, 5.12, 5.5, 7.0, 20.0):
+                        g.glActiveTexture(0x84C3)
+                        g.glBindTexture(0x0DE1, depth_texture)
+                        depth = 100 / (100 - 0.1) - 100 * 0.1 / ((100 - 0.1) * distance)
+                        values = (c.c_float * 4)(depth, depth, depth, 1.0)
+                        g.glTexImage2D(
+                            0x0DE1, 0, 0x8814, 1, 1, 0, 0x1908, 0x1406, values
+                        )
+                        cave = draw(
+                            p,
+                            testPosition=(0.0, -1.0, -5.0),
+                            testDirection=(0.0, -1.0, -5.0),
+                            testDither=0.5,
+                            testSkyLight=0.0,
+                        )
+                        assert cave[3] > 0.95, (path, quality, distance, cave)
+                        assert (
+                            max(abs(cave[i] - emitted[i]) for i in range(3)) < 0.01
+                        ), (emitted, cave)
+                    g.glActiveTexture(0x84C2)
+                    g.glBindTexture(0x0DE1, input_texture)
+                g.glTexImage2D(0x0DE1, 0, 0x8814, 1, 1, 0, 0x1908, 0x1406, pixels)
+                draw(p, testSkyLight=1.0)
+                g.glActiveTexture(0x84C3)
+                g.glBindTexture(0x0DE1, depth_texture)
             # Ray projection with zero W and off-screen rays must fall back to sky.
             for pos, direction in (
                 ((0.0, 0.0, 0.0), (1.0, 0.0, 0.0)),
@@ -455,7 +491,7 @@ p = program(
     + "\n"
     + reflection
     + """
-out vec4 result;void main(){result=GetReflection(vec3(0,1,0),testPosition,normalize(testDirection),testPosition,length(testPosition),-1.,depthtex1,testDither,1.,.3,1.,vec3(0,1,0),vec3(.1),vec3(1),0.);}
+out vec4 result;void main(){result=GetReflection(vec3(0,1,0),testPosition,normalize(testDirection),testPosition,length(testPosition),-1.,depthtex1,testDither,testSkyLight,.3,1.,vec3(0,1,0),vec3(.1),vec3(1),0.);}
 """
 )
 integer(p, "gaux2", 2)

@@ -15,7 +15,7 @@ jobs:
   validate:
     name: Validate canonical Lumina Event Horizon
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
 
     steps:
       - name: Check out repository
@@ -43,3 +43,17 @@ jobs:
 
       - name: Preprocess water and cloud shader variants
         run: python3 scripts/check_clouds_preprocess.py
+
+      - name: Install GLSL compiler and software OpenGL
+        run: sudo apt-get update && sudo apt-get install -y glslang-tools libosmesa6-dev python3-pil
+
+      - name: Compile beta.5 shader variants
+        run: /usr/bin/python3 scripts/check_beta5_preprocess.py
+
+      - name: Execute software OpenGL regression checks
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          /usr/bin/python3 scripts/check_water_beta3_gpu.py
+          /usr/bin/python3 scripts/check_clouds_gpu.py
+          /usr/bin/python3 scripts/check_beta5_render.py

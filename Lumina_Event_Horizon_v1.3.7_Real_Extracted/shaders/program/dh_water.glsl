@@ -30,7 +30,7 @@ float sunVisibility = LUMINA_SUN_VISIBILITY(SdotU);
 float sunVisibility2 = sunVisibility * sunVisibility;
 float shadowTimeVar1 = abs(sunVisibility - 0.5) * 2.0;
 float shadowTimeVar2 = shadowTimeVar1 * shadowTimeVar1;
-float shadowTime = shadowTimeVar2 * shadowTimeVar2;
+float shadowTime = LUMINA_SHADOW_FADE(SdotU);
 
 vec2 lmCoordM = lmCoord;
 
@@ -38,7 +38,7 @@ mat4 gbufferProjection = dhProjection;
 mat4 gbufferProjectionInverse = dhProjectionInverse;
 
 #ifdef OVERWORLD
-    vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
+    vec3 lightVec = shadowLightPosition * inversesqrt(max(dot(shadowLightPosition, shadowLightPosition), 1e-8));
 #else
     vec3 lightVec = sunVec;
 #endif

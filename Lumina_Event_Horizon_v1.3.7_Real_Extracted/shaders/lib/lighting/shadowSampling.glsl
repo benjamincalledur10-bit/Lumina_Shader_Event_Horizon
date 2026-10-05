@@ -41,6 +41,11 @@ vec2 offsetDist(float x, int s) {
 vec3 SampleTAAFilteredShadow(vec3 shadowPos, float offset, int shadowSamples, bool leaves, float colorMult, float colorPow) {
     vec3 shadow = vec3(0.0);
     float gradientNoise = InterleavedGradientNoiseForShadows();
+    #ifdef OVERWORLD
+        // Broader solar penumbrae at grazing angles soften moving long shadows.
+        float grazing = 1.0 - smoothstep(0.04, 0.35, abs(dot(lightVec, upVec)));
+        offset *= 1.0 + grazing * 0.65;
+    #endif
 
     #if !defined GBUFFERS_ENTITIES && !defined GBUFFERS_HAND && !defined GBUFFERS_TEXTURED
         offset *= 1.3875;

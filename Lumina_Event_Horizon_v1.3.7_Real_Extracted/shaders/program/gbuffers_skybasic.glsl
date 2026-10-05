@@ -25,7 +25,7 @@ float sunVisibility = LUMINA_SUN_VISIBILITY(SdotU);
 float sunVisibility2 = sunVisibility * sunVisibility;
 float shadowTimeVar1 = abs(sunVisibility - 0.5) * 2.0;
 float shadowTimeVar2 = shadowTimeVar1 * shadowTimeVar1;
-float shadowTime = shadowTimeVar2 * shadowTimeVar2;
+float shadowTime = LUMINA_SHADOW_FADE(SdotU);
 
 //Common Functions//
 

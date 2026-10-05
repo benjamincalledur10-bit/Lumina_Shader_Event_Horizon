@@ -7,6 +7,8 @@ Reuses and also runs the water matrix to retain coverage for the shared sky code
 import itertools
 import check_water_preprocess as water
 
+water.validate_water_matrix()
+
 count = 0
 for dimension, quality, platform, stage in itertools.product(
     ("world0", "world-1", "world1"),

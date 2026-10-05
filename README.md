@@ -101,8 +101,9 @@ Visual verification in Minecraft is still pending.
 
 ## Development
 
-The development preview is **v1.4.0-beta.4**, with upgraded water color,
-depth response, directional waves, High reflections, and rebuilt volumetric clouds.
+The development preview is **v1.4.0-beta.5**, with upgraded water color,
+depth response, directional waves, High reflections, evolving volumetric clouds, refined cinematic autofocus,
+and filtered air/water light shafts.
 Minecraft visual and performance testing remains pending.
 
 This preview also adds **High** to Water Reflection Quality, selected by the High,

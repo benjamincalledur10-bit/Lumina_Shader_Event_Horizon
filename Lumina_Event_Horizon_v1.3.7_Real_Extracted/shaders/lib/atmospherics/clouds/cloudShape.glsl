@@ -52,7 +52,10 @@ float LuminaCloudShape(vec3 worldPos, int altitude, float horizontalDistance, bo
     vec2 cell = floor(horizontal / 512.0);
     float coverage = clamp(LuminaCloudDailyCoverage() + 0.30 * (float(LUMINA_CLOUD_COVERAGE) - 1.0)
                          + 0.55 * float(LUMINA_CLOUD_RAIN_DENSITY) * rainFactor, 0.0, 0.98);
-    vec3 p = vec3(horizontal.x, h * 128.0, horizontal.y) / 32.0;
+    // Advect smaller billows at a different speed from the cloud bodies. This
+    // evolves their shape continuously instead of sliding a frozen silhouette.
+    vec3 p = (vec3(horizontal.x, h * 128.0, horizontal.y)
+              + cloudTime * vec3(0.10, 0.035, -0.07)) / 32.0;
     vec3 warp = (vec3(LuminaCloudNoise(p), LuminaCloudNoise(p + vec3(19.0, 7.0, 3.0)),
                      LuminaCloudNoise(p + vec3(5.0, 13.0, 23.0))) - 0.5) * 28.0;
     float shape = 0.0;
@@ -81,7 +84,7 @@ float LuminaCloudShape(vec3 worldPos, int altitude, float horizontalDistance, bo
         if (detail) {
             float small = LuminaCloudNoise(p * 2.0 + vec3(5.0, 9.0, 1.0));
             #if CLOUD_QUALITY >= 3
-                small = small * 0.55 + LuminaCloudNoise(p * 4.0) * 0.45;
+                small = small * 0.45 + LuminaCloudNoise(p * 4.0 + cloudTime * vec3(0.002, 0.001, -0.001)) * 0.55;
             #endif
             erosion = mix(erosion, erosion * 0.50 + small * 0.50,
                           1.0 - smoothstep(1600.0, 3600.0, horizontalDistance));

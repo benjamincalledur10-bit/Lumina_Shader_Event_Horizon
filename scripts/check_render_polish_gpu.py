@@ -11,29 +11,49 @@ import math
 import sys
 from pathlib import Path
 
-if sys.platform != "darwin":
-    raise SystemExit("This GPU check requires macOS and its native OpenGL framework.")
 root = (
     Path(__file__).resolve().parents[1]
     / "Lumina_Event_Horizon_v1.3.7_Real_Extracted/shaders"
 )
-g = c.CDLL("/System/Library/Frameworks/OpenGL.framework/OpenGL")
-pix = c.c_void_p()
-count = c.c_int()
-ctx = c.c_void_p()
-g.CGLChoosePixelFormat.argtypes = [
-    c.POINTER(c.c_int),
-    c.POINTER(c.c_void_p),
-    c.POINTER(c.c_int),
-]
-g.CGLCreateContext.argtypes = [c.c_void_p, c.c_void_p, c.POINTER(c.c_void_p)]
-g.CGLSetCurrentContext.argtypes = [c.c_void_p]
-assert (
-    g.CGLChoosePixelFormat((c.c_int * 3)(99, 0x3200, 0), c.byref(pix), c.byref(count))
-    == 0
-)
-assert g.CGLCreateContext(pix, None, c.byref(ctx)) == 0
-assert g.CGLSetCurrentContext(ctx) == 0
+if sys.platform == "darwin":
+    g = c.CDLL("/System/Library/Frameworks/OpenGL.framework/OpenGL")
+    pix, count, ctx = c.c_void_p(), c.c_int(), c.c_void_p()
+    g.CGLChoosePixelFormat.argtypes = [
+        c.POINTER(c.c_int),
+        c.POINTER(c.c_void_p),
+        c.POINTER(c.c_int),
+    ]
+    g.CGLCreateContext.argtypes = [c.c_void_p, c.c_void_p, c.POINTER(c.c_void_p)]
+    g.CGLSetCurrentContext.argtypes = [c.c_void_p]
+    assert (
+        g.CGLChoosePixelFormat(
+            (c.c_int * 3)(99, 0x3200, 0), c.byref(pix), c.byref(count)
+        )
+        == 0
+    )
+    assert g.CGLCreateContext(pix, None, c.byref(ctx)) == 0
+    assert g.CGLSetCurrentContext(ctx) == 0
+elif sys.platform.startswith("linux"):
+    # CI uses Mesa's software OpenGL to compile/link and execute the same GLSL.
+    # This validates rendering calculations, not physical GPU speed.
+    import ctypes.util
+
+    library = ctypes.util.find_library("OSMesa")
+    if not library:
+        raise SystemExit(
+            "Install libosmesa6 (CI uses libosmesa6-dev) for software OpenGL checks."
+        )
+    g = c.CDLL(library)
+    g.OSMesaCreateContextAttribs.argtypes = [c.POINTER(c.c_int), c.c_void_p]
+    g.OSMesaCreateContextAttribs.restype = c.c_void_p
+    attributes = (c.c_int * 9)(0x22, 0x1908, 0x33, 0x34, 0x36, 3, 0x37, 3, 0)
+    ctx = g.OSMesaCreateContextAttribs(attributes, None)
+    assert ctx
+    backing = (c.c_ubyte * (16 * 16 * 4))()
+    g.OSMesaMakeCurrent.argtypes = [c.c_void_p, c.c_void_p, c.c_uint, c.c_int, c.c_int]
+    assert g.OSMesaMakeCurrent(ctx, backing, 0x1401, 16, 16)
+else:
+    raise SystemExit("Rendering checks support macOS OpenGL and Linux OSMesa.")
 g.glCreateShader.restype = c.c_uint
 g.glShaderSource.argtypes = [
     c.c_uint,

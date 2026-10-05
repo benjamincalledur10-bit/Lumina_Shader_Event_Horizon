@@ -32,7 +32,11 @@ def expand(path, options):
         for key, value in options.items():
             source = re.sub(
                 r"(?m)^\s*#define " + key + r"\b[^\n]*",
-                "\n#define " + key + " " + str(value),
+                (
+                    "\n#undef " + key
+                    if value is None
+                    else "\n#define " + key + " " + str(value)
+                ),
                 source,
             )
     source = re.sub(r"(?m)^\s*#version[^\n]*", "", source)
@@ -59,43 +63,48 @@ def preprocess(path, options, platform="mac", version=260300):
     return result.stdout
 
 
-count = 0
-for dimension, profile, style, reflection, path, suffix in itertools.product(
-    ("world0", "world-1", "world1"),
-    ("POTATO", "MEDIUM", "HIGH", "ULTRA"),
-    (1, 2, 3),
-    (-1, 0, 1, 2, 3),
-    ("gbuffers_water", "dh_water"),
-    ("fsh", "vsh"),
-):
-    options = profiles[profile] | {
-        "WATER_STYLE_DEFINE": style,
-        "WATER_REFLECT_QUALITY": reflection,
-    }
-    output = preprocess(ROOT / dimension / f"{path}.{suffix}", options)
-    if suffix == "fsh" and dimension == "world0":
-        assert "float waterColumnLength" in output, (profile, path)
-        assert "float waterOpticalDepth" in output, (profile, path)
-        if style >= 2 and profile == "POTATO":
-            assert "vec2 normalBig = swell * 0.35" in output
-        if reflection == 0:
-            assert "// Method 1: Ray Marched Reflection" not in output
-            assert "// Method 2: Mirorred Image Reflection" not in output
-        if path == "dh_water" and reflection in (1, 2):
-            assert "float z1R = texture2D(dhDepthTex1," in output
-    count += 1
+def validate_water_matrix():
+    count = 0
+    for dimension, profile, style, reflection, path, suffix in itertools.product(
+        ("world0", "world-1", "world1"),
+        ("POTATO", "MEDIUM", "HIGH", "ULTRA"),
+        (1, 2, 3),
+        (-1, 0, 1, 2, 3),
+        ("gbuffers_water", "dh_water"),
+        ("fsh", "vsh"),
+    ):
+        options = profiles[profile] | {
+            "WATER_STYLE_DEFINE": style,
+            "WATER_REFLECT_QUALITY": reflection,
+        }
+        output = preprocess(ROOT / dimension / f"{path}.{suffix}", options)
+        if suffix == "fsh" and dimension == "world0":
+            assert "float waterColumnLength" in output, (profile, path)
+            assert "float waterOpticalDepth" in output, (profile, path)
+            if style >= 2 and profile == "POTATO":
+                assert "vec2 normalBig = swell * 0.35" in output
+            if reflection == 0:
+                assert "// Method 1: Ray Marched Reflection" not in output
+                assert "// Method 2: Mirorred Image Reflection" not in output
+            if path == "dh_water" and reflection in (1, 2):
+                assert "float z1R = texture2D(dhDepthTex1," in output
+        count += 1
 
-# Modern WSR/colored-lighting and legacy compatibility branches.
-for platform, version, profile, style, path in itertools.product(
-    ("mac", "other"),
-    (10800, 11300, 260300),
-    ("POTATO", "ULTRA"),
-    (1, 3),
-    ("gbuffers_water", "dh_water"),
-):
-    options = profiles[profile] | {"WATER_STYLE_DEFINE": style}
-    preprocess(ROOT / "world0" / f"{path}.fsh", options, platform, version)
-    count += 1
-print(
-    f"Water preprocessing passed: {count} configurations, including profile/sky-only/DH/legacy/WSR paths."
-)
+    # Modern WSR/colored-lighting and legacy compatibility branches.
+    for platform, version, profile, style, path in itertools.product(
+        ("mac", "other"),
+        (10800, 11300, 260300),
+        ("POTATO", "ULTRA"),
+        (1, 3),
+        ("gbuffers_water", "dh_water"),
+    ):
+        options = profiles[profile] | {"WATER_STYLE_DEFINE": style}
+        preprocess(ROOT / "world0" / f"{path}.fsh", options, platform, version)
+        count += 1
+    print(
+        f"Water preprocessing passed: {count} configurations, including profile/sky-only/DH/legacy/WSR paths."
+    )
+
+
+if __name__ == "__main__":
+    validate_water_matrix()

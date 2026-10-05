@@ -2,6 +2,14 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [1.4.0-beta.5] - 2026-10-05
+
+- Cloud bodies now translate with their wind while smaller billows evolve independently, shared by the sky, reflections and terrain shadows. Preserves the accepted cumulus volume and dry-weather noon/midnight clearing. Medium/High primary-ray budgets increase to 64/80 with shorter target steps; reflection and AMD caps remain unchanged.
+- Refined cinematic autofocus with a softer circular aperture, spatial/temporal sample rotation, depth-aware footprint coverage and focus-distance-dependent magnification. Foreground and focus-plane protection remain active; existing distance blur and legacy DoF retain their original aperture response.
+- Aligned the sun and shadow light vectors with the exact loader-provided positions rather than an independently approximated solar trajectory. Direct shadows fade smoothly at the horizon, gain modest grazing-angle penumbrae, and use a smaller camera-grid stabilization interval. The shadow source changes while direct shadow strength is near zero.
+- Air/water light shafts filter every shadow sample, including distant samples, and clamp texture borders. Replaced the approximate Overworld depth stepping with actual ray distances and stratification over the visible interval; opaque DH geometry clips tracing. Fixed quality budgets avoid abrupt intensity-dependent sample-count changes. Underwater shafts use extra samples, wavelength-dependent attenuation and a refracted-light phase response.
+- Added beta.5 GLSL compilation and rendering regression checks, including cinematic depth boundaries, solar alignment, horizon continuity, air/water integration and occlusion. Linux CI executes the rendering checks with Mesa software OpenGL; this does not measure physical GPU speed. Minecraft appearance, temporal stability and frame-time impact still require in-game testing.
+
 ## [1.4.0-beta.4] - 2026-10-04
 
 - Further updated this same beta: dry-weather clouds now thin smoothly around noon and especially midnight, while mornings and early nights retain more coverage. Rain reduces this daily clearing; user coverage controls remain active. Medium/High edge erosion has slightly finer definition while preserving the accepted cumulus volume. Added native GPU checks for the solar coverage cycle, continuous transitions and rain override.

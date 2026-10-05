@@ -1,8 +1,10 @@
 // Shared sky/lighting transitions. Inline expressions avoid new dynamic globals.
 #ifdef OVERWORLD
+    #define LUMINA_SHADOW_FADE(elevation) smoothstep(0.015, 0.15, abs(elevation))
     #define LUMINA_DAY_BLEND(elevation) (0.5 * smoothstep(-0.375, 0.0, (elevation)) + 0.5 * smoothstep(0.0, 0.0625, (elevation)))
     #define LUMINA_SUN_VISIBILITY(elevation) smoothstep(-0.0625, 0.0625, (elevation))
 #else
+    #define LUMINA_SHADOW_FADE(elevation) pow(clamp(abs(elevation) * 8.0, 0.0, 1.0), 4.0)
     #define LUMINA_DAY_BLEND(elevation) ((elevation) < 0.0 ? clamp((elevation) + 0.375, 0.0, 0.75) / 0.75 : clamp((elevation) + 0.03125, 0.0, 0.0625) / 0.0625)
     #define LUMINA_SUN_VISIBILITY(elevation) (clamp((elevation) + 0.0625, 0.0, 0.125) / 0.125)
 #endif
@@ -13,11 +15,8 @@
         return clamp((lmCoord - 0.03125) * 1.06667, 0.0, 1.0);
     }
     vec3 GetSunVector() {
-        const vec2 sunRotationData = vec2(cos(sunPathRotation * 0.01745329251994), -sin(sunPathRotation * 0.01745329251994));
         #ifdef OVERWORLD
-            float ang = fract(timeAngle - 0.25);
-            ang = (ang + (cos(ang * 3.14159265358979) * -0.5 + 0.5 - ang) / 3.0) * 6.28318530717959;
-            return normalize((gbufferModelView * vec4(vec3(-sin(ang), cos(ang) * sunRotationData) * 2000.0, 1.0)).xyz);
+            return sunPosition * inversesqrt(max(dot(sunPosition, sunPosition), 1e-8));
         #elif defined END
             vec3 bhDir = normalize(EVENT_HORIZON_DIRECTION);
             return normalize(mat3(gbufferModelView) * bhDir);

@@ -37,12 +37,12 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
         const float targetStep = 12.0;
         const int lightSamples = 1;
     #elif CLOUD_QUALITY == 2
-        const int maxSamples = 48;
-        const float targetStep = 8.0;
-        const int lightSamples = 2;
-    #else
         const int maxSamples = 64;
         const float targetStep = 6.0;
+        const int lightSamples = 2;
+    #else
+        const int maxSamples = 80;
+        const float targetStep = 4.0;
         const int lightSamples = 3;
     #endif
     int sampleCount = min(int(ceil(interval / targetStep)), maxSamples);

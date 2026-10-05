@@ -27,7 +27,7 @@ float sunVisibility2 = sunVisibility * sunVisibility;
 vec2 view = vec2(viewWidth, viewHeight);
 
 #ifdef OVERWORLD
-    vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
+    vec3 lightVec = shadowLightPosition * inversesqrt(max(dot(shadowLightPosition, shadowLightPosition), 1e-8));
 #else
     vec3 lightVec = sunVec;
 #endif
@@ -35,7 +35,7 @@ vec2 view = vec2(viewWidth, viewHeight);
 #ifdef LIGHTSHAFTS_ACTIVE
     float shadowTimeVar1 = abs(sunVisibility - 0.5) * 2.0;
     float shadowTimeVar2 = shadowTimeVar1 * shadowTimeVar1;
-    float shadowTime = shadowTimeVar2 * shadowTimeVar2;
+    float shadowTime = LUMINA_SHADOW_FADE(SdotU);
     float vlTime = min(abs(SdotU) - 0.05, 0.15) / 0.15;
 #endif
 

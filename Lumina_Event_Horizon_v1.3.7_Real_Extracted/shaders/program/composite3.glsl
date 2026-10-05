@@ -93,10 +93,26 @@
         return mix(low, SmoothBlurLevel(uv, level + 1, distance), fract(lod));
     }
 
+    #if WORLD_BLUR == 3
+    float CinematicFocusDistance() {
+    #if WB_DOF_FOCUS == 0
+        float focusDistance = AutofocusSceneDepth(vec2(0.5), centerDepthSmooth);
+    #elif WB_DOF_FOCUS > 0
+        float focusDistance = float(WB_DOF_FOCUS);
+    #else
+        float focusDistance = mix(1.0, 256.0, pow2(vsBrightness));
+    #endif
+        return max(focusDistance, 0.05);
+    }
+    #endif
+
     void DoSmoothCinematicBlur(inout vec3 color, float depth, float radius) {
         radius = clamp(radius, 0.0, 48.0);
         if (radius < 0.5) return;
         float sceneDistance = AutofocusSceneDepth(texCoord, depth);
+        #if WORLD_BLUR == 3
+            float focusDistance = CinematicFocusDistance();
+        #endif
         vec2 scale = vec2(1.0 / aspectRatio, 1.0) / 1080.0;
         #ifdef WB_ANAMORPHIC
             scale *= vec2(0.5, 1.5);
@@ -105,6 +121,9 @@
         // Overlapping prefiltered footprints suppress discrete copies of bright edges.
         // Physical pixel radius grows with resolution, including 4K rendering.
         float footprint = radius * (viewHeight / 1080.0) * 2.0 / sqrt(float(WB_AF_QUALITY));
+        #if WORLD_BLUR == 3
+            footprint *= 0.65; // Retain compact bokeh instead of a broad Gaussian haze.
+        #endif
         float maxLod = floor(log2(max(min(viewWidth, viewHeight), 1.0)));
         float lod = clamp(log2(max(footprint, 1.0)), 0.0, min(5.0, maxLod));
         // Near silhouettes, use the full-resolution source to avoid mipmap color leakage.
@@ -118,6 +137,15 @@
         float totalWeight = 0.0;
         for (int i = 0; i < WB_AF_QUALITY; i++) {
             float angle = float(i) * 2.39996323;
+            #if WORLD_BLUR == 3
+                // Spatial rotation removes fixed aperture copies; TAA resolves the
+                // bounded temporal rotation without changing focus or blur size.
+                float apertureRotation = fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)));
+                #ifdef TAA
+                    apertureRotation = fract(apertureRotation + float(frameCounter % 8) * 0.125);
+                #endif
+                angle += apertureRotation * 6.28318530718;
+            #endif
             float diskRadius = sqrt((float(i) + 0.5) / float(WB_AF_QUALITY));
             vec2 offset = vec2(cos(angle), sin(angle)) * diskRadius * radius * scale;
             vec2 uv = clamp(texCoord + offset, border, 1.0 - border);
@@ -126,8 +154,16 @@
             float sampleDistance = AutofocusSceneDepth(uv, sampleDepth);
             float tolerance = max(0.1, sceneDistance * 0.1);
             float visibility = smoothstep(sceneDistance - tolerance, sceneDistance - tolerance * 0.2, sampleDistance);
-            // Soft aperture edges reduce rings and repeated outlines; no noisy temporal jitter.
+            // Soft aperture edges reduce rings; cinematic mode uses bounded sample rotation.
             float weight = exp(-2.5 * diskRadius * diskRadius) * visibility;
+            #if WORLD_BLUR == 3
+                float sampleDefocus = max(sampleDistance - focusDistance - max(0.1, focusDistance * 0.05), 0.0)
+                                    / max(sampleDistance, 0.05);
+                float centerDefocus = max(sceneDistance - focusDistance - max(0.1, focusDistance * 0.05), 0.0)
+                                    / max(sceneDistance, 0.05);
+                float footprintCoverage = clamp(sampleDefocus / max(centerDefocus, 0.0001), 0.0, 1.0);
+                weight = (1.0 - smoothstep(0.85, 1.0, diskRadius)) * visibility * footprintCoverage;
+            #endif
             vec3 sampleColor = SmoothBlurColor(uv, lod, sceneDistance);
             #if defined WB_CHROMATIC && WORLD_BLUR != 3
                 vec2 fringe = offset * 0.035;
@@ -146,17 +182,12 @@
 #if WORLD_BLUR == 3
     void DoCinematicAutofocus(inout vec3 color, float depth) {
         float sceneDistance = AutofocusSceneDepth(texCoord, depth);
-        #if WB_DOF_FOCUS == 0
-            float focusDistance = AutofocusSceneDepth(vec2(0.5), centerDepthSmooth);
-        #elif WB_DOF_FOCUS > 0
-            float focusDistance = float(WB_DOF_FOCUS);
-        #else
-            float focusDistance = mix(1.0, 256.0, pow2(vsBrightness));
-        #endif
+        float focusDistance = CinematicFocusDistance();
         // Preserve the subject and foreground; blur only behind the focus plane.
         float focusBand = max(0.1, focusDistance * 0.05);
         float defocus = max(sceneDistance - focusDistance - focusBand, 0.0) / max(sceneDistance, 0.05);
-        float radius = min(24.0 * WB_AF_STRENGTH * defocus, 48.0);
+        float magnification = clamp(6.0 / max(focusDistance, 0.05), 0.30, 2.5);
+        float radius = min(18.0 * WB_AF_STRENGTH * defocus * magnification, 48.0);
         #ifdef WB_FOV_SCALED
             radius *= clamp(gbufferProjection[1][1] * 0.8, 0.25, 4.0);
         #endif

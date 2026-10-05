@@ -24,6 +24,8 @@ const bool colortex8Clear = true;
 const int noiseTextureResolution = 128;
 
 const bool shadowHardwareFiltering = true;
+// Smaller camera-grid updates retain stabilization with less visible stepping.
+const float shadowIntervalSize = 0.5;
 const float shadowDistanceRenderMul = 1.0;
 const float entityShadowDistanceMul = 0.125; // Iris feature
 

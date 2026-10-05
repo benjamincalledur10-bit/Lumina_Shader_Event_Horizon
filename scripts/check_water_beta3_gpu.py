@@ -228,11 +228,18 @@ vec3 ViewToPlayer(vec3 p){return p;}
 vec3 ScreenToView(vec3 p){vec4 v=gbufferProjectionInverse*vec4(p*2.-1.,1);return v.xyz/v.w;}
 void DoFog(inout vec4 col,inout float sky,float len,vec3 pos,float u,float s,float d,bool ref,float dist){}
 """
+REFLECTION_FIXTURE += """
+#define SHOOTING_STARS 1
+const mat4 gbufferModelViewInverse=mat4(1.0);
+const int worldDay=0;
+float timeAngle=0.25,sunVisibility=1.0,frameTimeCounter=0.0,maxBlindnessDarkness=0.0;
+""" + (root / "lib/atmospherics/meteors.glsl").read_text()
 reflection = (root / "lib/materials/materialMethods/reflections.glsl").read_text()
 reflection = re.sub(r"^\s*#include[^\n]*", "", reflection, flags=re.MULTILINE)
 background = (
     root / "lib/materials/materialMethods/reflectionBackground.glsl"
 ).read_text()
+background = re.sub(r"^\s*#include[^\n]*", "", background, flags=re.MULTILINE)
 g.glActiveTexture(0x84C3)
 depth_texture = c.c_uint()
 g.glGenTextures(1, c.byref(depth_texture))

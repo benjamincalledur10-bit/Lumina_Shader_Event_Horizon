@@ -1,3 +1,6 @@
+#ifdef OVERWORLD
+#include "/lib/atmospherics/meteors.glsl"
+#endif
 void AddBackgroundReflection(inout vec4 reflection, vec3 color, vec3 playerPos, vec3 normalM, vec3 normalMR, vec3 nViewPos, vec3 nViewPosR,
                              vec3 shadowMult, float RVdotU, float RVdotS, float z0, float dither, float skyLightFactor, float smoothness, float highlightMult) {
     #ifdef OVERWORLD
@@ -46,6 +49,7 @@ void AddBackgroundReflection(inout vec4 reflection, vec3 color, vec3 playerPos, 
                     
                     vec2 starCoord = GetStarCoord(nViewPosR, 0.5);
                     skyReflection += GetStars(starCoord, RVdotU, RVdotS);
+                    skyReflection += GetLuminaMeteors(nViewPosR);
 
                     #ifdef VL_CLOUDS_ACTIVE
                         vec3 worldNormalMR = normalize(mat3(gbufferModelViewInverse) * normalMR);

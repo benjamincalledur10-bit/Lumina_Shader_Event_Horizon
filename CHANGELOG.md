@@ -2,7 +2,12 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [Unreleased]
+## [1.4.0-beta.6] - 2026-10-05
+
+- Added occasional distant shooting stars and rarer atmospheric meteors as dry skies clear near midnight. Events follow deterministic world-space sky paths, with smooth appearance, motion and fade; larger meteors develop a green entry glow with a warm/white core. Rain and the horizon suppress visibility. Existing cloud compositing hides events behind clouds, and sky-effect water reflections use the same event clock and directions.
+- Added an independent Shooting Stars and Meteors option under Environment, enabled by default. Uses three bounded analytic event lanes in the existing sky passes; no geometry stages or extra textures. Events are visual only, with no terrain impacts or persistent objects. Actual FPS and Minecraft appearance still require in-game testing.
+- Added GPU regression checks for night/weather/horizon gating, seeded trajectories, green color, camera rotation invariance, fades and option disabling. Full-shader compilation covers independent static-star/nebula settings and reflected-sky paths.
+
 
 - Refined clear-weather aerial perspective with a height-integrated, world-distance haze curve shared by regular and Distant Horizons terrain. Wavelength-dependent extinction separates distant ridges while preserving mountain silhouettes; restrained daylight chroma recovery improves middle-distance terrain colors before fog. Rain and biome weather blend smoothly back to their existing fog response.
 

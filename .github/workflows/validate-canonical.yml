@@ -60,3 +60,4 @@ jobs:
           /usr/bin/python3 scripts/check_clouds_gpu.py
           /usr/bin/python3 scripts/check_beta5_render.py
           /usr/bin/python3 scripts/check_landscape_gpu.py
+          /usr/bin/python3 scripts/check_meteors_gpu.py

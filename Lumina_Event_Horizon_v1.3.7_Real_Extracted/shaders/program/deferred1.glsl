@@ -103,6 +103,10 @@ float GetLinearDepth(float depth) {
 #endif
 
 //Includes//
+#ifdef OVERWORLD
+    #include "/lib/atmospherics/meteors.glsl"
+#endif
+
 #include "/lib/util/spaceConversion.glsl"
 #include "/lib/util/dither.glsl"
 #include "/lib/atmospherics/fog/mainFog.glsl"
@@ -270,6 +274,7 @@ void main() {
         skyFade = 1.0;
 
         #ifdef OVERWORLD
+            color.rgb += GetLuminaMeteors(nViewPos);
             #if AURORA_STYLE > 0
                 auroraBorealis = GetAuroraBorealis(viewPos.xyz, VdotU, dither);
                 color.rgb += auroraBorealis;

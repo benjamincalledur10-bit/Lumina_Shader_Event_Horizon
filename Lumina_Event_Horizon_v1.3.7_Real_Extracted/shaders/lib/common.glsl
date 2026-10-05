@@ -11,6 +11,8 @@
 ---------------------------------------------------------------------*/
 
 //User Settings//
+    #define SHOOTING_STARS 1 //[0 1]
+
     #define SHADER_STYLE 4 //[4]
 
     #define RP_MODE 1 //[1 0 3 2]

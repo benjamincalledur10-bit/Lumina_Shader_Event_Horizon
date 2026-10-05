@@ -27,7 +27,9 @@ def check(dimension, stage, options, platform="mac"):
             # C preprocessing preserves decorative comments with backslashes;
             # remove comments before GLSL parsing (they do not affect shader code).
             compiled_source = re.sub(r"/\*.*?\*/|//[^\n]*", "", output, flags=re.S)
-            loader_constants = "#define DH_BLOCK_WATER 1\n"  # DH injects this enum during loading.
+            loader_constants = (
+                "#define DH_BLOCK_WATER 1\n"  # DH injects this enum during loading.
+            )
             f.write("#version " + version + "\n" + loader_constants + compiled_source)
             f.flush()
             result = subprocess.run([compiler, f.name], text=True, capture_output=True)
@@ -69,8 +71,26 @@ for profile, stage, dimension in itertools.product(
     ("world0", "world-1", "world1"),
 ):
     check(dimension, stage, water.profiles[profile])
+# Meteor visibility must not depend on static stars or nebula settings.
+for enabled, nebula, stage in itertools.product(
+    (0, 1),
+    (0, 1),
+    (
+        "deferred1.fsh",
+        "gbuffers_water.fsh",
+        "dh_water.fsh",
+        "gbuffers_skybasic.fsh",
+        "composite.fsh",
+    ),
+):
+    check(
+        "world0",
+        stage,
+        water.profiles["HIGH"]
+        | {"SHOOTING_STARS": enabled, "NIGHT_NEBULAE": nebula, "NIGHT_STAR_AMOUNT": 0},
+    )
 print(
-    f"Beta.5 shader variants passed: {count}; "
+    f"Shared shader variants passed: {count}; "
     + (
         "GLSL compilation included."
         if compiler

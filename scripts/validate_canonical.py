@@ -15,9 +15,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_ROOT = REPOSITORY_ROOT / "Lumina_Event_Horizon_v1.3.7_Real_Extracted"
 SHADER_ROOT = CANONICAL_ROOT / "shaders"
 SHADER_SUFFIXES = {".csh", ".fsh", ".glsl", ".vsh"}
-EXPECTED_SHADER_FILES = 380
-EXPECTED_INCLUDES = 723
-EXPECTED_PACKAGE_FILES = 400
+EXPECTED_SHADER_FILES = 381
+EXPECTED_INCLUDES = 725
+EXPECTED_PACKAGE_FILES = 401
 HISTORICAL_ROOTS = (
     "Lumina_1.3.3_Extracted/",
     "Lumina_Event_Horizon/",
@@ -344,10 +344,10 @@ def validate_compatibility(errors: list[str]) -> None:
         metadata = json.loads((SHADER_ROOT / "pack.json").read_text())
     except (OSError, UnicodeError, json.JSONDecodeError):
         return  # Already reported by validate_json.
-    if metadata.get("version") != "1.4.0-beta.5":
-        errors.append("canonical pack version must be exactly 1.4.0-beta.5")
+    if metadata.get("version") != "1.4.0-beta.6":
+        errors.append("canonical pack version must be exactly 1.4.0-beta.6")
     if metadata.get("description") != (
-        "Lumina Shader Event Horizon v1.4.0-beta.5 (compatible from 1.8 to 26.3)"
+        "Lumina Shader Event Horizon v1.4.0-beta.6 (compatible from 1.8 to 26.3)"
     ):
         errors.append("canonical compatibility description is out of date")
 

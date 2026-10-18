@@ -25,6 +25,10 @@ def preprocess(path, options, platform="mac"):
     ).stdout
 
 
+for name, settings in water.profiles.items():
+    expected = int(name in ("MEDIUM", "HIGH", "VERYHIGH", "ULTRA"))
+    assert int(settings["RAIN_PUDDLES"]) == expected, (name, settings)
+
 compiler = shutil.which("glslangValidator")
 if not compiler:
     raise SystemExit("glslangValidator is required for full GLSL validation.")

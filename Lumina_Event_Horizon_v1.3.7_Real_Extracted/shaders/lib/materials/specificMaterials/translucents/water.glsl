@@ -59,6 +59,7 @@
 
     // Reuse the existing bottom-depth sample for opacity and surface-wave scale.
     float waterDepthBlend = 1.0;
+    float waterShoreBlend = 0.0;
     #if WATER_MAT_QUALITY >= 2 || defined OVERWORLD
         float depthT = 1.0;
         vec3 viewPosT = viewPos;
@@ -81,6 +82,9 @@
                 vec3 waterWorldRay = mat3(gbufferModelViewInverse) * nViewPos;
                 float waterVerticalDepth = waterColumnLength * abs(waterWorldRay.y);
                 waterDepthBlend = depthT < 1.0 ? smoothstep(0.5, 10.0, waterVerticalDepth) : 1.0;
+                // Reuse bottom depth: no shoreline texture fetch or extra ray march.
+                waterShoreBlend = depthT < 1.0 ? (1.0 - smoothstep(0.20, 1.60, waterVerticalDepth))
+                                * smoothstep(0.0, 0.06, waterVerticalDepth) : 0.0;
             #endif
         }
     #endif
@@ -180,6 +184,16 @@
             #endif
 
             normalMap.xy *= 0.03 * lmCoordM.y + 0.01;
+            #ifdef OVERWORLD
+                if (waterShoreBlend > 0.0) {
+                    // Small crossing ripples fade into the broad water waves offshore.
+                    vec2 shorePhase = vec2(dot(worldPos.xz, vec2(1.7, 0.8)),
+                                           dot(worldPos.xz, vec2(-0.9, 1.4))) - rawWind * vec2(25.0, 19.0);
+                    vec2 shoreRipple = cos(shorePhase.x) * vec2(0.7, 0.3)
+                                     + cos(shorePhase.y) * vec2(-0.3, 0.6);
+                    normalMap.xy += shoreRipple * (0.008 * waterShoreBlend * smoothstep(0.8, 0.99, NdotU));
+                }
+            #endif
         #else
             float pNormalMult = 0.02 * rainFactor * inRainy * pow2(lmCoordM.y);
 
@@ -280,7 +294,7 @@
             ////
 
             // Water Foam //
-            #if WATER_FOAM_I > 0 && defined GBUFFERS_WATER
+            #if WATER_FOAM_I > 0 && (defined GBUFFERS_WATER || (defined DH_WATER && defined OVERWORLD))
                 if (NdotU > 0.99) {
                     vec3 matrixM = vec3(
                         gbufferModelViewInverse[0].y,
@@ -300,12 +314,23 @@
                     float foam = foamThreshold > 0.000001
                         ? pow2(clamp((foamThreshold + yPosDif) / max(foamThreshold, 0.000001), 0.0, 1.0))
                         : 0.0;
+                    #ifdef OVERWORLD
+                        float shoreFoam = 0.0;
+                        if (waterShoreBlend > 0.0) {
+                            float shorePulse = 0.5 + 0.5 * sin(dot(worldPos.xz, vec2(1.7, 0.8)) - rawWind * 25.0);
+                            shoreFoam = waterShoreBlend * (0.025 + 0.09 * shorePulse * shorePulse)
+                                            * smoothstep(0.04, 0.30, foamThreshold);
+                        }
+                        foam = depthT < 1.0 ? min(foam * 0.25 + shoreFoam, 0.24) : 0.0;
+                    #endif
                     #ifndef END
                         foam *= 0.4 + 0.25 * lmCoord.y;
                     #else
                         foam *= 0.6;
                     #endif
-                    foam *= clamp((fract(worldPos.y) - 0.7) * 10.0, 0.0, 1.0);
+                    #ifndef OVERWORLD
+                        foam *= clamp((fract(worldPos.y) - 0.7) * 10.0, 0.0, 1.0);
+                    #endif
 
                     vec4 foamColor = vec4(0.9, 0.95, 1.05, 1.0);
 

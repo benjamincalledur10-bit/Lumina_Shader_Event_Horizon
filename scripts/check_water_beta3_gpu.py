@@ -371,3 +371,89 @@ print(
     "GPU zero-biome-tint transmission passed: finite output instead of zero-vector normalization.",
     flush=True,
 )
+
+# Shore treatment shares the existing depth/foam budget and regular/DH behavior.
+g.glActiveTexture(0x84C2)
+g.glBindTexture(0x0DE1, input_texture)
+g.glTexImage2D(
+    0x0DE1, 0, 0x8814, 1, 1, 0, 0x1908, 0x1406, (c.c_float * 4)(0.5, 0.5, 0.5, 0.5)
+)
+shore_outputs = []
+for path in ("GBUFFERS_WATER", "DH_WATER"):
+    for quality in (2, 3):
+        for speed in (0.0, 1.1):
+            fixture = MATERIAL_FIXTURE.replace(
+                "#define WATER_SPEED_MULT 1.10", f"#define WATER_SPEED_MULT {speed}"
+            )
+            p = program(
+                f"#define OVERWORLD\n#define {path}\n#define WATER_STYLE 3\n#define WATER_MAT_QUALITY {quality}\n"
+                + fixture
+                + water
+                + "\nresult=vec4(waterShoreBlend,1.-reflectMult,normalM.x,normalM.z);}"
+            )
+            samplers(p, ("depthtex1", "dhDepthTex1", "gaux4", "noisetex"))
+            g.glUseProgram(p)
+            identity = (c.c_float * 16)(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+            g.glUniformMatrix4fv(
+                g.glGetUniformLocation(p, b"gbufferModelViewInverse"), 1, 0, identity
+            )
+            bands = []
+            for depth in (0.1, 0.3, 0.8, 1.6, 8.0):
+                a = draw(
+                    p,
+                    bottomViewPos=(0.0, -10.0 - depth, 0.0),
+                    frameTimeCounter=0,
+                    rainFactor=0,
+                    testViewZ=-10,
+                )
+                b = draw(
+                    p,
+                    bottomViewPos=(0.0, -10.0 - depth, 0.0),
+                    frameTimeCounter=10,
+                    rainFactor=0,
+                    testViewZ=-10,
+                )
+                assert all(math.isfinite(v) for v in (*a, *b)), (a, b)
+                assert 0 <= a[1] <= 0.24 and 0 <= b[1] <= 0.24, (a, b)
+                if speed == 0:
+                    assert max(abs(x - y) for x, y in zip(a, b)) < 1e-6, (a, b)
+                bands.append(a[0])
+            assert (
+                bands == sorted(bands, reverse=True)
+                and bands[0] > 0.9
+                and bands[-1] == 0
+            ), bands
+            near = draw(p, bottomViewPos=(0.0, -10.3, 0.0), frameTimeCounter=0)
+            far = draw(p, bottomViewPos=(0.0, -18.0, 0.0))
+            assert near[1] > 0 and far[1] == 0, (near, far)
+            integer(p, "isEyeInWater", 1)
+            submerged = draw(p, bottomViewPos=(0.0, -10.3, 0.0))
+            assert submerged[0] == 0, submerged
+            integer(p, "isEyeInWater", 0)
+            g.glActiveTexture(0x84C2)
+            g.glBindTexture(0x0DE1, input_texture)
+            g.glTexImage2D(
+                0x0DE1, 0, 0x8814, 1, 1, 0, 0x1908, 0x1406, (c.c_float * 4)(1, 1, 1, 1)
+            )
+            sky = draw(p, bottomViewPos=(0.0, -10.3, 0.0))
+            assert sky[0] == 0 and sky[1] == 0, sky
+            g.glTexImage2D(
+                0x0DE1,
+                0,
+                0x8814,
+                1,
+                1,
+                0,
+                0x1908,
+                0x1406,
+                (c.c_float * 4)(0.5, 0.5, 0.5, 0.5),
+            )
+            if speed == 1.1:
+                shore_outputs.append(near)
+assert (
+    max(abs(a - b) for a, b in zip(shore_outputs[0], shore_outputs[2])) < 1e-6
+), shore_outputs
+print(
+    "GPU shoreline: subtle bounded foam, depth fade, deep water unchanged, zero-speed freeze and regular/DH consistency.",
+    flush=True,
+)

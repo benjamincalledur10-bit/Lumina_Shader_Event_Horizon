@@ -81,7 +81,7 @@
     #define WATER_SIZE_MULT 100 //[25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300]
 
     #define SHADOW_SMOOTHING 4 //[1 2 3 4]
-    #define RAIN_PUDDLES 0 //[0 1 2 3 4]
+    #define RAIN_PUDDLES 1 //[0 1 2 3 4]
     #define SSAO_I 100 //[0 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300]
     #define VANILLAAO_I 100 //[0 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300]
 
@@ -488,6 +488,8 @@
         #define SHADOW_MAP_RES 4096
     #endif
     const int shadowMapResolution = SHADOW_MAP_RES;
+    // Continuous shadow rotation follows the loader solar camera.
+    const float shadowIntervalSize = 0.0;
 
     #if SSAO_I > 0
         #define SSAO_QUALI SSAO_QUALI_DEFINE

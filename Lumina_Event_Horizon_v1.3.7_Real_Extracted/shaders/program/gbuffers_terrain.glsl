@@ -26,7 +26,7 @@ in vec3 vertexPos;
 
 in vec4 glColorRaw;
 
-#if RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
+#if defined OVERWORLD && RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
     flat in vec3 binormal, tangent;
 #endif
 
@@ -68,12 +68,12 @@ float shadowTime = shadowTimeVar2 * shadowTimeVar2;
 vec4 glColor = glColorRaw;
 
 #ifdef OVERWORLD
-    vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
+    vec3 lightVec = LuminaShadowLight(sunVec);
 #else
     vec3 lightVec = sunVec;
 #endif
 
-#if RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
+#if defined OVERWORLD && RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
     mat3 tbnMatrix = mat3(
         tangent.x, binormal.x, normal.x,
         tangent.y, binormal.y, normal.y,
@@ -286,7 +286,7 @@ void main() {
                      playerPos, lmCoord, snowFactor, snowMinNdotU, NdotU, subsurfaceMode);
     #endif
 
-    #if RAIN_PUDDLES >= 1
+    #if defined OVERWORLD && RAIN_PUDDLES >= 1
         float puddleLightFactor = max0(lmCoord.y * 32.0 - 31.0) * clamp((1.0 - 1.15 * lmCoord.x) * 10.0, 0.0, 1.0);
         float puddleNormalFactor = pow2(max0(NdotUmax0 - 0.5) * 2.0);
         float puddleMixer = puddleLightFactor * inRainy * puddleNormalFactor;
@@ -299,10 +299,10 @@ void main() {
             vec3 voxelPos = SceneToPuddleVoxel(playerPos);
             vec3 voxel_sample_pos = clamp01(voxelPos / vec3(puddle_voxelVolumeSize));
             if (CheckInsidePuddleVoxelVolume(voxelPos)) {
-                noPuddles += texture2D(puddle_sampler, voxel_sample_pos.xz).r;
+                noPuddles += float(texture(puddle_sampler, voxel_sample_pos.xz).r);
             }
         #endif
-        if (pow2(pow2(wetnessM)) * puddleMixer - noPuddles > 0.00001) {
+        if (smoothstep(0.05, 0.80, wetnessM) * puddleMixer - noPuddles > 0.00001) {
             vec2 worldPosXZ = playerPos.xz + cameraPosition.xz;
             vec2 puddleWind = vec2(frameTimeCounter) * 0.03;
             #if WATER_STYLE == 1
@@ -318,7 +318,13 @@ void main() {
             vec3 pNormalNoise2 = texture2DLod(noisetex, pNormalCoord2, 0.0).rgb;
             float pNormalMult = 0.03;
 
-            vec3 puddleNormal = vec3((pNormalNoise1.xy + pNormalNoise2.xy - vec2(1.0)) * pNormalMult, 1.0);
+            vec2 ripple = vec2(0.0);
+            #if DETAIL_QUALITY >= 2
+                float rippleDistance = 1.0 - smoothstep(12.0, 32.0, lViewPos);
+                if (rainFactor > 0.001 && rippleDistance > 0.001)
+                    ripple = LuminaRainRipple(worldPosXZ, frameTimeCounter) * rainFactor * rippleDistance;
+            #endif
+            vec3 puddleNormal = vec3((pNormalNoise1.xy + pNormalNoise2.xy - vec2(1.0)) * pNormalMult + ripple, 1.0);
             puddleNormal = clamp(normalize(puddleNormal * tbnMatrix), vec3(-1.0), vec3(1.0));
 
             #if RAIN_PUDDLES == 1 || RAIN_PUDDLES == 3
@@ -327,18 +333,20 @@ void main() {
                       pFormNoise += texture2DLod(noisetex, puddlePosForm * 0.5, 0.0).b  * 5.0;
                       pFormNoise += texture2DLod(noisetex, puddlePosForm * 0.25, 0.0).b * 8.0;
                       pFormNoise *= sqrt1(wetnessM) * 0.5625 + 0.4375;
-                      pFormNoise  = clamp(pFormNoise - 7.0, 0.0, 1.0);
+                      pFormNoise  = clamp(pFormNoise - 6.5, 0.0, 1.0);
             #else
                 float pFormNoise = wetnessM;
             #endif
-            puddleMixer *= pFormNoise;
+            puddleMixer *= pFormNoise * smoothstep(0.05, 0.80, wetnessM);
+            puddleMixer = clamp(puddleMixer, 0.0, 1.0);
+            color.rgb *= 1.0 - 0.12 * puddleMixer;
 
-            float puddleSmoothnessG = 0.7 - rainFactor * 0.3;
+            float puddleSmoothnessG = 0.86 - rainFactor * 0.08;
             float puddleHighlight = (1.5 - subsurfaceMode * 0.6 * invNoonFactor);
             smoothnessG = mix(smoothnessG, puddleSmoothnessG, puddleMixer);
             highlightMult = mix(highlightMult, puddleHighlight, puddleMixer);
             smoothnessD = mix(smoothnessD, 1.0, sqrt1(puddleMixer));
-            normalM = mix(normalM, puddleNormal, puddleMixer * rainFactor);
+            normalM = normalize(mix(normalM, puddleNormal, puddleMixer));
         }
     #endif
 
@@ -398,7 +406,7 @@ out vec3 vertexPos;
 
 out vec4 glColorRaw;
 
-#if RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
+#if defined OVERWORLD && RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
     flat out vec3 binormal, tangent;
 #endif
 
@@ -420,7 +428,7 @@ out vec4 glColorRaw;
 attribute vec4 mc_Entity;
 attribute vec4 mc_midTexCoord;
 
-#if RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
+#if defined OVERWORLD && RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
     attribute vec4 at_tangent;
 #endif
 
@@ -481,7 +489,7 @@ void main() {
         gl_Position.xy = TAAJitter(gl_Position.xy, gl_Position.w);
     #endif
 
-    #if RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
+    #if defined OVERWORLD && RAIN_PUDDLES >= 1 || defined GENERATED_NORMALS || defined CUSTOM_PBR
         binormal = normalize(gl_NormalMatrix * cross(at_tangent.xyz, gl_Normal.xyz) * at_tangent.w);
         tangent  = normalize(gl_NormalMatrix * at_tangent.xyz);
     #endif

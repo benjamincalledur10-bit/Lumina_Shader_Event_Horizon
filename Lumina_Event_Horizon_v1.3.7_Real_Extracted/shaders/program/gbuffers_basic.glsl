@@ -29,7 +29,7 @@ float shadowTimeVar2 = shadowTimeVar1 * shadowTimeVar1;
 float shadowTime = shadowTimeVar2 * shadowTimeVar2;
 
 #ifdef OVERWORLD
-    vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
+    vec3 lightVec = LuminaShadowLight(sunVec);
 #else
     vec3 lightVec = sunVec;
 #endif

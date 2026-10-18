@@ -2,6 +2,14 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [Unreleased]
+
+- Use the shadow camera's world light axis consistently for Overworld directional shading and reflected highlights, and request continuous shadow rotation (`shadowIntervalSize = 0.0`). Preserve existing solar color timing and palettes; actual dawn/dusk movement still requires Minecraft validation.
+- Reshape rain opacity into narrow animated streaks while retaining the original precipitation texture mask and snow branch. Existing rain opacity and waving controls remain available.
+- Enable patchy rain puddles by default. Outdoor, upward-facing terrain in rainy biomes accumulates reflective wet patches using the loader's wetness history, retains them while drying and darkens slightly when soaked. Existing puddle modes and material exclusions remain available. Medium and higher detail add nearby analytical impact rings, with no extra texture samples; Potato skips rings. This is visual surface water, not raised water geometry, fluid simulation or newly spawned particle entities.
+- Fixed the existing integer puddle-mask sampler lookup in the custom-image Iris path, which failed GLSL compilation when puddles were enabled.
+- Added native OpenGL checks for shadow-axis alignment, precipitation masks and wetness accumulation, plus full GLSL variant compilation. Frame-time impact and Minecraft artistic/integration checks remain pending; enabling puddles adds the existing terrain noise and reflection work while wet.
+
 ## [1.4.0-beta.3] - 2026-10-04
 
 - Upgraded Overworld water coloration with a restrained cool tint, reduced saturation, clearer shallows, and stronger wavelength-dependent absorption at depth. Potato now uses bottom depth for absorption, transparency, and wave scaling; biome and custom-color controls remain active. Depth does not explicitly classify river/ocean biomes.

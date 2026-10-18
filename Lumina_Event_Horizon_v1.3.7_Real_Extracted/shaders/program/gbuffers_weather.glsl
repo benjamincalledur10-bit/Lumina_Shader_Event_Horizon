@@ -32,6 +32,19 @@ float sunVisibility2 = sunVisibility * sunVisibility;
     #include "/lib/misc/colorCodedPrograms.glsl"
 #endif
 
+// Rain streaks retain the loader texture mask, so snow/resource-pack shapes survive.
+float LuminaRainStreak(vec2 uv, float clock) {
+    vec2 q = uv * vec2(24.0, 12.0);
+    float column = floor(q.x);
+    float seed = fract(sin(column * 127.1) * 43758.5453);
+    float x = abs(fract(q.x) - 0.5);
+    float y = fract(q.y + clock * 5.0 + seed);
+    float aa = max(fwidth(q.x), 0.025);
+    float core = 1.0 - smoothstep(0.08, 0.16 + aa, x);
+    float tail = smoothstep(0.05, 0.20, y) * (1.0 - smoothstep(0.45, 0.95, y));
+    return core * tail;
+}
+
 //Program//
 void main() {
     vec4 color = texture2D(tex, texCoord);
@@ -39,7 +52,11 @@ void main() {
 
     if (color.a < 0.1 || isEyeInWater == 3) discard;
 
-    if (color.r + color.g < 1.5) color.a *= rainTexOpacity;
+    if (color.r + color.g < 1.5) {
+        float streak = LuminaRainStreak(texCoord, frameTimeCounter);
+        color.a *= rainTexOpacity * mix(0.22, 1.35, streak);
+        color.rgb = mix(color.rgb, vec3(dot(color.rgb, vec3(0.299, 0.587, 0.114))), 0.35);
+    }
     else color.a *= snowTexOpacity;
 
     color.rgb = sqrt3(color.rgb) * (blocklightCol * 2.0 * lmCoord.x + (ambientColor + 0.2 * lightColor) * lmCoord.y * (0.6 + 0.3 * sunFactor));

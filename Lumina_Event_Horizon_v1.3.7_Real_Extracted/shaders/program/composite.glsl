@@ -29,7 +29,7 @@ vec3 upVec = normalize(gbufferModelView[1].xyz);
 vec3 eastVec = normalize(gbufferModelView[0].xyz);
 vec3 northVec = normalize(gbufferModelView[2].xyz);
 #ifdef OVERWORLD
-    vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
+    vec3 lightVec = LuminaShadowLight(sunVec);
 #elif defined END
     vec3 lightVec = sunVec;
 #else

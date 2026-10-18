@@ -10,7 +10,7 @@ h = runpy.run_path(str(Path(__file__).with_name("check_render_polish_gpu.py")))
 g, program, draw, root = (h[k] for k in ("g", "program", "draw", "root"))
 common = (root / "lib/util/commonFunctions.glsl").read_text()
 helpers = common[
-    common.index("vec3 LuminaShadowLight") : common.index("float GetLuminance")
+    common.index("// Use the same light axis") : common.index("float GetLuminance")
 ]
 weather = (root / "program/gbuffers_weather.glsl").read_text()
 streak = weather[weather.index("float LuminaRainStreak") : weather.index("//Program//")]
@@ -23,7 +23,9 @@ uniform float timeAngle,clock;
 out vec4 result;
 """
 p = program(
-    fixture + helpers + "void main(){result=vec4(LuminaShadowLight(vec3(1,0,0)),1);}"
+    fixture + helpers + "vec3 linkedLight = LuminaShadowLight(vec3(1,0,0));"
+    "float linkedDot = dot(linkedLight,vec3(0,1,0));"
+    "void main(){result=vec4(linkedLight,linkedDot);}"
 )
 g.glUniformMatrix4fv.argtypes = [c.c_int, c.c_int, c.c_ubyte, c.POINTER(c.c_float)]
 

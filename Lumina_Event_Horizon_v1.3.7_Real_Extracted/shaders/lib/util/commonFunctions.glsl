@@ -28,13 +28,13 @@
 #endif
 
 // Use the same light axis as the shadow map, without changing sky color timing.
-vec3 LuminaShadowLight(vec3 fallbackSun) {
-    #if defined OVERWORLD && SHADOW_QUALITY >= 0
-        return normalize(mat3(gbufferModelView) * shadowModelViewInverse[2].xyz);
-    #else
-        return fallbackSun * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
-    #endif
-}
+// Keep uniform reads inline: Apple OpenGL crashes when a user function reads
+// these uniforms through a global initializer (glpLLVMGetFunctionGlobalVariableUse).
+#if defined OVERWORLD && SHADOW_QUALITY >= 0
+    #define LuminaShadowLight(fallbackSun) normalize(mat3(gbufferModelView) * shadowModelViewInverse[2].xyz)
+#else
+    #define LuminaShadowLight(fallbackSun) ((fallbackSun) * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0))
+#endif
 
 // One bounded analytical impact per world-space cell; no texture reads or loops.
 vec2 LuminaRainRipple(vec2 worldXZ, float clock) {

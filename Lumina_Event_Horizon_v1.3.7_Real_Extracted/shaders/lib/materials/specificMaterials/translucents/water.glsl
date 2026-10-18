@@ -210,6 +210,18 @@
                 normalMap.xy *= 2.0 - 1.8 * fresnel2;
         #endif
 
+            #if defined OVERWORLD && WATER_MAT_QUALITY >= 2 && DETAIL_QUALITY >= 2 && SHADOW_QUALITY >= 1
+                // Rain impacts use the existing puddle ripple field; no texture reads.
+                // Limit them to nearby, upward-facing water in rainy, sky-lit biomes.
+                vec2 impactFootprint = fwidth(worldPos.xz * 1.5);
+                float impactFilter = 1.0 - smoothstep(0.015, 0.07, max(impactFootprint.x, impactFootprint.y));
+                float impactMask = rainFactor * inRainy * smoothstep(0.90, 0.98, lmCoord.y)
+                                 * smoothstep(0.8, 0.99, NdotU) * (1.0 - smoothstep(8.0, 24.0, lViewPos))
+                                 * impactFilter;
+                if (isEyeInWater != 1 && impactMask > 0.001)
+                    normalMap.xy += LuminaRainRipple(worldPos.xz, frameTimeCounter) * impactMask * 0.65;
+            #endif
+
             // Bound user-selected wave strengths without letting the tangent normal collapse.
             #ifdef OVERWORLD
                 normalMap.xy *= inversesqrt(max(dot(normalMap.xy, normalMap.xy) / 0.64, 1.0));

@@ -38,6 +38,8 @@ MATERIAL_FIXTURE = r"""
 #define texture2D texture
 #define texture2DLod textureLod
 #define MC_VERSION 11300
+#define DETAIL_QUALITY 2
+#define SHADOW_QUALITY 1
 #define WATERCOLOR_MODE 3
 #define WATER_SPEED_MULT 1.10
 #define WATER_SIZE_MULT 100
@@ -56,7 +58,7 @@ uniform sampler2D depthtex1,dhDepthTex1,gaux4,noisetex;
 uniform mat4 gbufferModelViewInverse;
 uniform vec3 cameraPosition,bottomViewPos;
 uniform vec4 glColor;
-uniform float frameTimeCounter,rainFactor;
+uniform float frameTimeCounter,rainFactor,inRainy;
 uniform int isEyeInWater;
 float pow2(float x){return x*x;}
 vec3 pow2(vec3 x){return x*x;}
@@ -83,6 +85,14 @@ float lViewPos=length(viewPos),far=256;
 ivec2 texelCoord=ivec2(0);
 mat3 tbnMatrix=mat3(1,0,0,0,0,1,0,1,0);
 """
+
+common_functions = (root / "lib/util/commonFunctions.glsl").read_text()
+ripple_function = common_functions[
+    common_functions.index("vec2 LuminaRainRipple") : common_functions.index(
+        "float GetLuminance"
+    )
+]
+MATERIAL_FIXTURE = ripple_function + MATERIAL_FIXTURE
 
 for dimension in ("OVERWORLD", "NETHER", "END"):
     for path in ("GBUFFERS_WATER", "DH_WATER"):
@@ -455,5 +465,81 @@ assert (
 ), shore_outputs
 print(
     "GPU shoreline: subtle bounded foam, depth fade, deep water unchanged, zero-speed freeze and regular/DH consistency.",
+    flush=True,
+)
+
+# Compare actual water normals with rain exposure enabled/disabled. This isolates
+# impacts from the existing wind/rain swell response and reflection calculation.
+impact_fixture = (
+    MATERIAL_FIXTURE.replace(
+        "uniform float testViewZ;",
+        "uniform float testViewZ,testDistance,testSky,testUp;",
+    )
+    .replace(
+        "float lViewPos=length(viewPos),far=256;",
+        "float lViewPos=testDistance,far=256;",
+    )
+    .replace("lmCoord=vec2(.5,1)", "lmCoord=vec2(.5,testSky)")
+    .replace("NdotU=1,NdotUmax0=1", "NdotU=testUp,NdotUmax0=testUp")
+)
+for path in ("GBUFFERS_WATER", "DH_WATER"):
+    for quality, detail, shadow in ((1, 0, -1), (2, 2, 0), (2, 2, 1), (3, 3, 3)):
+        fixture = impact_fixture.replace(
+            "#define DETAIL_QUALITY 2", f"#define DETAIL_QUALITY {detail}"
+        ).replace("#define SHADOW_QUALITY 1", f"#define SHADOW_QUALITY {shadow}")
+        p = program(
+            f"#define OVERWORLD\n#define {path}\n#define WATER_STYLE 3\n#define WATER_MAT_QUALITY {quality}\n"
+            + fixture
+            + water
+            + "\nresult=vec4(normalM,1);}"
+        )
+        samplers(p, ("depthtex1", "dhDepthTex1", "gaux4", "noisetex"))
+        g.glUseProgram(p)
+        g.glUniformMatrix4fv(
+            g.glGetUniformLocation(p, b"gbufferModelViewInverse"),
+            1,
+            0,
+            (c.c_float * 16)(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1),
+        )
+        base = dict(
+            bottomViewPos=(0.0, -14.0, 0.0),
+            cameraPosition=(0.25, 0.0, 0.3),
+            frameTimeCounter=0.2,
+            rainFactor=1,
+            testViewZ=-10,
+            testDistance=10,
+            testSky=1,
+            testUp=1,
+        )
+
+        def impact_difference(**options):
+            args = base | options
+            a = draw(p, inRainy=0, **args)
+            b = draw(p, inRainy=1, **args)
+            assert all(math.isfinite(x) for x in (*a, *b))
+            assert abs(sum(x * x for x in b[:3]) - 1) < 1e-5, b
+            return max(abs(a - b) for a, b in zip(a, b))
+
+        near = impact_difference()
+        active = quality >= 2 and detail >= 2 and shadow >= 1
+        assert near > 1e-4 if active else near == 0, (path, quality, near)
+        for params in (
+            {"rainFactor": 0},
+            {"testDistance": 24},
+            {"testDistance": 64},
+            {"testSky": 0.8},
+            {"testUp": 0},
+        ):
+            assert impact_difference(**params) == 0, (path, quality, params)
+        integer(p, "isEyeInWater", 1)
+        assert impact_difference() == 0
+        integer(p, "isEyeInWater", 0)
+        if active:
+            # Impacts animate independently of the existing wind motion.
+            assert abs(near - impact_difference(frameTimeCounter=0.4)) > 1e-4
+            mid = impact_difference(testDistance=20)
+            assert 0 < mid < near, (near, mid)
+print(
+    "GPU water impacts: Medium+ only, animated nearby rings, smooth distance fade; dry/sheltered/vertical/underwater masks and regular/DH paths passed.",
     flush=True,
 )

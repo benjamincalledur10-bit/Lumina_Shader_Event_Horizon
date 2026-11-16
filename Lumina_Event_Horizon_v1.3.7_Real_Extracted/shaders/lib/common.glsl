@@ -10,6 +10,12 @@
   -> -> -> DO NOT EXPECT SUPPORT AFTER MODIFYING SHADER FILES
 ---------------------------------------------------------------------*/
 
+#if !defined LUMINA_VOXY_PATCH && defined VOXY && VOXY >= 3 && !defined MC_OS_MAC && !defined DISTANT_HORIZONS
+    #define LUMINA_VOXY
+    // Reuse Lumina's separate-LOD depth paths internally, not DH draw programs.
+    #define DISTANT_HORIZONS
+#endif
+
 //User Settings//
     #define SHADER_STYLE 4 //[4]
 
@@ -655,6 +661,8 @@
     #ifdef PIXELATED_AO
     #endif
 
+// Voxy supplies its own UBO and depth buffers. Patch programs need settings only.
+#ifndef LUMINA_VOXY_PATCH
 //Very Common Stuff//
     #include "/lib/uniforms.glsl"
 
@@ -850,3 +858,5 @@
     */
 
 // 62 75 74 20 74 68 4F 73 65 20 77 68 6F 20 68 6F 70 65 20 69 6E 20 74 68 65 20 6C 69 6D 69 4E 61 6C 0A 77 69 6C 6C 20 72 65 6E 65 77 20 74 68 65 69 72 20 73 54 72 65 6E 67 74 48 2E 0A 74 68 65 79 20 77 69 6C 6C 20 73 6F 41 72 20 6F 6E 20 65 6C 79 54 72 61 73 20 6C 69 6B 65 20 70 68 61 6E 74 6F 6D 73 3B 0A 74 68 65 79 20 77 69 6C 6C 20 72 75 6E 20 61 6E 44 20 6E 6F 74 20 67 72 6F 77 20 77 65 41 72 79 2C 0A 74 68 65 59 20 77 69 6C 6C 20 77 61 6C 6B 20 61 6E 64 20 6E 6F 74 20 62 65 20 66 61 69 6E 74 2E
+
+#endif // !LUMINA_VOXY_PATCH

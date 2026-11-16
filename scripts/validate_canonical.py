@@ -15,9 +15,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_ROOT = REPOSITORY_ROOT / "Lumina_Event_Horizon_v1.3.7_Real_Extracted"
 SHADER_ROOT = CANONICAL_ROOT / "shaders"
 SHADER_SUFFIXES = {".csh", ".fsh", ".glsl", ".vsh"}
-EXPECTED_SHADER_FILES = 379
-EXPECTED_INCLUDES = 721
-EXPECTED_PACKAGE_FILES = 399
+EXPECTED_SHADER_FILES = 389
+EXPECTED_INCLUDES = 738
+EXPECTED_PACKAGE_FILES = 412
 HISTORICAL_ROOTS = (
     "Lumina_1.3.3_Extracted/",
     "Lumina_Event_Horizon/",
@@ -110,8 +110,14 @@ def validate_includes(files: list[Path], errors: list[str]) -> None:
 def validate_json(errors: list[str]) -> None:
     for path in sorted(CANONICAL_ROOT.rglob("*.json")):
         try:
-            json.loads(path.read_text(encoding="utf-8-sig"))
-        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            text = path.read_text(encoding="utf-8-sig")
+            if path.name == "voxy.json":
+                guard = "#if defined VOXY && VOXY >= 3 && !defined MC_OS_MAC && !defined DISTANT_HORIZONS\n"
+                if not text.startswith(guard) or not text.endswith("\n#endif\n"):
+                    raise ValueError("invalid Voxy platform/API/exclusive-LOD guard")
+                text = text[len(guard):-len("\n#endif\n")]
+            json.loads(text)
+        except (OSError, UnicodeError, ValueError) as exc:
             errors.append(f"{relative(path)}: invalid JSON: {exc}")
 
 

@@ -4,6 +4,10 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Added experimental Voxy patch-schema-1 / VOXY-macro-3 adapters in the three standard dimensions: atlas/tint and face/lightmap decoding, shared day/night/rain palettes, basic directional/block lighting, emission IDs, translucent blocks and simplified sky-reflecting water. Near terrain keeps its existing rendering path.
+- Reused separate LOD depth consumers through Voxy sampler/projection aliases, including chunk-to-block render-distance conversion, preserving Iris's recognized sampler names for reverse-depth handling. Excluded LODs from vanilla depth; matched Lumina's TAA offsets. Native macOS, absent/older Voxy APIs and simultaneous DH leave Voxy descriptors inactive. Added no extra full-screen depth textures.
+- Added Voxy descriptor/UBO/output/TAA contract checks, injected-patch and consumer GLSL compilation, isolated GPU checks and a rendering-mod compatibility review. Actual Voxy/Iris runtime, full distant-material/shadow/reflection parity and Windows/Linux FPS remain unverified; see docs/VOXY.md before testing.
+
 - Added nearby rain-impact rings to Overworld water in Medium and higher profiles, reusing the existing analytical puddle ripple field without new texture samples or reflection steps. Impacts follow rain strength, rainy-biome and skylight masks, fade between 8 and 24 blocks and filter unresolved detail. They are suppressed underwater, on vertical faces, in dry/snowy biomes and in lower profiles; regular/DH water share the calculation. Skylight is an exposure approximation, not exact roof collision. Minecraft appearance and FPS still need in-game validation.
 
 - Added a depth-faded shoreline transition with subtle animated foam and small crossing ripples, reusing the existing bottom depth and foam noise. No additional texture samples or reflection march steps. Valid-bottom, horizontal-surface and above-water guards keep the effect off sky depth, underwater views and waterfalls; water speed zero freezes shoreline animation. The Overworld DH water path shares the foam treatment.

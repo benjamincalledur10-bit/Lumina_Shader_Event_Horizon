@@ -137,3 +137,10 @@ Lumina Shader: Event Horizon is a Modified Pack distributed under the
 also included inside every downloadable shader ZIP, as required by the original
 pack's terms. Review it before redistributing, including the shader in a
 modpack, or creating another modified pack.
+
+### Experimental Voxy support
+
+The development branch includes an experimental Windows/Linux Voxy adapter for
+terrain and simplified distant water. Minecraft runtime validation is pending.
+See [Voxy requirements and limits](docs/VOXY.md) and the
+[rendering-mod compatibility review](docs/MOD_COMPATIBILITY.md).

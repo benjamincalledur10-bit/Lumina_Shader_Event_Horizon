@@ -22,7 +22,7 @@ Use one of the official distribution pages:
 - [Modrinth](https://modrinth.com/shader/lumina-shader-event-horizon)
 - [CurseForge](https://www.curseforge.com/minecraft/shaders/lumina-shaders-event-horizon)
 
-The current stable release is **v1.3.9**, targeting Minecraft **1.8 through 26.3**.
+The current stable release is **v1.4.0**, targeting Minecraft **1.8 through 26.3**.
 Keep downloaded `.zip` files compressed when installing them.
 
 ## Highlights
@@ -64,7 +64,7 @@ render distance, selected profile, resource packs, and GPU.
 
 1. Install [Iris](https://www.irisshaders.dev/) or a compatible OptiFine
    version.
-2. Download `Lumina_Event_Horizon_v1.3.9.zip` from an official source above.
+2. Download `Lumina_Event_Horizon.v1.4.0.zip` from an official source above.
 3. Open Minecraft and go to **Options > Video Settings > Shader Packs**.
 4. Open the shader-pack folder and place the downloaded ZIP inside it. Do not
    extract the archive.
@@ -101,12 +101,12 @@ Visual verification in Minecraft is still pending.
 
 ## Development
 
-The development preview is **v1.4.0-beta.3**, with upgraded water color,
-depth response, directional waves, and reflection handling across quality levels.
-Minecraft visual and performance testing remains pending.
+**v1.4.0 — Worlds in Motion** includes the water, rain, shoreline and lighting
+changes documented in [CHANGELOG.md](CHANGELOG.md). Voxy remains experimental;
+its Windows/Linux runtime validation and broader frame-time testing are pending.
 
-
-- `main` contains the current stable, published state.
+- Published versions are pinned by release tags; `main` remains the baseline
+  until a separate development-branch merge is approved.
 - `luminahorizondev` is used for development and validation before a release.
 - The canonical source is `Lumina_Event_Horizon_v1.3.7_Real_Extracted/`; its
   historical directory name does not indicate the current pack version.

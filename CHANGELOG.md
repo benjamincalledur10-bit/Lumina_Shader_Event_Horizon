@@ -2,7 +2,58 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
-## [Unreleased]
+## [1.4.0] - 2026-11-16
+
+# 🌌 Lumina Event Horizon v1.4.0 — Worlds in Motion
+
+Rain sends ripples across rivers, sunlight warms the Overworld, and the End shines with a deeper cosmic sky. This update reworks water and weather, adds more control over the End’s signature effects, and introduces experimental Voxy support. ✨
+
+## 🕳️ A More Expressive End
+
+- **Black Hole Radial Rays** now have their own toggle and intensity slider, so you can soften or disable the rays while keeping the black hole and its accretion disk visible.
+- Rebalanced the highlights of the black hole and white hole.
+- Added two layers of End stars with varied sizes, brightness, and colors.
+- Refined the End’s lighting with a blue and violet palette.
+
+## 🌅 Lighting, Atmosphere & Bloom
+
+- Warmed direct sunlight and cooled ambient light in the Overworld.
+- Refined the Nether’s red and amber tones while preserving the character of each biome.
+- Smoothed transitions between dawn, daylight, dusk, night, and rain.
+- Preserved more detail in brightly lit clouds.
+- Added **Selective Bloom** with an adjustable highlight threshold and tighter halos. Small lights retain their glow and color.
+- Aligned directional lighting with the shadow camera and enabled continuous shadow rotation while preserving the existing palettes.
+
+## 🌊 Water, Rain & Shorelines
+
+- Water color, light absorption, and transparency now respond to depth, keeping shallows clearer and deep water richer in color.
+- Added directional swells and waves at several scales, with more surface activity during rain.
+- Improved water reflections based on viewing angle and quality settings.
+- Added subtle shoreline foam and crossing ripples that fade into deeper water.
+- Rain now falls in finer, animated streaks. Reflective puddles build up during rainfall, catch light, ripple from impacts, and dry gradually. **Rain Puddles** are enabled by default on **Medium and higher**.
+- Added a separate **Rain Impacts** toggle for ripples on water. Their visibility fades between **8 and 24 blocks**, and the effect is enabled by default on **Medium and higher**.
+
+## 🗺️ Experimental Voxy Support
+
+- Added an experimental integration for **Windows and Linux**, covering distant terrain in the **Overworld, Nether, and End**, with lighting, depth, fog, temporal anti-aliasing, and simplified distant water.
+- Corrected Voxy lighting in the End and on profiles with shadows disabled.
+
+**Voxy still needs in-game testing on Windows and Linux.** Distant water and materials use simplified rendering and do not yet match the quality of nearby terrain.
+
+## 🛠️ Fixes, Performance & Validation
+
+- Fixed Apple OpenGL linker crashes related to the Nether palette and shadow lighting.
+- Guarded against undefined divisions in foam and other edge cases in water calculations.
+- Fixed underwater reflections with **Distant Horizons** and puddle sampling with **Iris custom images**.
+- Reused existing calculations, scaled rendering work by quality profile, and limited nearby effects by distance.
+- Added OpenGL tests, GLSL compilation checks, package validation, and automated checks in GitHub Actions. Expanded coverage for water normals, transparency, depth, animation, and extreme settings.
+- Updated the documentation with compatibility details and known limitations.
+
+The rebuilt clouds, daily sky clearing, meteors, and additional **High** reflection mode from the withdrawn beta.4–beta.6 builds are not included.
+
+🐛 **Report bugs or share feedback:** [https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/issues](https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/issues)
+
+### Technical development notes
 
 - Added Water → Rain Impacts as an independent on/off control for nearby water impact rings. Medium and higher profiles default to on; lower profiles default to off. Disabling removes the impact filtering/mask/ripple calculations at preprocessing time, while preserving terrain puddles, wind waves and shoreline foam. Distant Voxy water keeps its existing simplified treatment. Real Minecraft FPS comparisons remain pending.
 

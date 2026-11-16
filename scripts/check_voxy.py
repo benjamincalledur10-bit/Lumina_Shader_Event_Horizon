@@ -260,11 +260,11 @@ if args.gpu:
             raise AssertionError(message.value.decode())
         return p
 
-    for dimension, kind in itertools.product(
-        ("world0", "world-1", "world1"), ("opaque", "translucent")
+    for dimension, kind, profile in itertools.product(
+        ("world0", "world-1", "world1"), ("opaque", "translucent"), ("POTATO", "HIGH")
     ):
         src = patch(
-            dimension, kind, water.profiles["HIGH"] | {"FXAA_DEFINE": -1}, ubo=False
+            dimension, kind, water.profiles[profile] | {"FXAA_DEFINE": -1}, ubo=False
         )
         p = native_program(src)
         setup(p)
@@ -302,6 +302,20 @@ if args.gpu:
                 assert v[3] == 1
             elif material != 32000:
                 assert abs(v[3] - 0.4) < 1e-6
+        g.glUseProgram(p)
+        g.glUniformMatrix4fv(
+            g.glGetUniformLocation(p, b"shadowModelViewInverse"),
+            1,
+            0,
+            (c.c_float * 16)(*([0.0] * 16)),
+        )
+        v = draw(p, sunPosition=(0, 0, 0), testId=32000, testFace=1)
+        assert all(math.isfinite(x) and x >= 0 for x in v), (
+            dimension,
+            kind,
+            profile,
+            v,
+        )
     # Exercise the actual depth-bridge macros with different Iris/Voxy camera
     # frames, not only identity matrices used by the fragment-colour fixtures.
     uniforms = (ROOT / "lib/uniforms.glsl").read_text()

@@ -80,7 +80,8 @@ isolated patch calculations, not the OpenGL-4.6 Voxy renderer.
 - 390 existing rain/solar GLSL variants and 624 water preprocessing variants.
 - 72 non-Voxy preprocessed variants have identical tokens to the previous commit:
   three dimensions, Potato/High, native-Mac/other paths and DH enabled/disabled.
-- Isolated native GPU calculations passed for opaque/glass/water/emissive IDs,
+- Isolated native GPU calculations passed in Potato/High, including empty shadow
+  matrices, for opaque/glass/water/emissive IDs,
   six faces, four solar phases and dry/rain cases; the actual projection aliases
   also round-trip with different Iris and Voxy camera matrices.
 - Existing water, shoreline, rain/puddle and Apple linker regressions passed.

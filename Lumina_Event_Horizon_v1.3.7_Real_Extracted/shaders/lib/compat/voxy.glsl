@@ -63,7 +63,20 @@ vec3 LuminaVoxyLight(vec3 albedo, vec3 worldNormal, vec2 lm, vec3 viewPos) {
     #endif
     // Same palette code as near terrain; variables remain local to this function.
     #include "/lib/colors/lightAndAmbientColors.glsl"
-    vec3 axis = normalize(shadowModelViewInverse[2].xyz);
+    vec3 axis;
+    #ifdef END
+        axis = EVENT_HORIZON_DIRECTION;
+    #elif defined OVERWORLD
+        #if SHADOW_QUALITY >= 0
+            axis = shadowModelViewInverse[2].xyz;
+        #else
+            axis = mat3(gbufferModelViewInverse) * viewSun
+                 * ((phase < 0.5325 || phase > 0.9675) ? 1.0 : -1.0);
+        #endif
+    #else
+        axis = vec3(0.0); // Nether has ambient/block lighting, not a solar source.
+    #endif
+    axis /= max(length(axis),1e-6); // Also safe before a shadow map is initialized.
     float diffuse = max(dot(worldNormal,axis),0.0);
     float sky = lm.y*lm.y;
     vec3 block = vec3(.1775,.104,.077)*vec3(XLIGHT_R,XLIGHT_G,XLIGHT_B)*XLIGHT_I*lm.x*lm.x*4.0;

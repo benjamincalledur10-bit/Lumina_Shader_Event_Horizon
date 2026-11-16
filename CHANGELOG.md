@@ -4,6 +4,8 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Corrected experimental Voxy lighting when shadow maps are disabled: use the solar/lunar direction in Potato and the black-hole direction in the End. Zero/uninitialized light axes remain finite. Extended isolated GPU coverage to Potato and High with empty shadow matrices.
+
 - Added experimental Voxy patch-schema-1 / VOXY-macro-3 adapters in the three standard dimensions: atlas/tint and face/lightmap decoding, shared day/night/rain palettes, basic directional/block lighting, emission IDs, translucent blocks and simplified sky-reflecting water. Near terrain keeps its existing rendering path.
 - Reused separate LOD depth consumers through Voxy sampler/projection aliases, including chunk-to-block render-distance conversion, preserving Iris's recognized sampler names for reverse-depth handling. Excluded LODs from vanilla depth; matched Lumina's TAA offsets. Native macOS, absent/older Voxy APIs and simultaneous DH leave Voxy descriptors inactive. Added no extra full-screen depth textures.
 - Added Voxy descriptor/UBO/output/TAA contract checks, injected-patch and consumer GLSL compilation, isolated GPU checks and a rendering-mod compatibility review. Actual Voxy/Iris runtime, full distant-material/shadow/reflection parity and Windows/Linux FPS remain unverified; see docs/VOXY.md before testing.

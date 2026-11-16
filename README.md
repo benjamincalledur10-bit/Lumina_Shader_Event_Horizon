@@ -144,3 +144,10 @@ The development branch includes an experimental Windows/Linux Voxy adapter for
 terrain and simplified distant water. Minecraft runtime validation is pending.
 See [Voxy requirements and limits](docs/VOXY.md) and the
 [rendering-mod compatibility review](docs/MOD_COMPATIBILITY.md).
+
+### Rain impacts control
+
+Use **Surface Materials → Water → Rain Impacts** to toggle nearby rain-impact
+rings on water. Medium and higher profiles enable them by default. The control
+is separate from terrain **Rain Puddles**, wind waves and shoreline foam;
+it does not add impact rings to experimental distant Voxy water.

@@ -210,7 +210,7 @@
                 normalMap.xy *= 2.0 - 1.8 * fresnel2;
         #endif
 
-            #if defined OVERWORLD && WATER_MAT_QUALITY >= 2 && DETAIL_QUALITY >= 2 && SHADOW_QUALITY >= 1
+            #if RAIN_IMPACTS == 1 && defined OVERWORLD && WATER_MAT_QUALITY >= 2 && DETAIL_QUALITY >= 2 && SHADOW_QUALITY >= 1
                 // Rain impacts use the existing puddle ripple field; no texture reads.
                 // Limit them to nearby, upward-facing water in rainy, sky-lit biomes.
                 vec2 impactFootprint = fwidth(worldPos.xz * 1.5);

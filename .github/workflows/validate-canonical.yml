@@ -48,3 +48,6 @@ jobs:
 
       - name: Preprocess water and compile Voxy integration
         run: python3 scripts/check_voxy.py
+
+      - name: Compile rain and solar regression variants
+        run: python3 scripts/check_rain_solar_preprocess.py

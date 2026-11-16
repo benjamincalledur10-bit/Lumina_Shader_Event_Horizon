@@ -28,6 +28,7 @@ def preprocess(path, options, platform="mac"):
 for name, settings in water.profiles.items():
     expected = int(name in ("MEDIUM", "HIGH", "VERYHIGH", "ULTRA"))
     assert int(settings["RAIN_PUDDLES"]) == expected, (name, settings)
+    assert int(settings["RAIN_IMPACTS"]) == expected, (name, settings)
 
 compiler = shutil.which("glslangValidator")
 if not compiler:
@@ -113,4 +114,47 @@ for puddles, platform, stage in itertools.product(
             result.stderr,
         )
     count += 1
+# Both impact settings must compile separately from all terrain-puddle modes.
+for impacts, puddles, stage in itertools.product(
+    (0, 1), (0, 1, 2, 3, 4), ("gbuffers_water.fsh", "dh_water.fsh")
+):
+    src = preprocess(
+        water.ROOT / "world0" / stage,
+        water.profiles["MEDIUM"] | {"RAIN_IMPACTS": impacts, "RAIN_PUDDLES": puddles},
+    )
+    assert ("float impactMask" in src) == bool(impacts)
+    with tempfile.NamedTemporaryFile("w", suffix=".frag") as f:
+        f.write(
+            "#version 150 compatibility\n#define DH_BLOCK_WATER 1\n"
+            + re.sub(r"/\*.*?\*/|//[^\n]*", "", src, flags=re.S)
+        )
+        f.flush()
+        result = subprocess.run([compiler, f.name], capture_output=True, text=True)
+        assert result.returncode == 0, (
+            impacts,
+            puddles,
+            stage,
+            result.stdout,
+            result.stderr,
+        )
+    count += 1
+# The switch must not alter the terrain puddle shader at any puddle setting.
+for puddles, platform in itertools.product((0, 1, 2, 3, 4), ("mac", "other")):
+    options = water.profiles["MEDIUM"] | {"RAIN_PUDDLES": puddles}
+    variants = [
+        preprocess(
+            water.ROOT / "world0/gbuffers_terrain.fsh",
+            options | {"RAIN_IMPACTS": value},
+            platform,
+        )
+        for value in (0, 1)
+    ]
+    tokens = [
+        re.sub(r"\s+", "", re.sub(r"/\*.*?\*/|//[^\n]*", "", src, flags=re.S))
+        for src in variants
+    ]
+    assert tokens[0] == tokens[1], (puddles, platform)
+print(
+    "Rain Impacts terrain invariance passed: all 5 puddle modes on both renderer paths."
+)
 print(f"Rain/solar GLSL compilation passed: {count} variants.")

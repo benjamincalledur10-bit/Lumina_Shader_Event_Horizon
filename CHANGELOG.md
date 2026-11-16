@@ -4,6 +4,8 @@ All notable changes to Lumina Event Horizon are documented in this file.
 
 ## [Unreleased]
 
+- Added Water → Rain Impacts as an independent on/off control for nearby water impact rings. Medium and higher profiles default to on; lower profiles default to off. Disabling removes the impact filtering/mask/ripple calculations at preprocessing time, while preserving terrain puddles, wind waves and shoreline foam. Distant Voxy water keeps its existing simplified treatment. Real Minecraft FPS comparisons remain pending.
+
 - Corrected experimental Voxy lighting when shadow maps are disabled: use the solar/lunar direction in Potato and the black-hole direction in the End. Zero/uninitialized light axes remain finite. Extended isolated GPU coverage to Potato and High with empty shadow matrices.
 
 - Added experimental Voxy patch-schema-1 / VOXY-macro-3 adapters in the three standard dimensions: atlas/tint and face/lightmap decoding, shared day/night/rain palettes, basic directional/block lighting, emission IDs, translucent blocks and simplified sky-reflecting water. Near terrain keeps its existing rendering path.

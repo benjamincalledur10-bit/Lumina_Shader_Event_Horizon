@@ -51,6 +51,7 @@ MATERIAL_FIXTURE = r"""
 #define WATER_ALPHA_MULT 100
 #define WATER_FOAM_I 100
 #define RAIN_PUDDLES 0
+#define RAIN_IMPACTS 1
 #define SUN_MOON_STYLE 2
 #define WORLD_SPACE_REFLECTIONS_INTERNAL 0
 #define BRIGHT_CAVE_WATER
@@ -483,10 +484,18 @@ impact_fixture = (
     .replace("NdotU=1,NdotUmax0=1", "NdotU=testUp,NdotUmax0=testUp")
 )
 for path in ("GBUFFERS_WATER", "DH_WATER"):
-    for quality, detail, shadow in ((1, 0, -1), (2, 2, 0), (2, 2, 1), (3, 3, 3)):
+    for quality, detail, shadow, impacts, puddles in (
+        (*settings, impacts, puddles)
+        for settings in ((1, 0, -1), (2, 2, 0), (2, 2, 1), (3, 3, 3))
+        for impacts in (0, 1)
+        for puddles in (0, 1)
+    ):
         fixture = impact_fixture.replace(
             "#define DETAIL_QUALITY 2", f"#define DETAIL_QUALITY {detail}"
         ).replace("#define SHADOW_QUALITY 1", f"#define SHADOW_QUALITY {shadow}")
+        fixture = fixture.replace(
+            "#define RAIN_IMPACTS 1", f"#define RAIN_IMPACTS {impacts}"
+        ).replace("#define RAIN_PUDDLES 0", f"#define RAIN_PUDDLES {puddles}")
         p = program(
             f"#define OVERWORLD\n#define {path}\n#define WATER_STYLE 3\n#define WATER_MAT_QUALITY {quality}\n"
             + fixture
@@ -521,7 +530,7 @@ for path in ("GBUFFERS_WATER", "DH_WATER"):
             return max(abs(a - b) for a, b in zip(a, b))
 
         near = impact_difference()
-        active = quality >= 2 and detail >= 2 and shadow >= 1
+        active = impacts == 1 and quality >= 2 and detail >= 2 and shadow >= 1
         assert near > 1e-4 if active else near == 0, (path, quality, near)
         for params in (
             {"rainFactor": 0},
@@ -540,6 +549,6 @@ for path in ("GBUFFERS_WATER", "DH_WATER"):
             mid = impact_difference(testDistance=20)
             assert 0 < mid < near, (near, mid)
 print(
-    "GPU water impacts: Medium+ only, animated nearby rings, smooth distance fade; dry/sheltered/vertical/underwater masks and regular/DH paths passed.",
+    "GPU water impacts: independent on/off and puddle settings, Medium+ only, animated nearby rings, smooth distance fade; dry/sheltered/vertical/underwater masks and regular/DH paths passed.",
     flush=True,
 )

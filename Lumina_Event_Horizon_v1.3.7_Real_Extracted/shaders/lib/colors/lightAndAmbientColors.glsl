@@ -53,8 +53,20 @@
         #else
             float noonFactorDM = noonFactor * noonFactor; //light shaft factor
         #endif
-        vec3 dayLightColor   = mix(sunsetClearLightColor, noonClearLightColor, noonFactorDM);
-        vec3 dayAmbientColor = mix(sunsetClearAmbientColor, noonClearAmbientColor, noonFactorDM);
+        // Lumina daylight palette: warm sunlight, gently cool skylight.
+        // Preserve luminance so this color pass does not alter exposure/contrast.
+        // Fade the extra warmth at sunset, where the existing light is already orange.
+        vec3 dayLightColorBase = mix(sunsetClearLightColor, noonClearLightColor, noonFactorDM);
+        vec3 dayAmbientColorBase = mix(sunsetClearAmbientColor, noonClearAmbientColor, noonFactorDM);
+        vec3 dayLightTint = mix(vec3(1.0), vec3(1.04, 1.0, 0.94), noonFactorDM);
+        vec3 dayAmbientTint = mix(vec3(1.0), vec3(0.96, 1.0, 1.04), 0.5 + 0.5 * noonFactorDM);
+        vec3 paletteLumaWeights = vec3(0.299, 0.587, 0.114);
+        vec3 dayLightColor = dayLightColorBase * dayLightTint
+                          * (dot(dayLightColorBase, paletteLumaWeights)
+                          / max(dot(dayLightColorBase * dayLightTint, paletteLumaWeights), 1e-6));
+        vec3 dayAmbientColor = dayAmbientColorBase * dayAmbientTint
+                            * (dot(dayAmbientColorBase, paletteLumaWeights)
+                            / max(dot(dayAmbientColorBase * dayAmbientTint, paletteLumaWeights), 1e-6));
 
         vec3 clearLightColor   = mix(nightClearLightColor, dayLightColor, sunVisibility2);
         vec3 clearAmbientColor = mix(nightClearAmbientColor, dayAmbientColor, sunVisibility2);
@@ -80,7 +92,8 @@
         vec3 lightColor   = vec3(0.0);
         vec3 ambientColor = (netherColor + 0.5 * lavaLightColor) * (0.9 + 0.45 * vsBrightness);
     #elif defined END
-        vec3 endLightColor = vec3(0.68, 0.51, 1.07);
+        // Lumina cosmic palette: precomputed tint preserves the existing luminance.
+        vec3 endLightColor = vec3(0.65616497, 0.51495421, 1.10700483);
         vec3 endOrangeCol = vec3(1.0, 0.3, 0.0);
         float endLightBalancer = 0.2 * vsBrightness;
         vec3 lightColor    = endLightColor * (0.35 - endLightBalancer);

@@ -22,7 +22,7 @@ Use one of the official distribution pages:
 - [Modrinth](https://modrinth.com/shader/lumina-shader-event-horizon)
 - [CurseForge](https://www.curseforge.com/minecraft/shaders/lumina-shaders-event-horizon)
 
-The current stable release is **v1.3.9**, targeting Minecraft **1.8 through 26.3**.
+The current stable release is **v1.4.0**, targeting Minecraft **1.8 through 26.3**.
 Keep downloaded `.zip` files compressed when installing them.
 
 ## Highlights
@@ -64,7 +64,7 @@ render distance, selected profile, resource packs, and GPU.
 
 1. Install [Iris](https://www.irisshaders.dev/) or a compatible OptiFine
    version.
-2. Download `Lumina_Event_Horizon_v1.3.9.zip` from an official source above.
+2. Download `Lumina_Event_Horizon.v1.4.0.zip` from an official source above.
 3. Open Minecraft and go to **Options > Video Settings > Shader Packs**.
 4. Open the shader-pack folder and place the downloaded ZIP inside it. Do not
    extract the archive.
@@ -101,7 +101,12 @@ Visual verification in Minecraft is still pending.
 
 ## Development
 
-- `main` contains the current stable, published state.
+**v1.4.0 — Worlds in Motion** includes the water, rain, shoreline and lighting
+changes documented in [CHANGELOG.md](CHANGELOG.md). Voxy remains experimental;
+its Windows/Linux runtime validation and broader frame-time testing are pending.
+
+- Published versions are pinned by release tags; `main` remains the baseline
+  until a separate development-branch merge is approved.
 - `luminahorizondev` is used for development and validation before a release.
 - The canonical source is `Lumina_Event_Horizon_v1.3.7_Real_Extracted/`; its
   historical directory name does not indicate the current pack version.
@@ -132,3 +137,17 @@ Lumina Shader: Event Horizon is a Modified Pack distributed under the
 also included inside every downloadable shader ZIP, as required by the original
 pack's terms. Review it before redistributing, including the shader in a
 modpack, or creating another modified pack.
+
+### Experimental Voxy support
+
+The development branch includes an experimental Windows/Linux Voxy adapter for
+terrain and simplified distant water. Minecraft runtime validation is pending.
+See [Voxy requirements and limits](docs/VOXY.md) and the
+[rendering-mod compatibility review](docs/MOD_COMPATIBILITY.md).
+
+### Rain impacts control
+
+Use **Surface Materials → Water → Rain Impacts** to toggle nearby rain-impact
+rings on water. Medium and higher profiles enable them by default. The control
+is separate from terrain **Rain Puddles**, wind waves and shoreline foam;
+it does not add impact rings to experimental distant Voxy water.

@@ -26,7 +26,7 @@ flat in vec4 glColor;
 
 //Common Variables//
 float SdotU = dot(sunVec, upVec);
-float sunVisibility = clamp(SdotU + 0.0625, 0.0, 0.125) / 0.125;
+float sunVisibility = LUMINA_SUN_VISIBILITY(SdotU);
 
 //Common Functions//
 vec3 SafeNormalizeShadowColor(vec3 color) {

@@ -1,3 +1,12 @@
+// Shared sky/lighting transitions. Inline expressions avoid new dynamic globals.
+#ifdef OVERWORLD
+    #define LUMINA_DAY_BLEND(elevation) (0.5 * smoothstep(-0.375, 0.0, (elevation)) + 0.5 * smoothstep(0.0, 0.0625, (elevation)))
+    #define LUMINA_SUN_VISIBILITY(elevation) smoothstep(-0.0625, 0.0625, (elevation))
+#else
+    #define LUMINA_DAY_BLEND(elevation) ((elevation) < 0.0 ? clamp((elevation) + 0.375, 0.0, 0.75) / 0.75 : clamp((elevation) + 0.03125, 0.0, 0.0625) / 0.0625)
+    #define LUMINA_SUN_VISIBILITY(elevation) (clamp((elevation) + 0.0625, 0.0, 0.125) / 0.125)
+#endif
+
 #ifdef VERTEX_SHADER
     vec2 GetLightMapCoordinates() {
         vec2 lmCoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
@@ -17,6 +26,29 @@
         #endif
     }
 #endif
+
+// Use the same light axis as the shadow map, without changing sky color timing.
+// Keep uniform reads inline: Apple OpenGL crashes when a user function reads
+// these uniforms through a global initializer (glpLLVMGetFunctionGlobalVariableUse).
+#if defined OVERWORLD && SHADOW_QUALITY >= 0
+    #define LuminaShadowLight(fallbackSun) normalize(mat3(gbufferModelView) * shadowModelViewInverse[2].xyz)
+#else
+    #define LuminaShadowLight(fallbackSun) ((fallbackSun) * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0))
+#endif
+
+// One bounded analytical impact per world-space cell; no texture reads or loops.
+vec2 LuminaRainRipple(vec2 worldXZ, float clock) {
+    vec2 q = worldXZ * 1.5;
+    vec2 cell = floor(q);
+    float seed = fract(sin(dot(mod(cell, 4096.0), vec2(127.1, 311.7))) * 43758.5453);
+    float age = fract(clock * 1.3 + seed);
+    vec2 delta = fract(q) - 0.5;
+    float radius = length(delta);
+    float ring = radius - age * 0.42;
+    float envelope = smoothstep(0.0, 0.08, age) * (1.0 - smoothstep(0.6, 1.0, age));
+    float slope = sin(ring * 100.0) * exp(-ring * ring * 1800.0) * envelope;
+    return delta / max(radius, 0.001) * slope * 0.035;
+}
 
 float GetLuminance(vec3 color) {
     return dot(color, vec3(0.299, 0.587, 0.114));

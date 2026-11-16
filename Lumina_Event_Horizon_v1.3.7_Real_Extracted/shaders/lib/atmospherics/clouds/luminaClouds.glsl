@@ -158,7 +158,7 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
     tracePos.y -= traceAdd.y;
 
     float firstHitPos = -1.0;
-    float VdotSM1 = max0(sunVisibility > 0.5 ? VdotS : - VdotS);
+    float VdotSM1 = max0(mix(-VdotS, VdotS, smoothstep(0.35, 0.65, sunVisibility)));
     float VdotSM1M = VdotSM1 * invRainFactor;
     float VdotSM2 = pow2(VdotSM1) * abs(sunVisibility - 0.5) * 2.0;
     float VdotSM3 = VdotSM2 * (2.5 + rainFactor) + 1.5 * rainFactor;
@@ -205,13 +205,20 @@ vec4 GetVolumetricClouds(int cloudAltitude, float distanceThreshold, inout float
             float cloudShading = 1.0 - (higherPlaneAltitude - tracePos.y) / cloudTallness;
             cloudShading = pow(max0(cloudShading), 1.2);
             float scattering = pow(VdotSM1, 6.0) * (1.0 - opacityFactor) * 2.0 * powderFactor;
-            cloudShading *= 1.0 + 0.3 * VdotSM3 * (1.0 - opacityFactor) + VdotSM4 + scattering;
+            // Keep density/height shading visible under strong forward scattering.
+            float cloudLightBoost = 0.3 * VdotSM3 * (1.0 - opacityFactor) + VdotSM4 + scattering;
+            cloudShading *= 1.0 + cloudLightBoost / (1.0 + 0.35 * cloudLightBoost);
 
             float silverLining = exp(-cloudNoise * 18.0) * pow(VdotSM1, 8.0) * invRainFactor;
 
             vec3 colorSample = cloudAmbientColor * (0.35 + 0.65 * cloudShading) + cloudLightColor * cloudShading;
             colorSample += cloudLightColor * scattering * 0.5;
             colorSample += cloudLightColor * silverLining * 0.65;
+            // A soft HDR shoulder retains highlight hue and cloud interior detail.
+            float cloudPeak = max(colorSample.r, max(colorSample.g, colorSample.b));
+            float cloudExcess = max(cloudPeak - 2.5, 0.0);
+            float cloudShoulder = cloudExcess * cloudExcess / (cloudExcess + 0.5);
+            colorSample /= 1.0 + 0.12 * cloudShoulder;
             vec3 cloudSkyColor = GetSky(VdotU, VdotS, dither, isEyeInWater == 0, false);
             #ifdef ATM_COLOR_MULTS
                 cloudSkyColor *= sqrtAtmColorMult; // C72380KD - Reduced atmColorMult impact on some things

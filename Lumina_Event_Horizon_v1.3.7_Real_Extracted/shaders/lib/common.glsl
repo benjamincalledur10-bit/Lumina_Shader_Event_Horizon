@@ -10,6 +10,12 @@
   -> -> -> DO NOT EXPECT SUPPORT AFTER MODIFYING SHADER FILES
 ---------------------------------------------------------------------*/
 
+#if !defined LUMINA_VOXY_PATCH && defined VOXY && VOXY >= 3 && !defined MC_OS_MAC && !defined DISTANT_HORIZONS
+    #define LUMINA_VOXY
+    // Reuse Lumina's separate-LOD depth paths internally, not DH draw programs.
+    #define DISTANT_HORIZONS
+#endif
+
 //User Settings//
     #define SHADER_STYLE 4 //[4]
 
@@ -81,7 +87,8 @@
     #define WATER_SIZE_MULT 100 //[25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300]
 
     #define SHADOW_SMOOTHING 4 //[1 2 3 4]
-    #define RAIN_PUDDLES 0 //[0 1 2 3 4]
+    #define RAIN_PUDDLES 1 //[0 1 2 3 4]
+    #define RAIN_IMPACTS 1 //[0 1]
     #define SSAO_I 100 //[0 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300]
     #define VANILLAAO_I 100 //[0 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300]
 
@@ -118,6 +125,8 @@
     #define EVENT_HORIZON_ROTATION_SPEED 1.00 //[0.00 0.25 0.50 0.75 1.00 1.25 1.50 2.00]
     #define EVENT_HORIZON_DISK_OUTER_RADIUS 5.0
     #define EVENT_HORIZON_DISK_TILT 0.1
+    #define BLACK_HOLE_RAYS
+    #define BLACK_HOLE_RAY_INTENSITY 100 //[0 10 20 30 40 50 60 70 80 90 100 110 120 130 140 150]
     #define WHITE_HOLE
     #define WHITE_HOLE_RAYS
 
@@ -145,6 +154,8 @@
     #define LIGHTSHAFT_SUNSET_SATURATION 0.50 //[-0.25 -0.20 -0.15 -0.10 -0.05 0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50]
 
     #define BLOOM_ENABLED 1 //[-1 1]
+    #define BLOOM_SELECTIVE
+    #define BLOOM_THRESHOLD 1.00 //[0.50 0.75 1.00 1.25 1.50 2.00 3.00]
     #define BLOOM_STRENGTH 0.12 //[0.027 0.036 0.045 0.054 0.063 0.072 0.081 0.09 0.10 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.21 0.23 0.25 0.28 0.32 10.00]
     #define IMAGE_SHARPENING 5 //[0 1 2 3 4 5 6 7 8 9 10]
     #define VIGNETTE_R
@@ -484,6 +495,8 @@
         #define SHADOW_MAP_RES 4096
     #endif
     const int shadowMapResolution = SHADOW_MAP_RES;
+    // Continuous shadow rotation follows the loader solar camera.
+    const float shadowIntervalSize = 0.0;
 
     #if SSAO_I > 0
         #define SSAO_QUALI SSAO_QUALI_DEFINE
@@ -649,6 +662,8 @@
     #ifdef PIXELATED_AO
     #endif
 
+// Voxy supplies its own UBO and depth buffers. Patch programs need settings only.
+#ifndef LUMINA_VOXY_PATCH
 //Very Common Stuff//
     #include "/lib/uniforms.glsl"
 
@@ -673,7 +688,12 @@
     #endif
 
     const float shadowMapBias = 1.0 - 25.6 / shadowDistance;
-    float noonFactor = sqrt(max(sin(timeAngle*6.28318530718),0.0));
+    #ifdef OVERWORLD
+        // Ease the sunrise/sunset color ramp before the square root amplifies it.
+        float noonFactor = sqrt(max(sin(timeAngle*6.28318530718), 0.0) * smoothstep(0.0, 0.12, sin(timeAngle*6.28318530718)));
+    #else
+        float noonFactor = sqrt(max(sin(timeAngle*6.28318530718),0.0));
+    #endif
     float nightFactor = max(sin(timeAngle*(-6.28318530718)),0.0);
     float invNightFactor = 1.0 - nightFactor;
     float rainFactor2 = rainFactor * rainFactor;
@@ -728,22 +748,26 @@
     vec3 waterFogColor = underwaterColorM2 * vec3(0.2 + 0.1 * vsBrightness);
 
     #ifdef NETHER
+    // Lumina red/amber palette uses precomputed, luminance-preserving constants.
+    // Avoid chained dynamic global initializers on the macOS OpenGL linker.
+    // Warm biomes receive the full tint; cool biomes retain their identity.
+    // Vanilla fog-color mode keeps its original palette.
     #ifdef MC_OS_MAC
         #if NETHER_COLOR_MODE == 3
             float netherColorMixer = inNetherWastes + inCrimsonForest + inWarpedForest + inBasaltDeltas + inSoulValley;
             vec3 netherColor = mix(
                 fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
                 (
-                    inNetherWastes * vec3(0.4, 0.14, 0.06) + inCrimsonForest * vec3(0.36, 0.07, 0.05) +
-                    inWarpedForest * vec3(0.18, 0.1, 0.25) + inBasaltDeltas * vec3(0.25, 0.235, 0.23) +
-                    inSoulValley * vec3(0.1, vec2(0.24))
+                    inNetherWastes * vec3(0.39878538, 0.14161744, 0.05485731) + inCrimsonForest * vec3(0.35970038, 0.07096528, 0.04581550) +
+                    inWarpedForest * vec3(0.18029461, 0.10038820, 0.24722839) + inBasaltDeltas * vec3(0.25002495, 0.23555028, 0.22710112) +
+                    inSoulValley * vec3(0.10001602, 0.24057652, 0.23698940)
                 ),
                 netherColorMixer
             );
         #elif NETHER_COLOR_MODE == 2
             vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
         #elif NETHER_COLOR_MODE == 0
-            vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
+            vec3 netherColor = vec3(0.69722423, 0.26275879, 0.07307493) * 0.6;
         #endif
     #else
     #if NETHER_COLOR_MODE == 3
@@ -751,16 +775,16 @@
         vec3 netherColor = mix(
             fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001),
             (
-                inNetherWastes * vec3(0.44, 0.14, 0.035) + inCrimsonForest * vec3(0.42, 0.045, 0.035) +
-                inWarpedForest * vec3(0.055, 0.28, 0.27) + inBasaltDeltas * vec3(0.22, 0.22, 0.23) +
-                inSoulValley * vec3(0.08, 0.20, 0.30)
+                inNetherWastes * vec3(0.43824534, 0.14148231, 0.03196956) + inCrimsonForest * vec3(0.41985012, 0.04564224, 0.03208611) +
+                inWarpedForest * vec3(0.05500586, 0.28065756, 0.26659877) + inBasaltDeltas * vec3(0.22004336, 0.22053661, 0.22712321) +
+                inSoulValley * vec3(0.08007813, 0.20064409, 0.29647857)
             ),
             clamp01(netherColorMixer)
         );
     #elif NETHER_COLOR_MODE == 2
         vec3 netherColor = fogColor * 0.6 + 0.2 * normalize(fogColor + 0.0001);
     #elif NETHER_COLOR_MODE == 0
-        vec3 netherColor = vec3(0.7, 0.26, 0.08) * 0.6;
+        vec3 netherColor = vec3(0.69722423, 0.26275879, 0.07307493) * 0.6;
     #endif
 
     float GetNetherBiomeFogDensity() {
@@ -784,7 +808,8 @@
         vec3 lavaLightColor = vec3(0.19, 0.072, 0.012);
     #endif
 
-    const vec3 endSkyColor = vec3(0.005, 0.006, 0.01);
+    // Lumina cosmic palette: precomputed tint preserves the existing luminance.
+    const vec3 endSkyColor = vec3(0.00517540, 0.00585219, 0.01030105);
 
     #if WEATHER_TEX_OPACITY == 100
         const float rainTexOpacity = 0.25;
@@ -834,3 +859,5 @@
     */
 
 // 62 75 74 20 74 68 4F 73 65 20 77 68 6F 20 68 6F 70 65 20 69 6E 20 74 68 65 20 6C 69 6D 69 4E 61 6C 0A 77 69 6C 6C 20 72 65 6E 65 77 20 74 68 65 69 72 20 73 54 72 65 6E 67 74 48 2E 0A 74 68 65 79 20 77 69 6C 6C 20 73 6F 41 72 20 6F 6E 20 65 6C 79 54 72 61 73 20 6C 69 6B 65 20 70 68 61 6E 74 6F 6D 73 3B 0A 74 68 65 79 20 77 69 6C 6C 20 72 75 6E 20 61 6E 44 20 6E 6F 74 20 67 72 6F 77 20 77 65 41 72 79 2C 0A 74 68 65 59 20 77 69 6C 6C 20 77 61 6C 6B 20 61 6E 64 20 6E 6F 74 20 62 65 20 66 61 69 6E 74 2E
+
+#endif // !LUMINA_VOXY_PATCH

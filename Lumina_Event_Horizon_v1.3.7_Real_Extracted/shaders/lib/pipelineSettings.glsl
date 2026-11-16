@@ -7,7 +7,7 @@ const int colortex4Format = RGBA8_SNORM;    //normalM & reflection strength
 const int colortex5Format = RGBA8;          //scene image for water reflections & volumetric cloud linear depth & volumetric light factor
 const int colortex6Format = RGB8;           //smoothnessD & materialMask & skyLightFactor
 const int colortex7Format = RGBA16F;        //(cloud/water map on gbuffer) | reflection temporal image (rgb) & previous depth
-const int colortex8Format = RGBA16F;        //SSR results for WSR, topmost translucent opacity
+const int colortex8Format = RGBA16F;        //SSR results for WSR, topmost translucent opacity | selective bloom HDR source
 */
 
 const bool colortex0Clear = true;

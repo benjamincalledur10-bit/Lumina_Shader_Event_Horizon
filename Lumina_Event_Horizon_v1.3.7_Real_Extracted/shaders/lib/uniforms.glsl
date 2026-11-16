@@ -121,14 +121,25 @@ uniform vec3 previousCameraPositionFract;
     uniform mat4 gbufferProjectionInverse;
 #endif
 
+#ifdef LUMINA_VOXY
+    uniform int vxRenderDistance;
+    uniform mat4 vxProj, vxProjInv, vxModelView, vxModelViewInv;
+    uniform sampler2D vxDepthTexTrans, vxDepthTexOpaque;
+    #define dhRenderDistance (vxRenderDistance * 16)
+    #define dhProjection (vxProj * vxModelView * gbufferModelViewInverse)
+    #define dhProjectionInverse (gbufferModelView * vxModelViewInv * vxProjInv)
+    #define dhDepthTex vxDepthTexTrans
+    #define dhDepthTex1 vxDepthTexOpaque
+#else
 #ifdef DISTANT_HORIZONS
     uniform int dhRenderDistance;
 
     uniform mat4 dhProjection;
     uniform mat4 dhProjectionInverse;
-    
+
     uniform sampler2D dhDepthTex;
     uniform sampler2D dhDepthTex1;
+#endif
 #endif
 
 #if COLORED_LIGHTING_INTERNAL > 0

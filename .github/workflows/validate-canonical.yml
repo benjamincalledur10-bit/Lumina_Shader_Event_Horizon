@@ -15,7 +15,7 @@ jobs:
   validate:
     name: Validate canonical Lumina Event Horizon
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
 
     steps:
       - name: Check out repository
@@ -40,3 +40,14 @@ jobs:
 
       - name: Validate canonical package
         run: python3 scripts/validate_canonical.py --base-ref "${{ steps.comparison.outputs.base_ref }}"
+
+      - name: Install GLSL compiler
+        run: |
+          sudo apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y glslang-tools
+
+      - name: Preprocess water and compile Voxy integration
+        run: python3 scripts/check_voxy.py
+
+      - name: Compile rain and solar regression variants
+        run: python3 scripts/check_rain_solar_preprocess.py

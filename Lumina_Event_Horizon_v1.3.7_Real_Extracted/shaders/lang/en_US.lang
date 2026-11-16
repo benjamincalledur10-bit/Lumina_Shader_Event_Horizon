@@ -612,6 +612,10 @@ option.BLOOM_ENABLED.comment=Enables blurry glow from bright objects and humidit
 value.BLOOM_ENABLED.-1=OFF
 value.BLOOM_ENABLED.1=§eON
 
+option.BLOOM_SELECTIVE=Selective Bloom
+option.BLOOM_SELECTIVE.comment=Extracts bright HDR highlights with a soft threshold and adds compact halos while preserving the sharp base image. Reduces humidity bloom. Disable to restore the previous bloom calculation.
+option.BLOOM_THRESHOLD=Bloom Highlight Threshold
+option.BLOOM_THRESHOLD.comment=Higher values restrict bloom to brighter sources; lower values include more surfaces. Uses brightness, not material identity. Highlights are extracted before downsampling to retain halos from small lights.
 option.BLOOM_STRENGTH=Bloom Strength
 option.BLOOM_STRENGTH.comment=Determines the intensity of glow on bright things, and the bloom from rain/cave humidity. §c[-]§r Too much bloom will cause the image to get blurrier and brighter than intended, especially in humid conditions.
 value.BLOOM_STRENGTH.0.027=15%
@@ -1117,6 +1121,11 @@ option.XLIGHT_I=Blocklight Intensity
 
 option.XLIGHT_CURVE=Blocklight Contrast
 option.XLIGHT_CURVE.comment=Adjusts how quickly the intensity of blocklight fades away as it travels distance away from the light source.
+option.BLACK_HOLE_RAYS=Black Hole Radial Rays
+option.BLACK_HOLE_RAYS.comment=Toggles the radial light rays extending across the End sky. Keeps the black hole, accretion disk, gravitational lensing, and photon ring visible. Independent of White Hole Light Rays.
+option.BLACK_HOLE_RAY_INTENSITY=Black Hole Ray Intensity
+option.BLACK_HOLE_RAY_INTENSITY.comment=Controls only the extended Black Hole rays. 100% preserves the original appearance; 0% removes the rays just like disabling Black Hole Radial Rays.
+suffix.BLACK_HOLE_RAY_INTENSITY=%
 option.WHITE_HOLE_RAYS=White Hole Light Rays
 option.WHITE_HOLE_RAYS.comment=Toggles the horizontal and vertical energy rays around the White Hole.
 option.WHITE_HOLE=White Hole
@@ -1129,3 +1138,8 @@ option.EVENT_HORIZON_LENSING_STRENGTH=Gravitational Lensing Strength
 option.EVENT_HORIZON_LENSING_STRENGTH.comment=Controls how strongly the black hole bends the background sky.
 option.EVENT_HORIZON_ROTATION_SPEED=Disk Rotation Speed
 option.EVENT_HORIZON_ROTATION_SPEED.comment=Controls the animation speed of the black and white hole disks.
+
+option.RAIN_IMPACTS=Rain Impacts
+option.RAIN_IMPACTS.comment=Rain-impact rings on nearby water. Available with Medium or higher water settings. Independent of terrain Rain Puddles and wind waves.
+value.RAIN_IMPACTS.0=OFF
+value.RAIN_IMPACTS.1=ON

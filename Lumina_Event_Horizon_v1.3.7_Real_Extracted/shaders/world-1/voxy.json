@@ -1,0 +1,58 @@
+#if defined VOXY && VOXY >= 3 && !defined MC_OS_MAC && !defined DISTANT_HORIZONS
+{
+  "version": 1,
+  "opaqueDrawBuffers": [
+    0,
+    4,
+    6
+  ],
+  "translucentDrawBuffers": [
+    0,
+    3,
+    4,
+    6,
+    8
+  ],
+  "uniforms": [
+    "vxProjInv",
+    "vxModelView",
+    "vxModelViewInv",
+    "gbufferModelView",
+    "gbufferModelViewInverse",
+    "shadowModelViewInverse",
+    "sunPosition",
+    "cameraPosition",
+    "sunAngle",
+    "worldTime",
+    "skyColor",
+    "fogColor",
+    "screenBrightness",
+    "rainFactor",
+    "inSnowy",
+    "inDry",
+    "inRainy",
+    "viewWidth",
+    "viewHeight",
+    "framemod8",
+    "frameTimeCounter",
+    "isEyeInWater",
+    "inNetherWastes",
+    "inCrimsonForest",
+    "inWarpedForest",
+    "inBasaltDeltas",
+    "inSoulValley"
+  ],
+  "samplers": [],
+  "excludeLodsFromVanillaDepth": true,
+  "useDynamicFarPlane": true,
+  "blending": {
+    "-1": "off",
+    "0": "SRC_ALPHA ONE_MINUS_SRC_ALPHA ONE ONE_MINUS_SRC_ALPHA",
+    "1": "off",
+    "2": "off",
+    "3": "off",
+    "4": "off"
+  },
+  "useViewportDims": true
+}
+#endif

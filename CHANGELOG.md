@@ -2,6 +2,133 @@
 
 All notable changes to Lumina Event Horizon are documented in this file.
 
+## [1.4.0] - 2026-11-16
+
+# 🌌 Lumina Event Horizon v1.4.0 — Worlds in Motion
+
+Rain sends ripples across rivers, sunlight warms the Overworld, and the End shines with a deeper cosmic sky. This update reworks water and weather, adds more control over the End’s signature effects, and introduces experimental Voxy support. ✨
+
+## 🕳️ A More Expressive End
+
+- **Black Hole Radial Rays** now have their own toggle and intensity slider, so you can soften or disable the rays while keeping the black hole and its accretion disk visible.
+- Rebalanced the highlights of the black hole and white hole.
+- Added two layers of End stars with varied sizes, brightness, and colors.
+- Refined the End’s lighting with a blue and violet palette.
+
+## 🌅 Lighting, Atmosphere & Bloom
+
+- Warmed direct sunlight and cooled ambient light in the Overworld.
+- Refined the Nether’s red and amber tones while preserving the character of each biome.
+- Smoothed transitions between dawn, daylight, dusk, night, and rain.
+- Preserved more detail in brightly lit clouds.
+- Added **Selective Bloom** with an adjustable highlight threshold and tighter halos. Small lights retain their glow and color.
+- Aligned directional lighting with the shadow camera and enabled continuous shadow rotation while preserving the existing palettes.
+
+## 🌊 Water, Rain & Shorelines
+
+- Water color, light absorption, and transparency now respond to depth, keeping shallows clearer and deep water richer in color.
+- Added directional swells and waves at several scales, with more surface activity during rain.
+- Improved water reflections based on viewing angle and quality settings.
+- Added subtle shoreline foam and crossing ripples that fade into deeper water.
+- Rain now falls in finer, animated streaks. Reflective puddles build up during rainfall, catch light, ripple from impacts, and dry gradually. **Rain Puddles** are enabled by default on **Medium and higher**.
+- Added a separate **Rain Impacts** toggle for ripples on water. Their visibility fades between **8 and 24 blocks**, and the effect is enabled by default on **Medium and higher**.
+
+## 🗺️ Experimental Voxy Support
+
+- Added an experimental integration for **Windows and Linux**, covering distant terrain in the **Overworld, Nether, and End**, with lighting, depth, fog, temporal anti-aliasing, and simplified distant water.
+- Corrected Voxy lighting in the End and on profiles with shadows disabled.
+
+**Voxy still needs in-game testing on Windows and Linux.** Distant water and materials use simplified rendering and do not yet match the quality of nearby terrain.
+
+## 🛠️ Fixes, Performance & Validation
+
+- Fixed Apple OpenGL linker crashes related to the Nether palette and shadow lighting.
+- Guarded against undefined divisions in foam and other edge cases in water calculations.
+- Fixed underwater reflections with **Distant Horizons** and puddle sampling with **Iris custom images**.
+- Reused existing calculations, scaled rendering work by quality profile, and limited nearby effects by distance.
+- Added OpenGL tests, GLSL compilation checks, package validation, and automated checks in GitHub Actions. Expanded coverage for water normals, transparency, depth, animation, and extreme settings.
+- Updated the documentation with compatibility details and known limitations.
+
+The rebuilt clouds, daily sky clearing, meteors, and additional **High** reflection mode from the withdrawn beta.4–beta.6 builds are not included.
+
+🐛 **Report bugs or share feedback:** [https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/issues](https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/issues)
+
+### Technical development notes
+
+- Added Water → Rain Impacts as an independent on/off control for nearby water impact rings. Medium and higher profiles default to on; lower profiles default to off. Disabling removes the impact filtering/mask/ripple calculations at preprocessing time, while preserving terrain puddles, wind waves and shoreline foam. Distant Voxy water keeps its existing simplified treatment. Real Minecraft FPS comparisons remain pending.
+
+- Corrected experimental Voxy lighting when shadow maps are disabled: use the solar/lunar direction in Potato and the black-hole direction in the End. Zero/uninitialized light axes remain finite. Extended isolated GPU coverage to Potato and High with empty shadow matrices.
+
+- Added experimental Voxy patch-schema-1 / VOXY-macro-3 adapters in the three standard dimensions: atlas/tint and face/lightmap decoding, shared day/night/rain palettes, basic directional/block lighting, emission IDs, translucent blocks and simplified sky-reflecting water. Near terrain keeps its existing rendering path.
+- Reused separate LOD depth consumers through Voxy sampler/projection aliases, including chunk-to-block render-distance conversion, preserving Iris's recognized sampler names for reverse-depth handling. Excluded LODs from vanilla depth; matched Lumina's TAA offsets. Native macOS, absent/older Voxy APIs and simultaneous DH leave Voxy descriptors inactive. Added no extra full-screen depth textures.
+- Added Voxy descriptor/UBO/output/TAA contract checks, injected-patch and consumer GLSL compilation, isolated GPU checks and a rendering-mod compatibility review. Actual Voxy/Iris runtime, full distant-material/shadow/reflection parity and Windows/Linux FPS remain unverified; see docs/VOXY.md before testing.
+
+- Added nearby rain-impact rings to Overworld water in Medium and higher profiles, reusing the existing analytical puddle ripple field without new texture samples or reflection steps. Impacts follow rain strength, rainy-biome and skylight masks, fade between 8 and 24 blocks and filter unresolved detail. They are suppressed underwater, on vertical faces, in dry/snowy biomes and in lower profiles; regular/DH water share the calculation. Skylight is an exposure approximation, not exact roof collision. Minecraft appearance and FPS still need in-game validation.
+
+- Added a depth-faded shoreline transition with subtle animated foam and small crossing ripples, reusing the existing bottom depth and foam noise. No additional texture samples or reflection march steps. Valid-bottom, horizontal-surface and above-water guards keep the effect off sky depth, underwater views and waterfalls; water speed zero freezes shoreline animation. The Overworld DH water path shares the foam treatment.
+- Explicitly enable Rain Puddles in Medium, High, Very High and Ultra profiles; disable by default in Potato, Very Low and Low. Manual puddle settings remain available. In-game shoreline balance and frame times require Minecraft validation.
+
+- Fixed a reproducible Apple OpenGL linker crash introduced by the shadow-axis update: inline the uniform matrix expression instead of calling a uniform-reading user function from a global initializer. The shadow direction calculation is unchanged. Added a native link regression with chained global initializers; the previous function-based form exits with SIGSEGV on the affected driver.
+
+- Use the shadow camera's world light axis consistently for Overworld directional shading and reflected highlights, and request continuous shadow rotation (`shadowIntervalSize = 0.0`). Preserve existing solar color timing and palettes; actual dawn/dusk movement still requires Minecraft validation.
+- Reshape rain opacity into narrow animated streaks while retaining the original precipitation texture mask and snow branch. Existing rain opacity and waving controls remain available.
+- Enable patchy rain puddles by default. Outdoor, upward-facing terrain in rainy biomes accumulates reflective wet patches using the loader's wetness history, retains them while drying and darkens slightly when soaked. Existing puddle modes and material exclusions remain available. Medium and higher detail add nearby analytical impact rings, with no extra texture samples; Potato skips rings. This is visual surface water, not raised water geometry, fluid simulation or newly spawned particle entities.
+- Fixed the existing integer puddle-mask sampler lookup in the custom-image Iris path, which failed GLSL compilation when puddles were enabled.
+- Added native OpenGL checks for shadow-axis alignment, precipitation masks and wetness accumulation, plus full GLSL variant compilation. Frame-time impact and Minecraft artistic/integration checks remain pending; enabling puddles adds the existing terrain noise and reflection work while wet.
+
+## [1.4.0-beta.3] - 2026-10-04
+
+- Upgraded Overworld water coloration with a restrained cool tint, reduced saturation, clearer shallows, and stronger wavelength-dependent absorption at depth. Potato now uses bottom depth for absorption, transparency, and wave scaling; biome and custom-color controls remain active. Depth does not explicitly classify river/ocean biomes.
+- Added crossing broad swells and independently advected medium/fine waves. Rain increases surface activity; derivative filtering reduces unresolved fine ripples. Wave normals are bounded at extreme slider values, normalized before Fresnel evaluation, and respect water speed/size controls. Existing vertex displacement is unchanged.
+- Balanced work by quality: Potato replaces one normal texture fetch with analytical swells while adding one bottom-depth fetch; material quality 2 uses one parallax iteration instead of two. Water SSR uses 12 march iterations at normal detail and 16 at high detail, with three refinements. These are work budgets, not measured FPS claims.
+- Improved Sky only and Potato water reflections with the full atmospheric sky gradient and consistent wave direction. Sky only still performs no terrain reflection lookup. Water SSR requires a refined terrain hit, rejects invalid/off-screen projections, preserves confidence independently of scene alpha, and fades at screen borders. Removed water-only edge jitter from both reflection methods.
+- Corrected DH mirrored reflection depth reconstruction to use the DH depth texture with its matching projection. Added a glossy DH water material response, protected near-zero mirrored projection divisors, zero biome-tint normalization, and underwater alpha divisors.
+- Added `scripts/check_water_preprocess.py` and `scripts/check_water_beta3_gpu.py`. Canonical validation and 624 preprocessing configurations passed. Isolated native Apple M4 checks cover full materials in all three dimensions, styles and quality levels; above/below-water branches; bounded normals; monotone opacity/attenuation; animated and speed-zero waves; and synthetic terrain-hit/sky/off-screen/zero-W reflection cases.
+- This beta also includes the rendering polish below. Minecraft integration, actual shoreline/DH seams, temporal behavior in motion, artistic balance, and frame-time impact remain pending visual testing.
+
+- Guarded zero and near-zero water-foam thresholds to prevent undefined divisions while preserving the existing shoreline response for ordinary inputs.
+- Preserved the Distant Horizons underwater material's full-reflection override when world-space reflections are active. Other DH paths continue to derive their reflection response from the updated wave normal, including the Overworld Schlick curve.
+- Moved selective bloom extraction to full resolution in composite3, before mipmap generation. Reuses colortex8's HDR storage after SSR consumption in composite1, retaining small bright-source energy without altering the sharp scene output. The selective path adds an HDR output write and mipmap generation; disabling selective bloom retains the previous bloom path.
+- Added reproducible native macOS GPU regression checks in `scripts/check_render_polish_gpu.py`. Isolated Apple M4 checks passed for degenerate foam, DH underwater/non-water/quality/reflection branches, hue preservation, actual mipmap energy retention, and selective/legacy bloom tile compilation. Preprocessing passed 96 dimension/blur/bloom configurations. Canonical validation passed; Minecraft loader integration, visual balance, and frame-time impact remain pending.
+
+## [1.4.0-beta.2] - 2026-10-03
+
+- Integrated Overworld water with depth: shallower optical paths retain more bed visibility, while thicker columns increase opacity and progressively attenuate the surface tint with wavelength-dependent coefficients. Applied a small desaturation to the base water tint while retaining biome colors and user color controls.
+- Reused the existing bottom-depth sample before normal generation to estimate vertical depth independently from viewing angle. Reduced waves/parallax in shallow water, softened small ripples, and added a modest rain response without adding texture fetches or normal samples.
+- Changed above-water Overworld reflection blending to Schlick's 2% normal-incidence response with strong grazing reflections, consistently in the regular and Distant Horizons paths. Guarded near-zero parallax divisors and made the DH reflection variable available before the underwater material branch.
+- Depth drives the shallow/river/deep-water distinction; this pass does not classify river/ocean biomes explicitly. Low material-quality profiles retain their existing depth-free fallback, and underwater fog retains its existing implementation. Static validation and isolated native GPU checks passed on Apple M4 for 18 style/quality/render-path combinations, plus legacy/TAA/custom-color/End branches. GPU readback verified monotone bounded attenuation and opacity, reflection endpoints, and camera-angle-invariant wave depth. Full in-game shoreline, river, ocean, and underwater checks remain pending.
+
+- Smoothed Overworld dawn/dusk sky and sunlight blends consistently across terrain, water, entities, atmospheric passes, and Distant Horizons. Eased the near-horizon noon color ramp without changing its daytime peak or nighttime endpoint.
+- Replaced abrupt solar/lunar sky-glare and volumetric-light response switches with continuous twilight blends, including safe normalization for dim light. Extended the existing shared rain smoothing with rise/fall parameters of 6/8 so lighting, cloud density/color, and atmospheric fog settle together.
+- Softened strong cloud forward-scattering boosts and added a hue-preserving HDR highlight shoulder to help retain interior shading under intense light. Cloud density, sample counts, and texture fetches are unchanged.
+- The shared tone map/exposure settings and the approved Nether/End palettes are unchanged. Static validation and isolated native GPU checks passed on Apple M4: transition continuity, bounded monotone blends, dim-light safety, and hue-preserving cloud highlights. Volumetric cloud functions compiled/linked at all three quality levels; The author visually tested and accepted the atmosphere changes on macOS; broader in-game/profile/version coverage remains pending.
+
+- Refined the End palette with slightly cooler blue-violet terrain lighting and a subtle violet tint in its dark sky/far-fog color. Precomputed constants preserve the previous luminance and keep shared tone mapping unchanged.
+- Black Hole/White Hole rendering, star layers, bloom settings, and other dimensions are unchanged by this pass. Static and numerical validation and isolated native OpenGL palette compilation/linking passed on Apple M4; The author visually tested and accepted the End palette on macOS; broader hardware/version coverage remains pending.
+
+- Refined Nether ambient and atmospheric colors with a subtle luminance-preserving red/amber tint, strongest in Nether Wastes and Crimson Forest. Warped Forest, Soul Sand Valley, and Basalt Deltas receive only a small tint to retain their individual palettes; biome transitions use the existing smooth weights.
+- Applied the palette to macOS and other platforms in biome and classic color modes; vanilla fog-color mode retains its original colors. Lava emission, block lighting, fog density, bloom, and shared tone mapping remain unchanged.
+- Replaced the initial Nether palette's chained dynamic global initializers with precomputed per-biome constants after a macOS native OpenGL linker crash when loading the development pack. Static/numerical checks and isolated native OpenGL compilation/linking of the corrected palette passed for all three macOS color modes on Apple M4. Subsequent author screenshots show the Nether loading after the fix; extended stability and biome-transition checks remain pending.
+
+- Refined the Overworld daytime palette with slightly warmer direct sunlight and subtly cooler ambient skylight. Luminance-preserving tints keep the existing lighting brightness and shared tone mapping; extra solar warmth fades toward sunset.
+- The palette blends through the existing daylight and weather transitions, leaving nighttime and full-rain lighting unchanged. No texture samples or new settings were added; Nether and End lighting are unchanged.
+- Static and numerical palette checks performed; in-game verification of daytime materials, sunrise/sunset, and weather transitions remains pending.
+
+## [1.4.0-beta.1] - 2026-10-03
+
+- Added **Selective Bloom**, enabled by default, and **Bloom Highlight Threshold** in Cinematics. A soft peak-channel HDR threshold favors bright sources while retaining saturated colors; additive composition preserves the sharp base image.
+- Weighted bloom toward compact halos and reduced humidity bloom amplification in selective mode. Disabling Selective Bloom restores the previous extraction, blend, and humidity calculations.
+- Selection uses brightness rather than material IDs. Extraction runs on existing mip-filtered samples, so tiny lights can lose broad halos; visual and GPU validation remain pending.
+
+- Rebalanced End celestial highlights: reduced Black Hole disk and photon-ring emission, White Hole core/disk emission, corona spread, and anamorphic flare intensity to reduce bloom spill around terrain silhouettes.
+- Replaced the single tiny-star grid with two sparse world-space star layers featuring varied angular sizes, brightness, and cool/warm tints; added derivative filtering for unresolved stars and a smooth polar density fade. No new texture samples or animation were added.
+- End composition values are an initial artistic pass; in-game silhouette, temporal stability, and macOS checks remain pending.
+
+- Added **Black Hole Radial Rays** and a separate **Black Hole Ray Intensity** slider (0–150%) to Event Horizon settings, addressing issue #4.
+- Rays default to ON at 100%, preserving the ray-control calculation; celestial emission is rebalanced separately in this beta. OFF and 0% use the same local back-disk mask, retaining the nearby Einstein ring, front accretion disk, event horizon, photon ring, and gravitational lensing.
+- White Hole rendering and its light-ray toggle remain independent.
+- Static validation performed; visual verification in Minecraft, including macOS, is pending.
+
 ## [1.3.9] - 2026-09-19
 
 # 🌌 Lumina Event Horizon v1.3.9 — Cinematic Focus
@@ -235,3 +362,5 @@ Sharper subjects, smoother backgrounds, and more control over your cinematic sty
 [1.3.9-rc.2]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9-rc.2
 
 [1.3.9]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.3.9
+
+[1.4.0-beta.2]: https://github.com/benjamincalledur10-bit/Lumina_Shader_Event_Horizon/releases/tag/v1.4.0-beta.2

@@ -39,6 +39,11 @@ float GetBloomFog(float lViewPos) {
         float bloomFogMult = 0.0;
     #endif
 
+    #ifdef BLOOM_SELECTIVE
+        // Reduce humidity-driven brightening before bloom extraction. The
+        // matching inverse in composite5 retains the base scene lighting.
+        bloomFogMult *= 0.35;
+    #endif
     bloomFogMult *= BLOOM_STRENGTH * 8.33333;
 
     return 1.0 + bloomFog * bloomFogMult;

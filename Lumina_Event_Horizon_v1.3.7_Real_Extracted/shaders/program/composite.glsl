@@ -29,15 +29,15 @@ vec3 upVec = normalize(gbufferModelView[1].xyz);
 vec3 eastVec = normalize(gbufferModelView[0].xyz);
 vec3 northVec = normalize(gbufferModelView[2].xyz);
 #ifdef OVERWORLD
-    vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
+    vec3 lightVec = LuminaShadowLight(sunVec);
 #elif defined END
     vec3 lightVec = sunVec;
 #else
     vec3 lightVec = sunVec;
 #endif
 float SdotU = dot(sunVec, upVec);
-float sunFactor = SdotU < 0.0 ? clamp(SdotU + 0.375, 0.0, 0.75) / 0.75 : clamp(SdotU + 0.03125, 0.0, 0.0625) / 0.0625;
-float sunVisibility = clamp(SdotU + 0.0625, 0.0, 0.125) / 0.125;
+float sunFactor = LUMINA_DAY_BLEND(SdotU);
+float sunVisibility = LUMINA_SUN_VISIBILITY(SdotU);
 float sunVisibility2 = sunVisibility * sunVisibility;
 float shadowTimeVar1 = abs(sunVisibility - 0.5) * 2.0;
 float shadowTimeVar2 = shadowTimeVar1 * shadowTimeVar1;

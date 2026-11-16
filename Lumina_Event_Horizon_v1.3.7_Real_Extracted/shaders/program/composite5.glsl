@@ -28,7 +28,7 @@ vec2 view = vec2(viewWidth, viewHeight);
 
 #if defined BLOOM_FOG || LENSFLARE_MODE > 0 && defined OVERWORLD
     float SdotU = dot(sunVec, upVec);
-    float sunFactor = SdotU < 0.0 ? clamp(SdotU + 0.375, 0.0, 0.75) / 0.75 : clamp(SdotU + 0.03125, 0.0, 0.0625) / 0.0625;
+    float sunFactor = LUMINA_DAY_BLEND(SdotU);
 #endif
 
 //Common Functions//
@@ -129,7 +129,13 @@ void DoBSLColorSaturation(inout vec3 color) {
         vec3 blur6 = GetBloomTile(7.0, coord, vec2(0.160625 , 0.3325));
         vec3 blur7 = GetBloomTile(8.0, coord, vec2(0.1784375, 0.3325));
 
-        vec3 blur = (blur1 + blur2 + blur3 + blur4 + blur5 + blur6 + blur7) * 0.14;
+        #ifdef BLOOM_SELECTIVE
+            // Favor compact halos over the broadest sky-wide blur levels.
+            vec3 blur = blur1 * 0.28 + blur2 * 0.23 + blur3 * 0.18
+                      + blur4 * 0.13 + blur5 * 0.09 + blur6 * 0.055 + blur7 * 0.035;
+        #else
+            vec3 blur = (blur1 + blur2 + blur3 + blur4 + blur5 + blur6 + blur7) * 0.14;
+        #endif
 
         float bloomStrength = BLOOM_STRENGTH + 0.2 * darknessFactor;
 
@@ -143,8 +149,12 @@ void DoBSLColorSaturation(inout vec3 color) {
             bloomStrength = mix(bloomStrength * 0.7, bloomStrength * 1.8, netherBloom);
         #endif
 
-        color = mix(color, blur, bloomStrength);
-        //color += blur * bloomStrength * (ditherFactor.x + ditherFactor.y);
+        #ifdef BLOOM_SELECTIVE
+            // Add only extracted highlights; retain the sharp base image.
+            color += blur * bloomStrength;
+        #else
+            color = mix(color, blur, bloomStrength);
+        #endif
     }
 #endif
 
@@ -219,7 +229,7 @@ void main() {
             float distX = abs(texCoord.x - whiteHoleScreenPos.x) * 600.0;
             flareWH += max(0.0, 1.0 - abs(texCoord.y - whiteHoleScreenPos.y) * 1.2) * exp(-distX);
             
-            color += vec3(0.3, 0.7, 1.0) * flareWH * 2.5 * whiteHoleVisibility;
+            color += vec3(0.3, 0.7, 1.0) * flareWH * 1.35 * whiteHoleVisibility;
         }
         #endif
         #endif

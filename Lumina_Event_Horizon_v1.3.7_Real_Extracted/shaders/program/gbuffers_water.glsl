@@ -44,15 +44,15 @@ in vec4 glColor;
 float NdotU = dot(normal, upVec);
 float NdotUmax0 = max(NdotU, 0.0);
 float SdotU = dot(sunVec, upVec);
-float sunFactor = SdotU < 0.0 ? clamp(SdotU + 0.375, 0.0, 0.75) / 0.75 : clamp(SdotU + 0.03125, 0.0, 0.0625) / 0.0625;
-float sunVisibility = clamp(SdotU + 0.0625, 0.0, 0.125) / 0.125;
+float sunFactor = LUMINA_DAY_BLEND(SdotU);
+float sunVisibility = LUMINA_SUN_VISIBILITY(SdotU);
 float sunVisibility2 = sunVisibility * sunVisibility;
 float shadowTimeVar1 = abs(sunVisibility - 0.5) * 2.0;
 float shadowTimeVar2 = shadowTimeVar1 * shadowTimeVar1;
 float shadowTime = shadowTimeVar2 * shadowTimeVar2;
 
 #ifdef OVERWORLD
-    vec3 lightVec = sunVec * ((timeAngle < 0.5325 || timeAngle > 0.9675) ? 1.0 : -1.0);
+    vec3 lightVec = LuminaShadowLight(sunVec);
 #else
     vec3 lightVec = sunVec;
 #endif
@@ -264,6 +264,12 @@ void main() {
             highlightColor *= pow2(moonPhaseInfluence);
         #endif
 
+        #ifdef OVERWORLD
+            if (mat == 32000 && isEyeInWater != 1) {
+                // Schlick water reflectance: clear near-normal views, strong grazing reflections.
+                fresnelM = (0.02 + 0.98 * pow2(pow2(fresnel)) * fresnel) * reflectMult;
+            } else
+        #endif
         fresnelM = (fresnelM * 0.85 + 0.15) * reflectMult;
 
         vec4 reflection = GetReflection(normalM, viewPos.xyz, nViewPos, playerPos, lViewPos, -1.0,

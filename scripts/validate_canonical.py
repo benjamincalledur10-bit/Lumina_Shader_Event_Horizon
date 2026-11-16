@@ -15,9 +15,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 CANONICAL_ROOT = REPOSITORY_ROOT / "Lumina_Event_Horizon_v1.3.7_Real_Extracted"
 SHADER_ROOT = CANONICAL_ROOT / "shaders"
 SHADER_SUFFIXES = {".csh", ".fsh", ".glsl", ".vsh"}
-EXPECTED_SHADER_FILES = 379
-EXPECTED_INCLUDES = 721
-EXPECTED_PACKAGE_FILES = 399
+EXPECTED_SHADER_FILES = 389
+EXPECTED_INCLUDES = 738
+EXPECTED_PACKAGE_FILES = 412
 HISTORICAL_ROOTS = (
     "Lumina_1.3.3_Extracted/",
     "Lumina_Event_Horizon/",
@@ -110,8 +110,14 @@ def validate_includes(files: list[Path], errors: list[str]) -> None:
 def validate_json(errors: list[str]) -> None:
     for path in sorted(CANONICAL_ROOT.rglob("*.json")):
         try:
-            json.loads(path.read_text(encoding="utf-8-sig"))
-        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            text = path.read_text(encoding="utf-8-sig")
+            if path.name == "voxy.json":
+                guard = "#if defined VOXY && VOXY >= 3 && !defined MC_OS_MAC && !defined DISTANT_HORIZONS\n"
+                if not text.startswith(guard) or not text.endswith("\n#endif\n"):
+                    raise ValueError("invalid Voxy platform/API/exclusive-LOD guard")
+                text = text[len(guard):-len("\n#endif\n")]
+            json.loads(text)
+        except (OSError, UnicodeError, ValueError) as exc:
             errors.append(f"{relative(path)}: invalid JSON: {exc}")
 
 
@@ -280,8 +286,13 @@ def validate_nether_features(errors: list[str]) -> None:
         if re.search(rf"^\s*(?:const\s+)?float\s+{name}\b", common, re.MULTILINE):
             errors.append(f"forbidden global Nether fog calculation: {name}")
 
+    # Chained Nether global initializers triggered a native macOS linker crash.
+    for name in ("netherColorBase", "netherPaletteWarmth", "netherPaletteTint"):
+        if re.search(rf"^\s*(?:const\s+)?(?:float|vec3)\s+{name}\b", common, re.MULTILINE):
+            errors.append(f"unsafe chained Nether palette global: {name}")
+
     mac_v137_signatures = (
-        (common, "inWarpedForest * vec3(0.18, 0.1, 0.25)", "v1.3.7 macOS Nether color"),
+        (common, "inWarpedForest * vec3(0.18029461, 0.10038820, 0.24722839)", "macOS Nether palette"),
         (common, "vec3 lavaLightColor = vec3(0.15, 0.06, 0.01)", "v1.3.7 macOS lava ambience"),
         (fog, "float fog = lPos / farM", "v1.3.7 macOS Nether fog"),
         (storm, "float stormSample = pow2(Noise3D(tracePosM + wind))", "v1.3.7 macOS storm sampling"),
@@ -339,10 +350,10 @@ def validate_compatibility(errors: list[str]) -> None:
         metadata = json.loads((SHADER_ROOT / "pack.json").read_text())
     except (OSError, UnicodeError, json.JSONDecodeError):
         return  # Already reported by validate_json.
-    if metadata.get("version") != "1.3.9":
-        errors.append("canonical pack version must be exactly 1.3.9")
+    if metadata.get("version") != "1.4.0":
+        errors.append("canonical pack version must be exactly 1.4.0")
     if metadata.get("description") != (
-        "Lumina Shader Event Horizon v1.3.9 (compatible from 1.8 to 26.3)"
+        "Lumina Shader Event Horizon v1.4.0 (compatible from 1.8 to 26.3)"
     ):
         errors.append("canonical compatibility description is out of date")
 
